@@ -177,9 +177,13 @@ Keep inheritance shallow. One or two levels is typical in R. Deep hierarchies (f
 
 ## Why S3 works {#sec-why-s3-works}
 
-S3 is R's dominant OOP system. Every base R object uses it. The tidyverse uses it. Most CRAN packages use it. It has been the default for over 30 years.
+S3 is R's dominant OOP system, and the name tells you where it came from. When John Chambers designed the S language at Bell Labs in the early 1980s, he needed a way to make `print()` and `summary()` do different things for different kinds of objects. The solution was deliberately informal: attach a class string to any object, and let the generic function look up the right method by pasting the generic name and the class name together. No class registry, no formal type hierarchy, no compiler checks. Just a naming convention. This was S version 3, so the system became known as S3.
 
-It works because it's simple. It requires no registration, no formal definitions, and no boilerplate. You can add methods to existing generics from any package: write `print.my_class` in your package and it just works. You can prototype quickly: slap a class on a list and start writing methods.
+It was supposed to be temporary. By 1998, Chambers had designed S4, a formal OOP system with typed slots, multiple dispatch, and a class registry enforced by `setClass()` and `setGeneric()`. S4 was adopted by the Bioconductor project for its genomics infrastructure, but the rest of the R community kept using S3. The informality that was supposed to be a limitation turned out to be a strength: S3 let package authors add methods to existing generics without coordination, which is exactly what a decentralized ecosystem of 20,000+ CRAN packages needs.
+
+Three decades later, S7 arrived as a synthesis. A joint working group from R-Core, Bioconductor, and the tidyverse designed it to combine S3's simplicity with S4's safety: typed properties, built-in validation, clean syntax, and full backward compatibility with S3 dispatch. The history of R's OOP systems is a story about formality: how much is enough, and who decides.
+
+S3 works because it's simple. It requires no registration, no formal definitions, and no boilerplate. You can add methods to existing generics from any package: write `print.my_class` in your package and it just works. You can prototype quickly: slap a class on a list and start writing methods.
 
 The downside is obvious: no enforcement. Nothing stops you from creating a `"penguin"` with a numeric name or negative mass, unless you write the validator yourself. S3 trusts the programmer.
 

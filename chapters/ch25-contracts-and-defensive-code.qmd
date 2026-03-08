@@ -5,7 +5,13 @@
 source(here::here("_common.R"))
 ```
 
-A function that silently returns the wrong answer is worse than one that crashes. At least a crash tells you something is wrong. This chapter teaches you to write functions that fail loudly, fail early, and fail helpfully, so that bugs surface where they originate, not fifty lines downstream.
+A function that silently returns the wrong answer is worse than one that crashes. At least a crash tells you something is wrong.
+
+In 1986, Bertrand Meyer was designing a programming language called Eiffel. He wanted functions to be explicit about what they expected and what they promised in return. He called the idea *Design by Contract*: every function has a precondition (what must be true before it runs), a postcondition (what it guarantees after it runs), and an invariant (what stays true throughout). If the precondition fails, the caller broke the contract. If the postcondition fails, the function broke it. Either way, execution stops immediately with a clear explanation of which obligation was violated and by whom.
+
+R has no built-in contract system, but the principle translates directly. A `stop()` at the top of a function that checks its inputs is a precondition. A `stopifnot()` before the return value is a postcondition. The validator in a constructor/validator/helper pattern (@sec-s3-classes-properly) is a class invariant. You write these by hand in R where Eiffel provides them as syntax, but the discipline is the same: state your assumptions explicitly, and halt the moment one is violated.
+
+This chapter teaches you to write functions that fail loudly, fail early, and fail helpfully, so that bugs surface where they originate, not fifty lines downstream.
 
 
 ## The case for validation {#sec-case-for-validation}

@@ -96,7 +96,9 @@ If you have not profiled, you do not have a performance problem; you have a feel
 
 ## Vectorization {#sec-vectorization}
 
-R is fast when you operate on whole vectors at once, and slow when you operate element by element.
+R is fast when you operate on whole vectors at once, and slow when you operate element by element. This is not an accident of implementation. It is a design philosophy with a specific origin.
+
+In 1962, Kenneth Iverson at Harvard published *A Notation as a Tool of Thought*, describing APL (A Programming Language). APL's central idea was that mathematical operations should apply to entire arrays, not individual elements. You don't write a loop to add two vectors; you write `A + B` and the language handles the iteration. Iverson won the Turing Award for this work in 1979. The idea traveled through S (where Chambers adopted it for statisticians who think in columns, not cells) and into R, where `x * 2` multiplies every element of `x` without a loop, an index variable, or any mention of how many elements `x` has.
 
 Vectorized operations call optimized C code internally. The loop still happens, but it happens in C, not in R's interpreter. This is the same idea as compilation in the lambda calculus sense: when you write `x * 2`, R does not perform beta reduction step by step in the interpreter. It calls a C function that performs all the multiplications in compiled machine code. The abstraction barrier between R and C is a translation from high-level terms into low-level operations, collapsing many reduction steps into a single native call.
 

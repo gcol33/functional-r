@@ -69,7 +69,7 @@ For loops are not bad R. They are verbose R. If you find yourself writing the sa
 
 ## `lapply()` and `sapply()`: base R functionals {#sec-lapply-sapply}
 
-R has had functionals since before most users started writing R. The foundation is `lapply()`:
+The idea of handing a function to something that applies it to every element in a collection goes back to Lisp. John McCarthy's 1960 paper described `mapcar`, a function that takes a function and a list and returns a new list with the function applied to each element. The name `map` became standard in later languages (Scheme, ML, Haskell), and R inherited the concept twice: once through `lapply()` in base R, and again through `purrr::map()` in the tidyverse. The mechanism is always the same. You separate *what to do* from *how to iterate*, and let the language handle the second part. `lapply()` is R's oldest version of that idea:
 
 ```{r}
 lapply(penguins_split, \(df) mean(df$body_mass_g, na.rm = TRUE))

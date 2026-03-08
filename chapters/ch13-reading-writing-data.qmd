@@ -307,6 +307,8 @@ When to use what:
 | Parquet | Fast, compressed, cross-language       | Not human-readable                |
 | Feather | Very fast read/write                   | Larger than Parquet, less adopted  |
 
+If your data doesn't fit in memory at all, [vectra](https://github.com/gcol33/vectra) (a package I wrote for exactly this case) can stream a CSV and run dplyr-like verbs (`filter`, `select`, `mutate`, `group_by`, `summarise`) without loading the full file into R.
+
 ::: callout-tip
 ## Opinion
 If your CSV takes more than a few seconds to read, switch to Parquet. You'll wonder why you didn't sooner.
