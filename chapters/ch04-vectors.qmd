@@ -333,10 +333,13 @@ NA == NA
 
 This returns `NA`, not `TRUE`. If you don't know what `x` is and you don't know what `y` is, you can't know whether they're equal. Always use `is.na()`.
 
-::: callout-note
-## For the curious
-`NA` propagation is not arbitrary; R is implementing a specific discipline. A value is either present or absent, and any operation on an absent value produces absence. In functional programming, this pattern is called *Maybe* (or *Option*): a value that might not exist. `1 + NA` returning `NA` is the same logic as Haskell's `Nothing >>= f` returning `Nothing`, or Rust's `None.map(f)` returning `None`. The mechanics differ but the rule is identical: if any input is unknown, the output is unknown. R threads this uncertainty through every arithmetic and comparison operation automatically, which is why `NA` feels contagious. It is. That's the point.
-:::
+This contagious behavior is not arbitrary. R is implementing a discipline: a value is either present or absent, and any operation on an absent value produces absence. The principle is older than R.
+
+By the late 1980s, the functional programming community had splintered into dozens of research languages, each exploring similar ideas but incompatible with the others. In 1987, a group of researchers at a conference in Portland decided to consolidate. The result, published in 1990, was Haskell. Where most languages allow mutable state as a practical concession, the Haskell committee made a harder choice: no variable can ever change its value, and no function can have a side effect. The compiler enforces these rules, which means the type system carries more information than in most languages. The language is named after Haskell Curry, a logician who worked on combinatory logic in the 1930s and 1940s; he will reappear in @sec-programs-and-proofs. In Haskell, the possibility of absence is built into the type system as `Maybe`: a value is either `Just 42` or `Nothing`, and any operation on `Nothing` propagates `Nothing` forward. `1 + NA` returning `NA` in R is the same logic as Haskell's `Nothing >>= f` returning `Nothing`.
+
+Rust came from a different direction. In 2006, Graydon Hoare, an engineer at Mozilla, started a side project. He was frustrated with C and C++: both gave you direct control over memory, but that control came with an entire class of bugs (buffer overflows, use-after-free, data races) that were responsible for most of the security vulnerabilities in browsers, operating systems, and network software. Hoare wanted a language with the same low-level performance but with a compiler that could catch these bugs before the program ever ran. He borrowed heavily from Haskell's type system, including the idea that missing values should be a type, not a special case. In Rust, the equivalent of `Maybe` is called `Option`: a value is `Some(42)` or `None`, and `None.map(f)` returns `None`. The compiler rejects any code that forgets to check whether a value is present.
+
+R's approach is looser: nothing stops you from ignoring `NA`, and you will not find out until your results look wrong. But the underlying rule is the same. If any input is unknown, the output is unknown. R threads this uncertainty through every arithmetic and comparison operation automatically, which is why `NA` feels contagious. It is. That's the point.
 
 
 ### Exercises {.unnumbered}

@@ -13,7 +13,7 @@ Or maybe `3 + 5 + 2 + 8` is just an expression, and 18 is its value. The calcula
 
 Notice the difference. The first story has *time* in it: first this happened, then that happened, then this. There is a running total, and it changes. The second story has no time. There is an expression, and it has a value; no variable was modified because there was no variable to modify.
 
-This difference turns out to be surprisingly deep. In 1936, there were no computers. No transistors, no screens, no keyboards. But two mathematicians, working independently, each found a way to describe what "computation" means in precise mathematical terms. Both models turned out to be equally powerful (anything one can compute, the other can too), but the programming languages that grew out of them decades later look and feel completely different. Most programming languages (C, Python, Java, JavaScript) grew out of the first model. R grew out of the second, and that is what this book is about.
+This difference turns out to be surprisingly deep. In 1936, there were no computers. No transistors, no screens, no keyboards. But two mathematicians, working independently, each found a way to describe what "computation" means in precise mathematical terms. Both models turned out to be equally powerful (anything one can compute, the other can too), but the programming languages that grew out of them decades later look and feel completely different. Most programming languages grew out of the first model. R grew out of the second, and that is what this book is about.
 
 
 ## Instructions and state {#sec-turing}
@@ -32,6 +32,10 @@ return total
 ```
 
 Watch `total`. It starts at 0, becomes 3, becomes 8, becomes 10, becomes 18. The variable *varies*; the answer lives in its final state. If you have written code in C or Python, this probably feels natural. It should: both languages were designed around exactly this view of computation.
+
+C came out of Bell Labs in the early 1970s. Dennis Ritchie and Ken Thompson were building Unix, a new operating system, and they needed a language that stayed close to the hardware. Ritchie designed C so that the programmer allocates memory, reads from it, writes to it, and frees it when done. The language does not manage any of this for you. This directness made C enormously influential: Unix spread, C spread with it, and most operating systems, databases, and compilers written since have been written in C. R itself is written in C. The picture of computation that C embodies, a program as a sequence of instructions modifying stored values, became the default mental model for a generation of programmers.
+
+Most of the popular languages that followed inherited that model, even when they made it friendlier. Guido van Rossum created Python in the late 1980s as a language that reads almost like pseudocode; it handles memory management automatically and lets you experiment one line at a time, but underneath, variables are still containers, and a program is still a sequence of instructions that changes what's inside them. The `for` loop above could be Python with one character changed. Java, released by Sun Microsystems in 1995, added strict type-checking and automatic memory management for large engineering teams writing large systems. JavaScript was created at Netscape that same year, originally for adding interactivity to web pages; Brendan Eich wrote the first version in ten days, and it has since become the most widely used programming language in the world. All four languages share the same underlying picture of what computation is. They differ in how much they protect you from mistakes, but the instruction-and-state model is the same.
 
 
 ## Expressions and functions {#sec-church}

@@ -482,7 +482,11 @@ When you write `factorial`, you are constructing a proof by induction that the p
 
 Computation, proof, and mathematics are three perspectives on one subject. The logicians who discovered this (Church, Gödel, Curry, Turing) were all working in the 1930s, before computers existed. They were studying what could be *proved*, and they found that the answer was identical to what could be *computed*.
 
-Today, the Curry-Howard correspondence is the foundation of *formal verification*: software that proves other software is correct. Languages like Coq and Lean let you write a program and a mathematical proof that the program does what you claim, and the compiler checks both. Here is a proof in Lean that adding zero to any natural number gives back the same number:
+Today, the Curry-Howard correspondence is the foundation of *formal verification*: software that proves other software is correct.
+
+The first practical tool to exploit this idea was Coq, developed at INRIA, the French national computer science institute, starting in the late 1980s. Thierry Coquand and Gérard Huet designed it around a type theory called the Calculus of Constructions (the "C-o-C" that gives Coq part of its name). In Coq, every program must come with a machine-checkable proof that it does what its type signature claims. If the proof has a gap, the code does not compile. There is no override, no flag to skip the check. This makes Coq painful for ordinary programming but powerful for building software where correctness matters more than convenience.
+
+In 2013, Leonardo de Moura at Microsoft Research started Lean, a newer proof assistant with a more accessible syntax and a growing library of formalized mathematics called Mathlib. Where Coq grew out of theoretical computer science, Lean has attracted a broader community of mathematicians who are formalizing results from analysis, algebra, and number theory. Both are *proof assistants*: part programming language, part theorem prover. Here is a proof in Lean that adding zero to any natural number gives back the same number:
 
 ```
 theorem add_zero (n : Nat) : n + 0 = n := by
