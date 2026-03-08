@@ -1,0 +1,19 @@
+/* Keep theme toggle visible and fixed on mobile */
+.navbar .quarto-color-scheme-toggle {
+  order: 999;
+  margin-left: auto;
+}
+
+/* Prevent toggle from collapsing into hamburger menu on mobile */
+@media (max-width: 991.98px) {
+  .navbar .quarto-color-scheme-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1050;
+    background: var(--bs-body-bg);
+    border-radius: 50%;
+    padding: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+}
