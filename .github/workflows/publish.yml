@@ -33,6 +33,7 @@ jobs:
       - name: Install R dependencies
         run: |
           install.packages(c(
+            "rmarkdown", "knitr",
             "here", "palmerpenguins", "tibble", "dplyr", "tidyr",
             "purrr", "stringr", "forcats", "lubridate", "readr",
             "readxl", "ggplot2", "rlang", "magrittr", "arrow",
