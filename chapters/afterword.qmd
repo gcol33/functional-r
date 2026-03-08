@@ -1,49 +1,28 @@
-# Afterword: Where the ideas lead {.unnumbered}
+# Afterword {.unnumbered}
 
 ```{r}
 #| include: false
 source(here::here("_common.R"))
 ```
 
-You have finished a book about R, and you have learned category theory.
+Curry and Howard noticed something strange, independently, decades apart. The rules of typed lambda calculus are identical to the rules of natural deduction in logic. A function of type `A -> B` is a proof that A implies B. A pair of type `(A, B)` is a proof that both A and B are true. A program that type-checks is a theorem that holds.
 
-Not formally. Nobody asked you to prove a theorem or draw a commutative diagram. But the structures are in your hands now, and they have names. (If you skipped @sec-r-as-mathematics, some of what follows will be more abstract than it needs to be. That chapter is the foundation for this afterword.)
+The thing you write (syntax) and the thing it means (semantics) turn out to be the same formal object, with a mechanical translation between them. A type checker is a proof checker, and a compiler is a proof transformer. I did not expect this when I first encountered it. Programs are instructions for machines. Proofs are arguments about truth. Why would the formal systems describing these two activities be the same system in different notation? Nobody planned this. Curry published on combinatory logic in the 1930s without knowing that Howard would arrive at the same structure from natural deduction three decades later. The correspondence was just there, waiting.
 
-When you applied `sqrt()` to a vector and got a vector back (@sec-vectorized-ops), you used a functor: a map that transforms contents while preserving the container's shape. When you wrote `lapply()`, `map()`, and `mutate()`, you used the same functor in different containers. The word changed; the structure didn't.
+Then there is Voevodsky and equality. If types are propositions and programs are proofs, what is equality? Normally equality is a yes-or-no judgement. Voevodsky proposed that equality is a *structure*: two values are equal if there is a path connecting them, and that path is itself a type, which can have its own paths (equalities between equalities). Types become spaces, equalities become continuous deformations, and the entire framework of homotopy theory (the branch of topology that studies shapes up to continuous deformation) maps onto type theory.
 
-When you combined vectors with `c()` and noticed that grouping doesn't matter and `NULL` changes nothing (@sec-no-scalars), you used a monoid. When you composed functions with `|>` (@sec-pipes-and-composition), stacked ggplot layers with `+` (@sec-ggplot-lambda), and folded lists with `Reduce()` (@sec-reduce-and-accumulate), you used the same monoid in different disguises. An associative operation with an identity element. That's all it is, and it's everywhere.
+This is homotopy type theory. A path in a topological space is a geometric object: a continuous function from the unit interval into the space. In HoTT, that same path is a term you can write down, type-check, and compute with. The geometry is the program and the topology is the type system; syntax and semantics collapse into each other again, one level deeper than Curry-Howard.
 
-When you wrote `TRUE | FALSE` and `factor(c("male", "female"))`, you built sum types: a value that is exactly one of a fixed set of variants (@sec-logical-vectors, @sec-why-factors). When you built data frames with named columns, you built product types: a value that combines several fields at once (@sec-data-frames). Sum and product. OR and AND. The two ways of composing types, and together they form what mathematicians call an *algebra* of types.
+Each time this happens, something that looked like a metaphor ("programs are *like* proofs," "types are *like* spaces") turns out to be an identity. The syntax was the semantics, and the only thing separating them was notation. Every decade someone finds another layer of this, and the gap between writing a program and stating a mathematical truth gets narrower.
 
-When you called a function, you performed a beta reduction: plugging an argument into a lambda term and simplifying (@sec-return-values). When you created a closure, you froze a beta reduction mid-step, holding a partially applied term in an environment that stays alive because something still points to it (@sec-closures). When `NA` propagated through your arithmetic, you were seeing the same pattern that Haskell calls Maybe: a computation that threads the possibility of absence without crashing (@sec-missing-values). When `tryCatch` caught an error and returned a fallback, you saw the Either pattern: success or failure, carried through as a value rather than an exception (@sec-trycatch).
+HoTT is young. Its implications for practical programming are still being worked out, and where it leads is anyone's guess. But there is something I have not mentioned yet.
 
-These patterns are not R-specific. They show up in Haskell, in Rust, in Scala, in mathematics, in physics. They are the vocabulary of *category theory*: the study of structure-preserving maps between mathematical objects. A functor preserves shape. A monoid provides an identity and associativity. A natural transformation converts one functor into another without losing information (you saw this with `pivot_longer` and `pivot_wider`, @sec-pivot-longer). The patterns are abstract, but you learned them through concrete R code, which is the only honest way to learn abstraction: from the bottom up, through examples, until the pattern becomes impossible to ignore.
+In 1945, Eilenberg and Mac Lane introduced category theory as bookkeeping for mathematics. They wanted to track the relationships between algebra, topology, and logic. The objects mattered less than the maps between them. A functor is a map that preserves structure, a monoid is an operation that is associative and has an identity element, and a natural transformation converts one functor into another. Saunders Mac Lane called it "abstract nonsense," and he meant it as a compliment.
 
+You have been doing category theory for the last 33 chapters.
 
-## Types as spaces
+`map(x, sqrt)` returning a list of the same length is a functor. Composing functions with `|>` is a category where objects are types and arrows are functions. Folding a list with `Reduce()` is a monoid. Reshaping data with `pivot_longer()` and `pivot_wider()` without losing information is a natural isomorphism.
 
-There is one more step, and it is the strangest.
+If you go looking, you will find more of these connections. Between R and Haskell, between type theory and topology, between the code you write on a Tuesday afternoon and mathematics that is older than computers. The rabbit hole does not end. I have been down it for years and I am nowhere near the bottom.
 
-The Curry-Howard correspondence (@sec-curry-howard) says that types are propositions and programs are proofs. A function of type `A -> B` is evidence that `A` implies `B`. A recursive function that terminates is a proof by induction. You saw this in @sec-programs-and-proofs, where the structure of a Lean proof mirrored the structure of `factorial()` in R.
-
-In 2006, Vladimir Voevodsky, a Fields Medalist working in algebraic geometry, began pushing this correspondence further. If types are propositions, what is *equality* between types? Voevodsky's answer drew on a branch of mathematics called homotopy theory, which studies spaces and continuous deformations. In homotopy theory, two shapes are "the same" if you can continuously deform one into the other. A coffee mug and a donut are the same (both have one hole). A sphere and a cube are the same (neither has a hole). Sameness is not identity; it is the existence of a path between two points.
-
-Voevodsky proposed that types are not just propositions but *spaces*, and that equality between values is a *path* in that space. Two values are equal if there is a path connecting them, and two types are equal if there is a continuous, structure-preserving map between them: an isomorphism. This idea became *homotopy type theory* (HoTT), formalized in a 2013 book by a group of mathematicians and computer scientists at the Institute for Advanced Study.
-
-What does this have to do with R? More than you might expect.
-
-You saw that `pivot_longer()` and `pivot_wider()` are isomorphisms (@sec-pivot-longer): two data frames that encode the same information in different shapes. In HoTT's language, wide and long formats are two points in a space of data representations, and the pivot functions are a *path* between them. The path is the proof that the two representations carry the same information. You don't just know they're equivalent; the transformation *is* the evidence.
-
-Voevodsky's deepest insight was the *univalence axiom*: if two types are isomorphic, they are identical. Not merely equivalent, not interchangeable in practice, but the same type. This sounds like philosophical hair-splitting until you realize what it means for programming: if you can write a lossless round-trip between two representations, your code should be allowed to treat them as the same type. Wide and long data frames aren't just "equivalent for practical purposes." Under univalence, they *are* the same structure viewed from different angles, and the pivot functions are the rotation.
-
-This is speculative territory for a book about R. R has no dependent types, no formal proof system, no compiler that checks isomorphisms. But the intuition is worth carrying: every time you reshape data without losing information, you are walking a path in a space of representations. Every time you prove that a transformation is reversible, you are establishing an equivalence that, in a more expressive type system, would be an identity.
-
-The ideas in this book trace a line from Church's lambda calculus (1936) through Curry and Howard's correspondence (1934-1969) to Voevodsky's homotopy type theory (2006). Each step made the same move: take something programmers already do, and reveal the mathematics underneath. Functions are lambda terms. Types are propositions. Programs are proofs. Isomorphisms are paths. Each layer explains the previous one and opens the door to the next.
-
-R sits at the beginning of this line. It inherited lambda calculus from Scheme, first-class functions from Lisp, and a type system that, while informal, exhibits the algebraic structure of sum and product types, functors, and monoids. You can write R for a career without knowing any of this, just as you can drive a car without knowing thermodynamics. But if you have read this far, you have looked under the hood, and what you found is that the engine is made of mathematics.
-
-The mathematics is not finished. Homotopy type theory is young. Proof assistants like Lean and Agda are implementing it, and the implications for programming languages are still being worked out. Cubical type theory (Cohen, Coquand, Huber, Mörtberg, 2015) gave HoTT a computational interpretation, making it possible to *run* proofs as programs. What that means for practical languages, for data science, for the tools we use daily, nobody knows yet.
-
-But the direction is clear: the gap between writing code and proving theorems is closing. The distinction between a data transformation and a mathematical proof is blurring. And the ideas you learned in this book (functions as values, composition as the fundamental operation, types as structure) are the ones that will still matter when that gap closes.
-
-This book taught you to think in R. The ideas behind R will outlast any single language.
+Thank you for reading my book.
