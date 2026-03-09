@@ -139,7 +139,13 @@ clean_and_summarise <- function(df) {
 penguins |> clean_and_summarise()
 ```
 
-Wrapping a pipeline in a function gives the composition a name. `clean_and_summarise` is a single function built from four composed steps. You can pass it around, store it in a list, or use it inside another pipeline, exactly as @sec-functions-are-values-chapter described. Notice that `penguins |> filter(species == "Adelie") |> nrow()` describes the transformation without naming intermediates. In Haskell, this style is called "point-free" or "tacit" programming, tracing back to combinatory logic (Schönfinkel, 1924): functions are composed without mentioning the data they act on. R's pipe enables a mild version of this. It isn't fully point-free (dplyr verbs still reference column names), but the same impulse is at work.
+Wrapping a pipeline in a function gives the composition a name. `clean_and_summarise` is a single function built from four composed steps. You can pass it around, store it in a list, or use it inside another pipeline, exactly as @sec-functions-are-values-chapter described. Notice that the pipeline describes the transformation without naming intermediates:
+
+```r
+penguins |> filter(species == "Adelie") |> nrow()
+```
+
+In Haskell, this style is called "point-free" or "tacit" programming, tracing back to combinatory logic (Schönfinkel, 1924): functions are composed without mentioning the data they act on. R's pipe enables a mild version of this. It isn't fully point-free (dplyr verbs still reference column names), but the same impulse is at work.
 
 
 ## The placeholder `_` {#sec-placeholder}
@@ -175,7 +181,15 @@ The `\(x)` syntax from @sec-anonymous-functions creates a function inline. The t
 
 The magrittr pipe `%>%` came first (2014). The native pipe `|>` arrived in R 4.1 (2021). Both do the same basic thing: insert the left side as the first argument of the right side. The differences are practical.
 
-First, `|>` requires parentheses on the right side. `x |> sqrt()`, not `x |> sqrt`. Second, `|>` uses `_` as its placeholder (named argument only, once). `%>%` uses `.` (anywhere, multiple times). Third, `|>` is faster because it is a syntax transformation: the parser rewrites `x |> f()` to `f(x)` before evaluation. `%>%` is a function call with its own overhead. Fourth, `|>` needs no package. `%>%` needs magrittr (loaded automatically by the tidyverse). The theoretical distinction runs deeper. The base pipe `|>` is pure composition: (g . f)(x), with no implicit variable and no branching. The magrittr pipe `%>%` is closer to what Haskell calls *Kleisli composition*. In ordinary composition, you chain functions of the form a -> b. In Kleisli composition, you chain functions of the form a -> m b, where m is some context (a list, a maybe, an I/O action). The `.` pronoun in `%>%` acts like that context: it threads the result through, allowing you to refer to it multiple times, branch on it, or pass it to non-first arguments. This is why `x %>% { if (nrow(.) > 0) filter(., cond) else . }` works with `%>%` but has no direct equivalent with `|>`. The magrittr pipe is not just "composition with a dot"; it is closer to the monadic bind operator `>>=`, which chains computations that carry context along with their result. If this sounds abstract, think of it concretely: `|>` is "apply the next function," while `%>%` is "apply the next function, and here is a name for what you are working with." That extra naming power makes `%>%` more flexible but also more complex, which is precisely why the base pipe chose to omit it.
+First, `|>` requires parentheses on the right side: `x |> sqrt()`, not `x |> sqrt`. Second, `|>` uses `_` as its placeholder (named argument only, once), while `%>%` uses `.` (anywhere, multiple times). Third, `|>` is faster because it is a syntax transformation: the parser rewrites `x |> f()` to `f(x)` before evaluation, whereas `%>%` is a function call with its own overhead. Fourth, `|>` needs no package; `%>%` needs magrittr (loaded automatically by the tidyverse).
+
+The theoretical distinction runs deeper. The base pipe `|>` is pure composition: (g . f)(x), with no implicit variable and no branching. The magrittr pipe `%>%` is closer to what Haskell calls *Kleisli composition*. In ordinary composition, you chain functions of the form a -> b. In Kleisli composition, you chain functions of the form a -> m b, where m is some context (a list, a maybe, an I/O action). The `.` pronoun in `%>%` acts like that context: it threads the result through, allowing you to refer to it multiple times, branch on it, or pass it to non-first arguments. This is why the following works with `%>%` but has no direct equivalent with `|>`:
+
+```r
+x %>% { if (nrow(.) > 0) filter(., cond) else . }
+```
+
+The magrittr pipe is not just "composition with a dot"; it is closer to the monadic bind operator `>>=`, which chains computations that carry context along with their result. If this sounds abstract, think of it concretely: `|>` is "apply the next function," while `%>%` is "apply the next function, and here is a name for what you are working with." That extra naming power makes `%>%` more flexible but also more complex, which is precisely why the base pipe chose to omit it.
 
 ```{r}
 # These are equivalent

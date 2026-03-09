@@ -416,7 +416,16 @@ Base R also has `subset()`, which combines filtering and column selection:
 subset(penguins, species == "Adelie", select = c(species, body_mass_g))
 ```
 
-`subset()` is clean and readable. For simple operations, it works well. The advantage of dplyr is consistency: every verb takes a data frame first and returns a data frame, so they compose. In base R, `aggregate()` returns different column names, `order()` returns indices rather than a data frame, and `transform()` (the base equivalent of `mutate()`) cannot reference columns it just created. The dplyr verbs snap together; the base R equivalents each have their own interface. In fact, dplyr and SQL are the same language wearing different syntax: `filter(penguins, species == "Adelie")` becomes `SELECT * FROM penguins WHERE species = 'Adelie'`; `group_by(species) |> summarise(n = n())` becomes `SELECT species, COUNT(*) AS n FROM penguins GROUP BY species`. Both implement relational algebra, which is why they feel similar. Call `show_query()` on a database-backed tibble to see the translation directly.
+`subset()` is clean and readable. For simple operations, it works well. The advantage of dplyr is consistency: every verb takes a data frame first and returns a data frame, so they compose. In base R, `aggregate()` returns different column names, `order()` returns indices rather than a data frame, and `transform()` (the base equivalent of `mutate()`) cannot reference columns it just created. The dplyr verbs snap together; the base R equivalents each have their own interface.
+
+In fact, dplyr and SQL are the same language wearing different syntax. Both implement relational algebra, which is why they feel similar:
+
+| dplyr | SQL |
+|---|---|
+| `filter(penguins, species == "Adelie")` | `SELECT * FROM penguins WHERE species = 'Adelie'` |
+| `group_by(species) |> summarise(n = n())` | `SELECT species, COUNT(*) AS n ... GROUP BY species` |
+
+Call `show_query()` on a database-backed tibble to see the translation directly.
 
 In category theory, a natural transformation maps one functor to another while preserving structure. `filter()` transforms a data frame (a container of rows) into a smaller container where columns keep their types and relationships are maintained. The clean composability of dplyr verbs is not an accident; it reflects this mathematical structure, where the transformation commutes with the container.
 
