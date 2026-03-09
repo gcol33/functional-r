@@ -6,4 +6,4 @@ R descends from the lambda calculus, by way of Scheme and a Bell Labs language c
 
 You'll learn R from scratch. You'll learn how to store and manipulate data, write your own functions, transform messy tables into clean results, and build visualizations. You'll also learn *why* R works the way it does, which makes everything else easier to learn. By the end, you'll understand functional programming, know how to work with real data, and see ideas (closures, composition, immutability) that show up in every modern language. No programming experience is assumed.
 
-This book is free and open source, licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). The source code is available on [GitHub](https://github.com/gcol33/thinking-in-r). To cite this book, use DOI [10.5281/zenodo.18918795](https://doi.org/10.5281/zenodo.18918795).
+This book is free and open source, licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). The source code is available on [GitHub](https://github.com/gcol33/thinking-in-r). To cite this book, use DOI [10.5281/zenodo.18918794](https://doi.org/10.5281/zenodo.18918794).
