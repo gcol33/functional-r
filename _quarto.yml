@@ -5,7 +5,7 @@ project:
 book:
   title: "Thinking in R"
   reader-mode: true
-  site-url: https://gcol33.github.io/thinking-in-r/
+  site-url: https://gillescolling.com/thinking-in-r/
   repo-url: https://github.com/gcol33/thinking-in-r/
   repo-branch: main
   repo-actions: [edit, issue]

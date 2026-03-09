@@ -1,30 +1,31 @@
 # Thinking in R
 
-A free, open-source book that teaches R from scratch and explains why the language works the way it does.
+[![Book status](https://img.shields.io/badge/book-in%20progress-orange)](https://gillescolling.com/thinking-in-r/)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-**[Read the book](https://gillescolling.com/functional-r/)**
+**Learn R the way it was meant to be used.**
 
-## About
+Most R books teach R as a statistics tool: load data, run a test, make a plot, copy-paste until it works. This book teaches R as a *language*, one built on functions, composition, and mathematical thinking. It starts from scratch but never talks down. By the end, you don't just use R; you understand it.
 
-Most R books teach you *what* to type. This one also explains *why* it works.
+Read the book online at **[gillescolling.com/thinking-in-r](https://gillescolling.com/thinking-in-r/)**.
 
-R descends from the lambda calculus, through Lisp, Scheme, and S. That lineage explains why everything in R is a vector, why functions are values you can pass around, why `x * 2` multiplies an entire column without a loop, and why `filter(df, x > 3)` can read column names without quotes. Understanding the design makes everything else easier to learn.
+## Why this book
 
-No programming experience is assumed. By the end, you will have written real code, understood functional programming, and seen ideas that transfer to any language.
+R is a functional programming language descended from Scheme. Everything in R is an expression, every expression returns a value, and functions are values. Once you see this, everything clicks: vectorization, pipes, formulas, tidyverse, ggplot2. They're not magic; they're consequences of the language's design.
+
+No existing free book takes you from zero to deep understanding of R as a language. [R for Data Science](https://r4ds.hadley.nz/) teaches tidyverse workflows, not the language itself. [Advanced R](https://adv-r.hadley.nz/) is a reference for experts, not accessible to beginners. This book fills the gap: standalone, no prerequisites, no assumed reading.
 
 ## Structure
 
 The book is organized in five parts and 33 chapters:
 
-- **Foundations** (ch. 1--9): computation models, vectors, functions, logic, algorithms
-- **Working with data** (ch. 10--17): lists, data frames, strings, I/O, dplyr, tidy data, ggplot2
-- **Thinking functionally** (ch. 18--23): closures, map/reduce, function factories, recursion, lazy evaluation
-- **The type system** (ch. 24--27): S3/S7 objects, contracts, metaprogramming, building a DSL
-- **Going further** (ch. 28--33): performance, R internals, C++/Rust/Python interop, packages, reproducibility
+- **Foundations** (ch. 1-9): computation models, vectors, functions, logic, algorithms
+- **Working with data** (ch. 10-17): lists, data frames, strings, I/O, dplyr, tidy data, ggplot2
+- **Thinking functionally** (ch. 18-23): closures, map/reduce, function factories, recursion, lazy evaluation
+- **The type system** (ch. 24-27): S3/S7 objects, contracts, metaprogramming, building a DSL
+- **Going further** (ch. 28-33): performance, R internals, C++/Rust/Python interop, packages, reproducibility
 
-## Contributing
-
-Found an error? [Open an issue](https://github.com/gcol33/functional-r/issues). Want to improve something? Pull requests are welcome.
+No programming experience is assumed. By the end, you will have written real code, understood functional programming, and seen ideas that transfer to any language.
 
 ## Building locally
 
@@ -35,7 +36,32 @@ quarto render
 quarto preview   # live reload
 ```
 
+## Contributing
+
+Spotted a typo, unclear explanation, or broken code example? [Open an issue](https://github.com/gcol33/thinking-in-r/issues) or submit a pull request. Contributions are welcome.
+
+## Support
+
+> "Software is like sex: it's better when it's free." -- Linus Torvalds
+
+I'm a PhD student who writes R books and packages in my free time because I believe good tools should be free and open.
+
+If this book helped you learn something, buying me a coffee is a nice way to say thanks.
+
+[![Buy Me A Coffee](https://img.shields.io/badge/-Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/gcol33)
+
 ## License
 
 Text: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 Code: [MIT](https://opensource.org/licenses/MIT)
+
+## Citation
+
+```bibtex
+@book{thinking-in-r,
+  author = {Colling, Gilles},
+  title = {Thinking in R},
+  year = {2026},
+  url = {https://gillescolling.com/thinking-in-r/}
+}
+```
