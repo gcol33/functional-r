@@ -1,16 +1,346 @@
-/* Theme toggle: always visible, top-right, next to search */
-.quarto-color-scheme-toggle {
-  position: fixed;
-  top: 8px;
-  right: 50px;
-  z-index: 1050;
-  font-size: 1.2rem;
-  padding: 4px 8px;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+/* ============================================================
+   Thinking in R — Custom Theme
+   Matches gillescolling.com dark/light palette
+   ============================================================ */
+
+/* --- Lock font family across both themes (cosmo=Source Sans Pro, darkly=Lato) --- */
+body {
+  font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
-.quarto-color-scheme-toggle:hover {
+/* No transitions on theme switch — Quarto swaps stylesheets, so
+   transitions cause a staggered/async repaint. Instant is cleaner. */
+
+/* ============================================================
+   SUN/MOON TOGGLE (inside Quarto's native toggle)
+   ============================================================ */
+
+/* Vertically center the SVG icons */
+.quarto-color-scheme-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Light mode: show moon, hide sun */
+.quarto-color-scheme-toggle .icon-sun {
+  display: none;
+}
+.quarto-color-scheme-toggle .icon-moon {
+  display: inline-block;
+}
+
+/* Dark mode: show sun, hide moon */
+body.quarto-dark .quarto-color-scheme-toggle .icon-sun {
+  display: inline-block;
+}
+body.quarto-dark .quarto-color-scheme-toggle .icon-moon {
+  display: none;
+}
+
+/* ============================================================
+   CITATION BOX
+   ============================================================ */
+
+.citation-box {
+  position: relative;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem 3rem 1rem 1rem;
+  margin: 1rem 0;
+}
+
+.citation-text {
+  margin: 0 !important;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.citation-box p {
+  margin: 0 !important;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.copy-btn:hover {
   opacity: 1;
+  color: #333;
+}
+
+.copy-btn.copied {
+  color: #28a745;
+  opacity: 1;
+}
+
+/* ============================================================
+   DARK MODE (using Quarto's native .quarto-dark class)
+   ============================================================ */
+
+/* --- Palette (matches gillescolling.com) --- */
+body.quarto-dark {
+  --bs-body-bg: #1a1a1a;
+  --bs-body-color: #b0b0b0;
+  --dm-bg-primary: #1a1a1a;
+  --dm-bg-secondary: #2d2d2d;
+  --dm-bg-tertiary: #3d3d3d;
+  --dm-text-primary: #f0f0f0;
+  --dm-text-secondary: #b0b0b0;
+  --dm-accent: #f8f0ea;
+  --dm-border: #404040;
+  --dm-code-bg: #252525;
+  --dm-code-color: #e8b4b8;
+  --dm-link: #8ab4f8;
+}
+
+/* --- Base --- */
+body.quarto-dark {
+  background-color: var(--dm-bg-primary);
+  color: var(--dm-text-secondary);
+}
+
+/* --- Headings --- */
+body.quarto-dark h1,
+body.quarto-dark h2,
+body.quarto-dark h3,
+body.quarto-dark h4,
+body.quarto-dark h5,
+body.quarto-dark h6,
+body.quarto-dark .sidebar-title {
+  color: var(--dm-text-primary) !important;
+}
+
+/* --- Links --- */
+body.quarto-dark a {
+  color: var(--dm-link);
+}
+
+body.quarto-dark a:hover {
+  color: #aeccff;
+}
+
+/* --- Sidebar --- */
+body.quarto-dark #quarto-sidebar,
+body.quarto-dark .sidebar-navigation {
+  background-color: var(--dm-bg-primary);
+  border-right-color: var(--dm-border);
+}
+
+body.quarto-dark .sidebar-item-text,
+body.quarto-dark .sidebar-item a {
+  color: var(--dm-text-secondary) !important;
+}
+
+body.quarto-dark .sidebar-item.active > .sidebar-item-text,
+body.quarto-dark .sidebar-item.active > a {
+  color: var(--dm-text-primary) !important;
+  font-weight: 600;
+}
+
+body.quarto-dark .sidebar .chapter-number {
+  color: var(--dm-text-secondary);
+}
+
+/* --- Content area --- */
+body.quarto-dark #quarto-content {
+  background-color: var(--dm-bg-primary);
+}
+
+body.quarto-dark .page-columns {
+  background-color: var(--dm-bg-primary);
+}
+
+/* --- Code blocks --- */
+body.quarto-dark pre {
+  background-color: var(--dm-code-bg);
+  border: 1px solid var(--dm-border);
+  border-radius: 6px;
+}
+
+body.quarto-dark pre code {
+  background-color: transparent;
+  color: var(--dm-text-primary);
+}
+
+body.quarto-dark code {
+  background-color: var(--dm-bg-secondary);
+  color: var(--dm-code-color);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+body.quarto-dark pre code {
+  padding: 0;
+}
+
+/* --- Syntax highlighting (match website's warm tones) --- */
+body.quarto-dark .sourceCode .co { color: #6a9955; }   /* comments */
+body.quarto-dark .sourceCode .st { color: #ce9178; }   /* strings */
+body.quarto-dark .sourceCode .dv { color: #b5cea8; }   /* numbers */
+body.quarto-dark .sourceCode .kw { color: #c586c0; }   /* keywords */
+body.quarto-dark .sourceCode .fu { color: #dcdcaa; }   /* functions */
+body.quarto-dark .sourceCode .op { color: #d4d4d4; }   /* operators */
+body.quarto-dark .sourceCode .cn { color: #4fc1ff; }   /* constants */
+body.quarto-dark .sourceCode .sc { color: #d7ba7d; }   /* special chars */
+
+/* --- R output --- */
+body.quarto-dark pre.sourceCode code .r-out,
+body.quarto-dark .cell-output pre {
+  color: #a0a0a0;
+}
+
+/* --- Callouts --- */
+body.quarto-dark .callout {
+  background-color: var(--dm-bg-secondary);
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .callout-body p {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .callout-header {
+  color: var(--dm-text-primary);
+}
+
+body.quarto-dark .callout-tip {
+  border-left-color: #4ec9b0;
+}
+
+body.quarto-dark .callout-note {
+  border-left-color: var(--dm-link);
+}
+
+body.quarto-dark .callout-warning {
+  border-left-color: #cca700;
+}
+
+body.quarto-dark .callout-important {
+  border-left-color: #f48771;
+}
+
+/* --- Tables --- */
+body.quarto-dark .table,
+body.quarto-dark table {
+  color: var(--dm-text-secondary);
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .table thead th,
+body.quarto-dark table thead th {
+  color: var(--dm-text-primary);
+  background-color: var(--dm-bg-secondary);
+  border-bottom-color: var(--dm-border);
+}
+
+body.quarto-dark .table td,
+body.quarto-dark table td {
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--dm-text-secondary);
+}
+
+/* --- TOC (right sidebar) --- */
+body.quarto-dark #quarto-margin-sidebar,
+body.quarto-dark .toc-actions {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark #quarto-margin-sidebar a {
+  color: var(--dm-text-secondary) !important;
+}
+
+body.quarto-dark #quarto-margin-sidebar a.active {
+  color: var(--dm-text-primary) !important;
+}
+
+/* --- Search --- */
+body.quarto-dark .aa-DetachedFormContainer,
+body.quarto-dark .aa-Panel {
+  background-color: var(--dm-bg-secondary);
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .aa-Input {
+  background-color: var(--dm-bg-primary);
+  color: var(--dm-text-primary);
+}
+
+/* --- Footer and nav --- */
+body.quarto-dark .nav-footer {
+  background-color: var(--dm-bg-primary);
+  border-top-color: var(--dm-border);
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .nav-page a {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .nav-page a:hover {
+  color: var(--dm-text-primary);
+}
+
+/* --- Horizontal rules --- */
+body.quarto-dark hr {
+  border-color: var(--dm-border);
+}
+
+/* --- Blockquotes --- */
+body.quarto-dark blockquote {
+  border-left-color: var(--dm-border);
+  color: var(--dm-text-secondary);
+}
+
+/* --- Images: slight brightness reduction --- */
+body.quarto-dark img {
+  filter: brightness(0.85);
+}
+
+body.quarto-dark img:hover {
+  filter: brightness(0.95);
+}
+
+/* --- Exercises sections --- */
+body.quarto-dark .unnumbered {
+  color: var(--dm-text-primary);
+}
+
+/* --- Selection highlight --- */
+body.quarto-dark ::selection {
+  background-color: rgba(138, 180, 248, 0.3);
+  color: var(--dm-text-primary);
+}
+
+/* --- Citation box dark mode --- */
+body.quarto-dark .citation-box {
+  background-color: var(--dm-bg-secondary);
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .citation-text {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .copy-btn {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .copy-btn:hover {
+  color: var(--dm-text-primary);
 }

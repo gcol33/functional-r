@@ -61,6 +61,8 @@ format:
     theme:
       light: cosmo
       dark: darkly
+    css: custom.css
+    include-after-body: theme-toggle.html
     callout-appearance: simple
 
 editor: source
