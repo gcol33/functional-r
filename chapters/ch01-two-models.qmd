@@ -101,7 +101,11 @@ Both give the answer 4. But the second version is shorter, easier to read, and (
 
 This pattern shows up everywhere in R:
 
-- `if/else` returns a value, so you can write `y <- if (x > 0) "positive" else "negative"`. In most languages, `if` is a statement that *does* something; in R, it's an expression that *produces* something (@sec-expressions-names).
+- `if/else` returns a value, so you can assign its result directly. In most languages, `if` is a statement that *does* something; in R, it's an expression that *produces* something (@sec-expressions-names):
+
+    ```r
+    y <- if (x > 0) "positive" else "negative"
+    ```
 - Functions are ordinary values. You can store a function in a variable, pass it to another function, or create one on the fly, the same way you'd pass around a number or a string (@sec-functions-are-values).
 - `x * 2` multiplies every element of `x` at once, with no loop and no index variable. Operations that in other languages require you to write a loop are built into R as expressions on whole vectors (@sec-vectors).
 - Pipe chains compose functions left to right, each one receiving the result of the previous one. This is function composition, the core operation of Church's model, made into syntax (@sec-pipes-and-composition):
