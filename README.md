@@ -49,4 +49,6 @@ Text: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) · C
 
 ## Support
 
-If this book helped you, [buying me a coffee](https://buymeacoffee.com/gcol33) is a nice way to say thanks.
+If this book helped you, buying me a coffee is a nice way to say thanks.
+
+<a href="https://buymeacoffee.com/gcol33"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="40"></a>
