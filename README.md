@@ -1,6 +1,6 @@
 # Thinking in R
 
-[![Book status](https://img.shields.io/badge/book-in%20progress-orange)](https://gillescolling.com/thinking-in-r/)
+[![Book status](https://img.shields.io/badge/book-published-brightgreen)](https://gillescolling.com/thinking-in-r/)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 A free, open-source book that teaches R as a functional programming language. Five parts, 33 chapters, from first function call to metaprogramming and package development.
