@@ -1,19 +1,16 @@
-/* Place theme toggle to the left of search */
-.navbar .quarto-color-scheme-toggle {
-  order: -1;
+/* Theme toggle: always visible, top-right, next to search */
+.quarto-color-scheme-toggle {
+  position: fixed;
+  top: 8px;
+  right: 50px;
+  z-index: 1050;
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-/* On mobile: keep toggle and search side by side, toggle on the left */
-@media (max-width: 991.98px) {
-  .navbar .quarto-color-scheme-toggle,
-  .navbar .type--hierarchical {
-    display: flex !important;
-  }
-
-  .navbar .quarto-color-scheme-toggle {
-    position: fixed;
-    top: 8px;
-    right: 90px;
-    z-index: 1050;
-  }
+.quarto-color-scheme-toggle:hover {
+  opacity: 1;
 }
