@@ -211,9 +211,9 @@ Carry = A AND B
 
 Two gates. This is a *half adder*. Before looking at the circuit, here are the standard symbols used in circuit diagrams. A filled dot where wires cross means they are connected (a junction); without the dot, wires simply cross without connecting.
 
-![Standard logic gate symbols. Inputs enter from the left, output exits to the right.](../images/gate_symbols.png){#fig-gate-symbols width=100%}
+![Standard logic gate symbols. Inputs enter from the left, output exits to the right.](../images/gate_symbols.png){#fig-gate-symbols width=100% fig-align="left"}
 
-![A half adder: one XOR gate for the sum, one AND gate for the carry.](../images/half_adder.png){#fig-half-adder width=100% fig-alt="Circuit diagram of a half adder showing one XOR gate producing Sum and one AND gate producing Carry, with inputs A and B."}
+![A half adder: one XOR gate for the sum, one AND gate for the carry.](../images/half_adder.png){#fig-half-adder width=100% fig-align="left" fig-alt="Circuit diagram of a half adder showing one XOR gate producing Sum and one AND gate producing Carry, with inputs A and B."}
 
 We can verify this in R. R's `&`, `|`, `!`, and `xor()` are the same Boolean operations:
 
@@ -285,7 +285,7 @@ Sum = A XOR B XOR Cin
 
 **Step 4: build the circuit.** The Sum formula chains two XOR gates. The Cout formula uses two AND gates and one OR gate, but engineers noticed that `(B AND Cin) OR (A AND Cin)` can be rewritten as `((A XOR B) AND Cin)`, because the XOR captures whether exactly one of A, B is 1. The final circuit uses five gates: two XOR, two AND, one OR.
 
-![A full adder built from five logic gates. Two XOR gates compute the sum; two AND gates and one OR gate compute the carry-out.](../images/full_adder.png){#fig-full-adder width=100% fig-alt="Circuit diagram of a full adder showing two XOR gates, two AND gates, and one OR gate connected with labeled wires for A, B, Cin, Sum, and Cout."}
+![A full adder built from five logic gates. Two XOR gates compute the sum; two AND gates and one OR gate compute the carry-out.](../images/full_adder.png){#fig-full-adder width=100% fig-align="left" fig-alt="Circuit diagram of a full adder showing two XOR gates, two AND gates, and one OR gate connected with labeled wires for A, B, Cin, Sum, and Cout."}
 
 ```{r}
 full_adder <- function(A, B, Cin) {
