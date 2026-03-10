@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-`sqrt(9)`, `c(1, 2, 3)`, `sum(x > 70)`: every piece of R code so far has relied on functions that someone else wrote. The obvious next question is what it takes to write one yourself.
+You have been borrowing other people's work. `sqrt(9)`, `c(1, 2, 3)`, `sum(x > 70)`: every piece of R code you have written so far calls a function that someone else defined, tested, and packaged for you. At some point the problems you need to solve will stop fitting neatly into the functions that already exist. What does it take to write your own?
 
 
 ## Anatomy of a function {#sec-anatomy-function}

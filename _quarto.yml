@@ -14,6 +14,7 @@ book:
   repo-actions: [edit, issue]
   chapters:
     - index.qmd
+    - chapters/foreword.qmd
     - part: "Part I: Foundations"
       chapters:
         - chapters/ch01-two-models.qmd

@@ -233,6 +233,7 @@ adelie |> count(island)
 A pipe should tell a story. If it reads like a run-on sentence, break it into paragraphs. Name the paragraph boundaries with meaningful variable names, not `temp1` and `temp2`.
 :::
 
+The pipe gives you composition in a readable notation, but composition is only the beginning. Once you can chain transformations, the next question is how to apply them to many things at once: to every column, every group, every element of a list. That is the territory of @sec-purrr-map.
 
 ### Exercises {.unnumbered}
 

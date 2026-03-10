@@ -5,7 +5,21 @@
 source(here::here("_common.R"))
 ```
 
-When you call a function, R needs to find every name you use inside it. The rules for how it searches are simple and general. @sec-scope-first-look introduced the basics: local variables live inside the function, and a function can see variables from the environment where it was defined. This chapter makes those ideas precise and takes them further, to the point where functions can remember things between calls.
+Call this function three times and watch what happens:
+
+```{r}
+f <- function() {
+  n <- 0
+  n <- n + 1
+  n
+}
+
+f()
+f()
+f()
+```
+
+Always 1. The counter never advances, because every call starts from scratch: every local variable is born and dies within a single invocation. You could call it a thousand times and nothing would accumulate. So how do you build a function that *remembers*? The answer runs through environments, scoping rules, and a mechanism with a name borrowed from mathematical logic: the closure.
 
 
 ## Environments {#sec-environments}
@@ -56,7 +70,7 @@ The global environment sits at the bottom, with attached packages stacked above 
 
 ## Lexical scoping {#sec-lexical-scoping}
 
-R uses lexical scoping: a function looks for names where it was *defined*, not where it was *called*. This choice traces back to Scheme (1975), which adopted lexical scoping over Lisp's dynamic scoping and changed programming history. Dynamic scoping searches the call stack, which is simpler to implement but makes functions unpredictable: the same function returns different results depending on who calls it. R inherited lexical scoping from Scheme, not from S (which originally used dynamic scoping; see @sec-s-language), and this one design decision is why closures work in R at all. The principle is simple, but the interactions are not.
+Consider this:
 
 ```{r}
 x <- 10
@@ -65,7 +79,7 @@ g <- function() { x <- 20; f() }
 g()
 ```
 
-`g()` returns 10, not 20. Because `f` was defined in the global environment, it looks for `x` there, not inside `g` where it was called. The `x <- 20` inside `g` is invisible to `f`. What matters is where the function was written in the source code (the definition site), not where it happens to be called at runtime.
+The result is 10, not 20. `f` was defined in the global environment, so it looks for `x` there, ignoring the `x <- 20` inside `g` where it was merely *called*. This is lexical scoping: a function resolves names where it was *defined*, not where it was *called*. R inherited the idea from Scheme (1975), which adopted it over Lisp's dynamic scoping and changed programming language design. Dynamic scoping searches the call stack, which is simpler to implement but makes functions unpredictable: the same function returns different results depending on who calls it. R took lexical scoping from Scheme, not from S (which originally used dynamic scoping; see @sec-s-language), and this one design decision is why closures work in R at all.
 
 Four rules govern how R resolves names:
 

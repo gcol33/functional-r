@@ -39,6 +39,8 @@ That solution came out of Bell Labs in the early 1970s. Dennis Ritchie and Ken T
 
 Most of the popular languages that followed inherited that model, even when they made it friendlier. Guido van Rossum created Python in the late 1980s as a language that reads almost like pseudocode; it handles memory management automatically and lets you experiment one line at a time, but underneath, variables are still containers, and a program is still a sequence of instructions that changes what's inside them. The `for` loop above could be Python with one character changed. Java, released by Sun Microsystems in 1995, added strict type-checking and automatic memory management for large engineering teams writing large systems. JavaScript was created at Netscape that same year, originally for adding interactivity to web pages; Brendan Eich wrote the first version in ten days, and it has since become the most widely used programming language in the world. All four languages share the same underlying picture of what computation is. They differ in how much they protect you from mistakes, but the instruction-and-state model is the same. It dominates so thoroughly that you might assume it's the only model there is.
 
+So is it?
+
 
 ## Expressions and functions {#sec-church}
 
