@@ -27,7 +27,7 @@ head(methods(print), 10)
 
 This is *functional OOP*: methods belong to generics, not to classes. You call `print(x)`, not `x.print()`. Most languages (Java, Python, C++) do the opposite: methods belong to objects, and you write `object.method()`. R dispatches on the first argument. Anyone can add a method for any class to any generic without modifying the class, which is why R's ecosystem composes so well: package A defines a class, package B defines a method for it, and neither needs to know the other exists.
 
-This connects back to @sec-operators-are-functions: "everything that happens is a function call." Dispatch is just R picking *which* function to call.
+Dispatch is just R picking *which* function to call, the same principle as "everything that happens is a function call" (@sec-operators-are-functions).
 
 ::: callout-note
 ## The type-theory connection
@@ -127,7 +127,7 @@ penguin(42, 3750)
 
 The constructor is fast and trusting. The validator is thorough. The helper is what users call. This separation of concerns comes from Advanced R: construction is cheap, validation is careful, and the user interface is clean.
 
-This is the core skill of this chapter. If you write S3 classes, write all three functions.
+If you write S3 classes, write all three functions.
 
 
 ### Exercises {.unnumbered}
@@ -181,9 +181,9 @@ S3 is R's dominant OOP system, and the name tells you where it came from. When J
 
 It was supposed to be temporary. By 1998, Chambers had designed S4, a formal OOP system with typed slots, multiple dispatch, and a class registry enforced by `setClass()` and `setGeneric()`. S4 was adopted by the Bioconductor project for its genomics infrastructure, but the rest of the R community kept using S3. The informality that was supposed to be a limitation turned out to be a strength: S3 let package authors add methods to existing generics without coordination, which is exactly what a decentralized ecosystem of 20,000+ CRAN packages needs.
 
-Three decades later, S7 arrived as a synthesis. A joint working group from R-Core, Bioconductor, and the tidyverse designed it to combine S3's simplicity with S4's safety: typed properties, built-in validation, clean syntax, and full backward compatibility with S3 dispatch. The history of R's OOP systems is a story about formality: how much is enough, and who decides.
+Three decades later, S7 arrived as a synthesis. A joint working group from R-Core, Bioconductor, and the tidyverse designed it to combine S3's simplicity with S4's safety: typed properties, built-in validation, clean syntax, and full backward compatibility with S3 dispatch. The history of R's OOP systems is a story about formality: how much is enough, and who decides?
 
-S3 works because it's simple. It requires no registration, no formal definitions, and no boilerplate. You can add methods to existing generics from any package: write `print.my_class` in your package and it just works. You can prototype quickly: slap a class on a list and start writing methods.
+For S3, the answer is: almost none, and the programmer decides. It requires no registration, no formal definitions, and no boilerplate. You can add methods to existing generics from any package: write `print.my_class` in your package and it just works. You can prototype quickly: slap a class on a list and start writing methods.
 
 The downside is obvious: no enforcement. Nothing stops you from creating a `"penguin"` with a numeric name or negative mass, unless you write the validator yourself. S3 trusts the programmer.
 

@@ -71,7 +71,7 @@ filter(penguins, species %in% c("Adelie", "Chinstrap"))
 
 One detail worth knowing: `filter()` drops rows where the condition evaluates to `NA`. If `body_mass_g` is `NA` for a row, then `body_mass_g > 4000` is `NA`, and `filter()` excludes it. This is usually what you want. If you need to keep `NA` rows, test for them explicitly: `filter(penguins, is.na(body_mass_g))`.
 
-Under the hood, `filter()` is doing the same logical subsetting you saw in @sec-comparison-operators: `penguins[penguins$species == "Adelie", ]`. The verb just makes the intent explicit.
+Under the hood, `filter()` is doing the same logical subsetting from @sec-comparison-operators: `penguins[penguins$species == "Adelie", ]`. The verb makes the intent explicit — and, more importantly, composable with other verbs.
 
 
 ### Exercises {.unnumbered}
@@ -291,12 +291,10 @@ arrange(penguins, species, desc(body_mass_g))
 
 Unlike the other verbs, `arrange()` ignores grouping by default. If you want to sort within groups, set `.by_group = TRUE`.
 
-`arrange()` is pure display. It does not change the data, only the order of rows. No information is added or removed. But a well-sorted table can reveal patterns that a jumbled one hides.
+`arrange()` is pure display. It does not change the data, only the order of rows. No information is added or removed. But a well-sorted table can reveal patterns that a jumbled one hides — and sometimes you need more than the five core verbs to expose them.
 
 
 ## More verbs {#sec-more-verbs}
-
-The five core verbs handle most transformations. A few more are worth knowing.
 
 `distinct()` returns unique rows:
 
@@ -337,7 +335,7 @@ Finally, `across()` applies a function to multiple columns at once. Summarise al
 summarise(penguins, across(where(is.numeric), \(x) mean(x, na.rm = TRUE)))
 ```
 
-`across()` applies a function to multiple columns at once. It pairs naturally with `where()`, `starts_with()`, and the other selection helpers from @sec-select. It becomes easier to use after @sec-iteration-without-loops, where you will see the same pattern of "apply a function to many things" in a broader context.
+`across()` applies a function to multiple columns at once. It pairs naturally with `where()`, `starts_with()`, and the other selection helpers from @sec-select. The same pattern — "apply a function to many things" — reappears in a broader context in @sec-iteration-without-loops.
 
 
 ### Exercises {.unnumbered}
@@ -350,7 +348,7 @@ summarise(penguins, across(where(is.numeric), \(x) mean(x, na.rm = TRUE)))
 
 ## The base R equivalents {#sec-base-r-equivalents}
 
-Everything dplyr does, base R can do too. The verbs are convenient wrappers, not new capabilities. Here are the translations.
+Everything dplyr does, base R can do too. The verbs are convenient wrappers, not new capabilities — so what exactly do you gain?
 
 `filter()` is logical subsetting:
 
@@ -385,7 +383,7 @@ mutate(penguins, mass_kg = body_mass_g / 1000)
 penguins$mass_kg <- penguins$body_mass_g / 1000
 ```
 
-Note the difference: the base R version modifies the data frame in place (or rather, modifies the binding). The dplyr version returns a new data frame and leaves the original untouched.
+The base R version modifies the binding; the dplyr version returns a new data frame and leaves the original untouched. This distinction matters more as pipelines grow longer.
 
 `summarise()` plus `group_by()` maps to `aggregate()`:
 

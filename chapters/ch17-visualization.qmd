@@ -7,7 +7,7 @@ source(here::here("_common.R"))
 
 ggplot2 doesn't give you a scatterplot function and a bar chart function. It gives you a language for describing any plot. Once you see the grammar, you stop memorizing plot types and start constructing them.
 
-This chapter assumes you have tidy data (@sec-tidy-data), can reshape it with dplyr (@sec-data-transformation), and can pipe it through transformations (@sec-pipes-and-composition). Visualization is the payoff: you have cleaned the data, now you see it.
+This chapter assumes you have tidy data (@sec-tidy-data), can reshape it with dplyr (@sec-data-transformation), and can pipe it through transformations (@sec-pipes-and-composition). You have cleaned the data; now you see it.
 
 
 ## The grammar of graphics {#sec-grammar-of-graphics}
@@ -24,7 +24,7 @@ Hadley Wickham implemented this idea in 2005 as ggplot2: a layered grammar where
 6. **Facets**: small multiples, splitting by a variable.
 7. **Themes**: non-data visual styling.
 
-You don't need all seven for every plot. Most plots are data + aesthetics + geom. The rest are refinements.
+Most plots need only three: data + aesthetics + geom. The rest are refinements.
 
 ```{r}
 library(palmerpenguins)
@@ -141,7 +141,7 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g)) +
   geom_smooth(method = "lm")
 ```
 
-Layers compose with `+`. The plot above has two layers: points and a linear fit. Each `+` adds a component to the same plot object.
+Layers compose with `+`. The plot above has two layers: points and a linear fit. Each `+` adds a component to the same plot object. But adding layers only changes the geometry — what about controlling *how* data values map to visual properties?
 
 
 ### Exercises {.unnumbered}
@@ -227,7 +227,7 @@ By default, all panels share the same axis scales. You can free them with `scale
 
 When to facet vs when to color: facet when the groups would overlap too much, or when you want each group's pattern to stand alone. Color works when groups are few and visually separable.
 
-Faceting replaces the temptation to build the same plot three times with a loop or copy-paste. One `facet_wrap()` call produces all the panels, with shared axes for honest comparison. The grammar handles the layout; you focus on the question.
+Either way, faceting replaces the temptation to build the same plot three times with a loop or copy-paste. One `facet_wrap()` call produces all the panels, with shared axes for honest comparison. The grammar handles the layout; you focus on the question.
 
 
 ### Exercises {.unnumbered}
@@ -268,7 +268,7 @@ To set a default theme for your entire session, use `theme_set()`:
 theme_set(theme_minimal())
 ```
 
-Themes are purely cosmetic: the grammar is the substance of this chapter, not the polish, so spend your time on clear mappings and good labels before worrying about fonts.
+Themes are purely cosmetic. Spend your time on clear mappings and good labels before worrying about fonts.
 
 That said, a consistent theme across all your plots signals professionalism. Pick one default early (most people end up with `theme_minimal()` or `theme_bw()`) and use it everywhere; consistency matters more than which theme you choose.
 
@@ -358,6 +358,8 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g)) +
 **Overloading a single plot.** Too many colors, too many geoms, too much data. If a plot is hard to read, split it into facets or separate plots. A simpler plot almost always communicates better.
 
 Most ggplot2 errors are not about syntax. They are about structure: the data is in the wrong shape, the mapping is in the wrong place, or the wrong composition operator is connecting the layers. When a plot doesn't look right, check the data and the mappings before adjusting visual parameters. The grammar tells you where the problem is, if you listen to it.
+
+Once the plot is right, you need to get it out of R.
 
 
 ## Saving plots {#sec-saving-plots}

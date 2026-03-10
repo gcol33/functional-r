@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-Part II is about working with data, and data has size. Before you load a CSV with a million rows, join two large tables, or filter a data frame inside a loop, you need a mental model for why some operations are instant and others bring R to a halt. The difference is rarely about your code being "bad." It is about the problem's inherent complexity: how running time scales with input size, and why some algorithms hit a wall that no amount of hardware can fix. The ideas in this chapter, Big-O notation, hash tables, and the limits of computation, will inform every data-wrangling decision in the chapters that follow.
+Part II is about working with data, and data has size. Before you load a CSV with a million rows, join two large tables, or filter a data frame inside a loop, you need a mental model for why some operations are instant and others bring R to a halt. The difference is rarely about your code being "bad." It is about the problem's inherent complexity: how running time scales with input size, and why some algorithms hit a wall that no amount of hardware can fix. The ideas in this chapter --- Big-O notation, hash tables, and the limits of computation --- explain the difference between code that scales and code that chokes.
 
 
 ## Not all operations are equal {#sec-why-speed-shape}
@@ -62,7 +62,7 @@ The simplest test: double n and see what happens to the time. If the time roughl
 
 Suppose you have a list of 10,000 names and you need to check whether `"beta"` is among them. The naive approach: scan the list from the beginning, comparing each entry. On average you check half the entries before finding a match (or all of them if the name isn't there). That is O(n).
 
-Can you do better? If the list is sorted, binary search gets you to O(log n). But there is a way to get O(1), constant time, regardless of how many names are in the list.
+If the list is sorted, binary search gets you to O(log n). But there is a way to get O(1) --- constant time, regardless of how many names are in the list.
 
 The trick is to turn the name into a number. A *hash function* takes a string (or any value) and produces an integer. For example, a simple hash might sum the character codes of each letter:
 
@@ -163,7 +163,7 @@ The constant in O(1) depends on the hash function's speed and the collision rate
 
 Time is not the only resource. Memory matters too, especially in R where data frames can be gigabytes.
 
-Creating a full copy of a 1 GB data frame uses 1 GB of additional memory. Two copies and you are at 3 GB total. R's garbage collector reclaims unused memory, but if multiple large objects are live simultaneously, you can exhaust RAM.
+A full copy of a 1 GB data frame uses 1 GB of additional memory. Two copies and you are at 3 GB total. R's garbage collector reclaims unused memory, but if multiple large objects are live simultaneously, you can exhaust RAM.
 
 ### Copy-on-modify
 
@@ -188,7 +188,7 @@ y[1] <- 0
 obj_addr(x) == obj_addr(y)  # FALSE: y is now a separate copy
 ```
 
-Copy-on-modify is why passing large objects to functions is cheap in R: the function receives a reference, not a copy. A copy happens only if the function modifies the object.
+Copy-on-modify is why passing large objects to functions is cheap in R: the function receives a reference, not a copy. A copy happens only if the function modifies the object. But when modification *does* happen --- say, inside a loop --- the cost can compound.
 
 ### Pre-allocation vs. growing
 
@@ -234,7 +234,7 @@ lobstr::obj_size(x, y)  # same as obj_size(x), not double
 
 ## Common algorithms in R {#sec-common-algorithms}
 
-You rarely implement algorithms from scratch in R. But knowing what the built-in functions do helps you choose the right tool and predict performance.
+You rarely implement algorithms from scratch in R, but the built-in functions make algorithmic choices on your behalf. Knowing what they chose helps you predict when they will be fast and when they will not.
 
 ### Sorting
 
@@ -278,7 +278,7 @@ Using `fixed = TRUE` avoids regex compilation and can be noticeably faster for s
 
 ## Computability {#sec-computability}
 
-Everything above assumes the problem *can* be solved, but not all problems can.
+Everything above assumes the problem *can* be solved. Not all problems can.
 
 ### The halting problem {#sec-halting-problem}
 
@@ -356,7 +356,7 @@ The R package `R.utils` provides `withTimeout()` for a cleaner interface. These 
 
 Alonzo Church (working with lambda calculus) and Alan Turing (working with his abstract machine) independently showed in 1936 that their models of computation are equivalent. The *Church-Turing thesis* states that any function computable by an effective procedure can be computed by a Turing machine, or equivalently, expressed as a lambda calculus term.
 
-This has a concrete consequence: R, Python, C, Haskell, and every other general-purpose language can compute exactly the same set of functions. No language can solve the halting problem. No language can compute a function that another general-purpose language cannot. The differences between languages are speed, expressiveness, and safety, not computational power.
+This has a concrete consequence: R, Python, C, Haskell, and every other general-purpose language can compute exactly the same set of functions. No language can solve the halting problem. No language can compute a function that another general-purpose language cannot. The differences between languages are speed, expressiveness, and safety --- not computational power.
 
 R's functional core (functions as values, closures, recursion) is directly descended from lambda calculus. When you write `function(x) x + 1`, you are writing a lambda term. The equivalence between lambda calculus and Turing machines means that R's functional style and C's imperative loops are two notations for the same mathematics.
 

@@ -23,7 +23,7 @@ Even if you never publish to CRAN, a package gives you:
 - **Dependency management**: you declare what you need.
 - **Namespace control**: your names do not collide with other packages' names.
 
-In @sec-functions-are-values-chapter, you saw that functions are values. A package is a named collection of functions with metadata. The metadata is what makes the difference between "a folder of scripts" and "something someone else can install and use."
+In @sec-functions-are-values-chapter, you saw that functions are values. A package is a named collection of functions with metadata. The metadata is what makes the difference between "a folder of scripts" and "something someone else can install and use." The metadata has a specific shape.
 
 ::: callout-tip
 ## Opinion
@@ -107,7 +107,7 @@ usethis::use_readme_rmd()          # add README.Rmd
 usethis::use_github_action()       # add CI/CD
 ```
 
-Each one does one task correctly. No boilerplate to remember.
+Each one does one task correctly. No boilerplate to remember. The functions you write, however, are invisible to users until you document them.
 
 ::: callout-tip
 ## Opinion
@@ -152,7 +152,7 @@ Key tags:
 
 Markdown in roxygen is enabled by adding `Roxygen: list(markdown = TRUE)` to `DESCRIPTION`. Then you can use `**bold**`, `*italic*`, `` `code` ``, and `[function()]` for cross-links.
 
-`devtools::document()` converts roxygen comments to `.Rd` files in `man/` and updates `NAMESPACE`. You write roxygen; you never touch `man/` directly.
+`devtools::document()` converts roxygen comments to `.Rd` files in `man/` and updates `NAMESPACE`. You write roxygen; you never touch `man/` directly. Good documentation earns users; the next question is how to manage the packages those users will need.
 
 ::: callout-tip
 ## Opinion
@@ -231,7 +231,7 @@ test_that("plotting works", {
 
 `skip_if_not_installed()` prevents the test from failing on machines where the Suggested package is not available.
 
-Minimize dependencies. Every dependency is a potential breakage point. If you only need one function from a package, consider whether you can write it yourself.
+Minimize dependencies. Every dependency is a potential breakage point. If you only need one function from a package, consider whether you can write it yourself. Dependencies declare what your package needs; tests prove that what you built actually works.
 
 A useful diagnostic: `usethis::use_package()` will refuse to add a package that is not installed, which catches typos early. And `devtools::check()` will warn if you import a package but never use it.
 
@@ -323,7 +323,7 @@ result
 ```
 ```
 
-The YAML header is boilerplate. The content is yours. Write it as if the reader has never seen your package before and has five minutes to decide whether to use it.
+The YAML header is boilerplate. The content is yours. Write it as if the reader has never seen your package before and has five minutes to decide whether to use it. Documentation and vignettes make a package usable; the automated quality gate that makes it *reliable* is `R CMD check`.
 
 
 ## R CMD check {#sec-r-cmd-check}
@@ -350,7 +350,7 @@ Common issues and how to fix them:
 - **"Non-standard file/directory found"**: add the file to `.Rbuildignore` with `usethis::use_build_ignore("filename")`.
 - **"No visible binding for global variable"**: common with tidyverse code that uses unquoted column names. Fix with `utils::globalVariables()` or use `.data$column` from rlang.
 
-Run `check()` often during development, not just at the end. Each run should find at most one or two issues. If you wait until the end to run `check()` for the first time, you may face dozens of notes and warnings at once, which is demoralizing and hard to debug.
+Run `check()` often during development, not just at the end. Each run should find at most one or two issues. If you wait until the end, you face dozens of notes at once, which is demoralizing and hard to debug. A passing check means the package is well-formed; the remaining question is how to get it into other people's hands.
 
 ### Exercises {.unnumbered}
 

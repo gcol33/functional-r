@@ -102,7 +102,7 @@ The conversion is not perfectly symmetric. Comments and whitespace are lost in t
 
 ## Capturing and evaluating expressions {#sec-capture-evaluate}
 
-There are two sides to capturing: capturing *your own* expression, and capturing *the caller's* expression.
+Capturing *your own* expression and capturing *the caller's* expression require different tools.
 
 `quote()` and `expr()` capture what you type directly:
 
@@ -143,7 +143,7 @@ df <- data.frame(x = c(1, 2, 3), y = c(10, 20, 30))
 eval_tidy(expr(x + y), data = df)
 ```
 
-The pattern is: **capture** (defuse) an expression, optionally **modify** it, then **evaluate** (inject) it in the right context. Tidy evaluation calls this defuse-and-inject.
+This three-step sequence — **capture**, optionally **modify**, then **evaluate** in the right context — is what tidy evaluation calls defuse-and-inject. The next question is what happens when the expression you need does not exist yet.
 
 One more base R tool worth knowing: `match.call()`. Inside a function, it returns the entire call as the user typed it, with arguments matched by name:
 
@@ -166,7 +166,7 @@ Many modeling functions use `match.call()` to record the call for reproducibilit
 
 ## Building expressions programmatically {#sec-building-expressions}
 
-So far you have captured expressions that a human typed. You can also build them from parts.
+What if the function name or variable is not known until runtime? You need to build the expression from parts.
 
 `rlang::call2()` constructs a call object:
 

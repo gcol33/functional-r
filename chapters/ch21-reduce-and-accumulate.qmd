@@ -9,7 +9,7 @@ library(dplyr)
 
 `map()` transforms each element independently. `Reduce()` combines elements into one result. If `map()` is "do this to each," then `Reduce()` is "collapse everything with this."
 
-In @sec-iteration-without-loops you saw how `map()` replaces loops that apply a function to each element. But some loops do not just apply: they accumulate. A running total, a chain of merges, a series of intersections. These loops carry state from one iteration to the next. `Reduce()` is the functional that replaces them.
+In @sec-iteration-without-loops you saw how `map()` replaces loops that apply a function to each element. But some loops do not just apply: they accumulate. A running total, a chain of merges, a series of intersections. These loops carry state from one iteration to the next. `Reduce()` is the functional that replaces them — given only a binary operation, it collapses an entire list into a single value.
 
 
 ## Left fold {#sec-left-fold}
@@ -87,9 +87,7 @@ Sometimes you want not just the final result, but every intermediate step. Base 
 Reduce(`+`, 1:5, accumulate = TRUE)
 ```
 
-Running totals: `1, 3, 6, 10, 15`. This is the *scan* operation (Haskell's `scanl`, APL's `\`). Where fold collapses a list to a single value, scan collapses it to a list of running values.
-
-Cumulative operations are everywhere in practice: cumulative sums, running maxima, progressive string building.
+Running totals: `1, 3, 6, 10, 15`. This is the *scan* operation (Haskell's `scanl`, APL's `\`). Where fold collapses a list to a single value, scan collapses it to a list of running values. Running maxima, cumulative sums, progressive string construction — all fall out of the same pattern:
 
 ```{r}
 Reduce(max, c(3, 1, 4, 1, 5, 9, 2, 6), accumulate = TRUE)
@@ -115,7 +113,7 @@ accumulate(1:5, `+`)
 
 Same results. The differences from base `Reduce()` are syntactic: `.x` and `.f` instead of positional arguments, `.init` instead of `init`, no `right` argument (use `reduce(.x, .f, .dir = "backward")` instead). The purrr versions also accept lambda-style formulas, though anonymous functions with `\()` are clearer.
 
-`purrr::reduce2()` folds over two lists in parallel, passing an extra argument from the second list at each step:
+Sometimes the operation at each step needs more than just the accumulator and the next element. `purrr::reduce2()` folds over two lists in parallel, passing an extra argument from the second list at each step:
 
 ```{r}
 reduce2(

@@ -26,7 +26,7 @@ Why it breaks:
 - Random seeds not set.
 - Outputs separated from the code that produced them.
 
-The fix is structural, not behavioral. Do not rely on discipline ("I will remember to run script 3 first"). Build a system that makes the wrong thing hard. Each tool in this chapter eliminates a specific failure mode: `here` eliminates path problems, `renv` eliminates version problems, Quarto eliminates the code/output sync problem, `targets` eliminates the run-order problem, Git eliminates the "which version was it?" problem.
+The fix is structural, not behavioral. Do not rely on discipline ("I will remember to run script 3 first"). Build a system that makes the wrong thing hard. Each tool in this chapter eliminates a specific failure mode: `here` eliminates path problems, `renv` eliminates version problems, Quarto eliminates the code/output sync problem, `targets` eliminates the run-order problem, Git eliminates the "which version was it?" problem. The first one costs nothing to adopt.
 
 ::: callout-tip
 ## Opinion
@@ -64,11 +64,11 @@ my_analysis/
 └── renv.lock           # dependency lockfile
 ```
 
-Raw data is sacred: never modify it. Read it, transform it in code, write outputs elsewhere. If someone asks "where did this number come from?", you can trace it from the output file back through the code to the raw data.
+Raw data is sacred: never modify it. Read it, transform it in code, write outputs elsewhere. If someone asks "where did this number come from?", you can trace it from the output file back through the code to the raw data. That traceability breaks the moment code and data live in different places.
 
 A common mistake is placing data-cleaning code in a different project from the analysis. Then reproducing the analysis requires finding and running a separate project first. Keep everything in one project, or use `targets` (@sec-targets) to formalize the dependency.
 
-Another common mistake: using `rm(list = ls())` at the top of a script to "clean up." This clears your workspace but does not restart R. Hidden state (loaded packages, modified options, changed working directories) persists. Instead, restart R (Ctrl+Shift+F10 in RStudio) for a true clean slate.
+Another common mistake: using `rm(list = ls())` at the top of a script to "clean up." This clears your workspace but does not restart R. Hidden state (loaded packages, modified options, changed working directories) persists. Instead, restart R (Ctrl+Shift+F10 in RStudio) for a true clean slate. Clean paths solve one reproducibility problem; package versions are the next one.
 
 ::: callout-tip
 ## Opinion
@@ -103,9 +103,9 @@ renv::restore()    # install exactly the versions in the lockfile
 
 The workflow: `init()` once, `snapshot()` after installing or updating packages, commit `renv.lock` to Git. That is all.
 
-renv does not version R itself. If the R version matters, document it. Docker solves this completely (see @sec-reproducibility-stack), but is beyond this book.
+renv does not version R itself. If the R version matters, document it. Docker solves this completely (see @sec-reproducibility-stack), but is beyond this book. What renv does handle -- package versions -- raises an immediate practical question.
 
-A common question: should you commit `renv.lock` to Git? Yes, always. It is small (a few KB of JSON), and it is the entire point of renv. Without the lockfile in version control, a collaborator cannot restore your environment. The `renv/` directory itself (which contains the actual installed packages) is typically git-ignored.
+Should you commit `renv.lock` to Git? Yes, always. It is small (a few KB of JSON), and it is the entire point of renv. Without the lockfile in version control, a collaborator cannot restore your environment. The `renv/` directory itself (which contains the actual installed packages) is typically git-ignored.
 
 ::: callout-tip
 ## Opinion
@@ -147,7 +147,7 @@ There is no separate script that makes the figures and a Word document that desc
 
 Quarto is the successor to R Markdown. The core idea, literate programming, dates back to Donald Knuth (1984): write programs as documents where the prose explains the code, not the other way around. The lineage runs from WEB (Pascal/TeX) through Sweave (2002), knitr (2012), R Markdown, to Quarto (2022). Better tooling, multi-language support. If you know R Markdown, you know Quarto. The main differences: Quarto uses `#|` for chunk options (instead of the chunk header), supports Python, Julia, and Observable in addition to R, and has better defaults for academic output (cross-references, citations, callouts).
 
-Output formats: HTML, PDF, Word, presentations, websites, books. This book is written in Quarto.
+Output formats: HTML, PDF, Word, presentations, websites, books. This book is written in Quarto. The format is flexible, but the real control comes from chunk options.
 
 Chunk options control behavior. Place them at the top of each chunk with the `#|` prefix:
 
@@ -177,7 +177,7 @@ bibliography: references.bib
 As shown by @wickham2019, tidy data principles simplify analysis.
 ```
 
-The citation is rendered in the output and a reference list is appended automatically. No more manually typed reference sections that drift from the actual citations.
+The citation is rendered in the output and a reference list is appended automatically. No more manually typed reference sections that drift from the actual citations. Quarto keeps code and prose in sync within a single document; for multi-step analyses, a different tool keeps the steps themselves in sync.
 
 ### Exercises {.unnumbered}
 
@@ -358,7 +358,7 @@ sessioninfo::session_info()
 
 This captures R version, OS, package versions. If results differ on another machine, the session info is the first place to look.
 
-These are small things, but they make the difference between "I can reproduce this" and "I cannot."
+These are small things, but they close gaps that the larger tools leave open.
 
 ### Exercises {.unnumbered}
 

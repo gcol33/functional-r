@@ -54,7 +54,7 @@ paste0("Gentoo", "penguin")
 sprintf("The %s weighs %d grams", "Gentoo", 5200)
 ```
 
-`nchar()` counts characters. `paste()` joins with a space, `paste0()` joins without. `sprintf()` does formatted substitution, borrowing syntax from C. These work, but they are inconsistent in argument order and `NA` handling. That inconsistency is why stringr exists.
+`nchar()` counts characters. `paste()` joins with a space, `paste0()` joins without. `sprintf()` does formatted substitution, borrowing syntax from C. These work, but they are inconsistent in argument order and `NA` handling — and inconsistency compounds once you start chaining operations.
 
 
 ### Exercises {.unnumbered}
@@ -94,7 +94,7 @@ str_trim("  messy data  ")
 str_squish("  too   many   spaces  ")
 ```
 
-Pattern matching is where stringr shines. `str_detect()` is the readable version of `grepl()`:
+Pattern matching is where stringr earns its place. `str_detect()` is the readable version of `grepl()`:
 
 ```{r}
 species <- penguins$species
@@ -115,9 +115,9 @@ Splitting:
 str_split("one-two-three", "-")
 ```
 
-`str_split()` returns a list because each input string could split into a different number of pieces.
+`str_split()` returns a list because each input string could split into a different number of pieces — the same reason `strsplit()` does in base R, and a preview of why lists matter for irregular output.
 
-Applied to the penguins data:
+On the penguins data:
 
 ```{r}
 str_to_upper(levels(penguins$island))
@@ -209,7 +209,7 @@ Why does this exist? Statistical models need to encode categorical variables. Fa
 
 Historical baggage: `data.frame()` used to convert all strings to factors by default. This caused years of confusion and the ubiquitous `stringsAsFactors = FALSE` incantation. R 4.0 (released 2020) changed the default to `FALSE`, ending decades of pain. If you see old code with `stringsAsFactors`, now you know why.
 
-When you need factors:
+So when do factors actually help?
 
 - Controlling the order of levels in plots (bars, legends, facets)
 - Statistical modeling (`lm()`, `glm()`, and friends)
@@ -234,7 +234,7 @@ sizes <- factor(c("small", "medium", "large"), levels = c("small", "medium", "la
 sizes
 ```
 
-The `levels` argument controls the allowed values and their order. Without it, R defaults to alphabetical, which is why "high" comes before "low" and plots look wrong.
+The `levels` argument controls the allowed values and their order. Without it, R defaults to alphabetical, which is why "high" comes before "low" and plots look wrong. Manually specifying levels for every factor gets tedious fast.
 
 forcats provides cleaner tools. Every function starts with `fct_`:
 
@@ -305,7 +305,7 @@ The number from `unclass()` is days since the Unix epoch. Dates in R count from 
 as.Date("2026-03-07") - as.Date("2026-01-01")
 ```
 
-R returns a `difftime` object. Dates understand addition and subtraction.
+R returns a `difftime` object. Subtraction works, and so does addition — but only with scalars:
 
 ```{r}
 as.Date("2026-01-01") + 30
@@ -318,7 +318,7 @@ as.Date("2026-03-07")
 as.Date("07/03/2026", format = "%d/%m/%Y")
 ```
 
-The `format` argument uses `%Y` (4-digit year), `%m` (month), `%d` (day), and similar codes. These are hard to remember, which is why lubridate exists.
+The `format` argument uses `%Y` (4-digit year), `%m` (month), `%d` (day), and similar codes. These are hard to remember — and easy to get wrong when your data mixes formats.
 
 
 

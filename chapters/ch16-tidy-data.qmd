@@ -43,7 +43,7 @@ pop_tidy <- data.frame(
 pop_tidy
 ```
 
-Now you can filter by year, group by country, plot year on the x-axis. Every dplyr verb and every ggplot2 aesthetic mapping works because each variable has its own column. The tools compose because the data has a consistent shape.
+Now you can filter by year, group by country, plot year on the x-axis. Every dplyr verb and every ggplot2 aesthetic mapping works because each variable has its own column. The tools compose because the data has a consistent shape — but getting there by hand is tedious.
 
 
 ### Exercises {.unnumbered}
@@ -66,7 +66,7 @@ data.frame(
 
 ## `pivot_longer()`: columns to rows {#sec-pivot-longer}
 
-Reshaping `pop_wide` into `pop_tidy` by hand was tedious. `pivot_longer()` from the tidyr package does it in one call:
+`pivot_longer()` from the tidyr package does the reshaping in one call:
 
 ```{r}
 library(tidyr)
@@ -130,7 +130,7 @@ quarterly <- data.frame(
 
 ## `pivot_wider()`: rows to columns {#sec-pivot-wider}
 
-`pivot_wider()` is the inverse: values in a column become column names. It's less common than `pivot_longer()`, but you need it when data is too long.
+`pivot_wider()` is the inverse: values in a column become column names. You need it when data is *too* long — when distinct variables are stacked into a single column.
 
 ```{r}
 measurements <- data.frame(
@@ -194,12 +194,14 @@ Wide tables are easier for humans to read. A table with countries as rows and ye
 
 Data entry is often easier in wide format too. If you're recording daily temperatures for three cities, a spreadsheet with cities as rows and dates as columns is natural. Nobody fills in a three-column long-form table by hand.
 
-The workflow is: receive data however it comes, reshape to tidy for analysis, reshape to wide for presentation if needed. This chapter teaches the transformation tools, not a religion. Tidy data is a means to easier analysis, not a goal in itself.
+The workflow is: receive data however it comes, reshape to tidy for analysis, reshape to wide for presentation if needed. Tidy data is a means to easier analysis, not a goal in itself.
+
+Even tidy data hits a wall when the information you need spans multiple tables.
 
 
 ## Joins: combining tables {#sec-joins}
 
-Real analysis rarely lives in a single table. You have customers and orders, species and observations, sites and measurements. Joins match rows from two tables by a shared key.
+You have customers and orders, species and observations, sites and measurements. Joins match rows from two tables by a shared key.
 
 ```{r}
 bands <- data.frame(
@@ -281,7 +283,7 @@ Start with `left_join()`. Use `anti_join()` to debug. The others are situational
 
 ## Other tidyr tools {#sec-other-tidyr}
 
-A few more tidyr functions solve common data-cleaning problems.
+Pivoting and joining handle the structural problems. A few more tidyr functions handle the messy details.
 
 ### Separating and uniting columns {.unnumbered}
 
@@ -337,7 +339,7 @@ report |> fill(group)
 
 ### Nesting {.unnumbered}
 
-`nest()` packs subsets of a data frame into list-columns, and `unnest()` unpacks them. This pattern shines when fitting models to groups, but it requires familiarity with list-columns and iteration. We return to it in @sec-purrr-map when you have those tools.
+`nest()` packs subsets of a data frame into list-columns, and `unnest()` unpacks them. This pattern shines when fitting models to groups, but it requires familiarity with list-columns and iteration — both covered in @sec-purrr-map.
 
 
 ## Summary {#sec-tidy-data-summary}

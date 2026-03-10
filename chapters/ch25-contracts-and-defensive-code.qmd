@@ -11,7 +11,7 @@ In 1986, Bertrand Meyer was designing a programming language called Eiffel. He w
 
 R has no built-in contract system, but the principle translates directly. A `stop()` at the top of a function that checks its inputs is a precondition. A `stopifnot()` before the return value is a postcondition. The validator in a constructor/validator/helper pattern (@sec-s3-classes-properly) is a class invariant. You write these by hand in R where Eiffel provides them as syntax, but the discipline is the same: state your assumptions explicitly, and halt the moment one is violated.
 
-This chapter teaches you to write functions that fail loudly, fail early, and fail helpfully, so that bugs surface where they originate, not fifty lines downstream.
+The goal is functions that fail loudly, fail early, and fail helpfully, so that bugs surface where they originate, not fifty lines downstream.
 
 
 ## The case for validation {#sec-case-for-validation}
@@ -47,7 +47,7 @@ The principle: check inputs at the boundary, where data enters your function, no
 
 A 2003 NASA study found that 40% of aerospace software failures came from *missing* code: situations the programmers didn't anticipate. The Ariane 5 rocket (1996) self-destructed 37 seconds after launch because a 64-bit float was silently converted to a 16-bit integer, overflowing without a check; a single `stop()` equivalent would have saved a $370 million rocket. Silent failures are more dangerous than crashes. When your function returns `NA` instead of erroring on bad input, you've created a silent failure. `stop()` with a clear message is the safe choice: it forces the caller to deal with the problem immediately, before the bad value propagates through fifty lines of downstream code.
 
-This chapter is about functions you write for yourself and for others. Not about validating user input in a Shiny app (different topic, different tools).
+(This is about functions you write for yourself and for others, not about validating user input in a Shiny app.)
 
 
 ## `stop()`, `warning()`, and `message()` {#sec-stop-warning-message}
@@ -166,7 +166,7 @@ Named `stopifnot()` gives you the conciseness of assertions with messages you co
 
 ## Common validation patterns {#sec-validation-patterns}
 
-Most validation falls into a handful of recurring patterns. Here are the ones you will use most.
+A function that expects a numeric scalar but receives a character vector of length three will fail somewhere, the question is where. These patterns catch it at the door.
 
 - **Type checks**: `is.numeric(x)`, `is.character(x)`, `is.logical(x)`, `is.data.frame(x)`, `is.list(x)`.
 - **Length checks**: `length(x) == 1` for scalars, `length(x) > 0` for non-empty inputs.
@@ -303,9 +303,9 @@ safe_log(10)
 safe_log("a")
 ```
 
-Erlang (1986, Ericsson) takes this philosophy to its extreme: instead of preventing crashes with validation, Erlang designs *supervisors* that detect and restart failed processes. Ericsson's telecom switches achieved 99.9999999% uptime using this "let it crash" philosophy. R's `tryCatch()` is a mild version of the same idea. Both philosophies agree on the essential point: silent failures are the real enemy.
+Erlang (1986, Ericsson) takes this philosophy to its extreme: instead of preventing crashes with validation, Erlang designs *supervisors* that detect and restart failed processes. Ericsson's telecom switches achieved 99.9999999% uptime using this "let it crash" philosophy. R's `tryCatch()` is a mild version of the same idea. Both philosophies agree on the essential point: silent failures are the real enemy. But what does a disciplined version of "catch and recover" look like as a data structure?
 
-This pattern has a name in functional programming: the *Either* type (or *Result* in Rust). A computation either succeeds with a value or fails with an error. `tryCatch` runs the expression; if it succeeds, you get the result; if it throws, you get the error handler's output. This is the same 'value or absence' logic as `NA` propagation (@sec-missing-values), but for errors instead of missing data. `NA` implements Maybe (present or absent); `tryCatch` implements Either (success or failure). Both are ways of threading the possibility of failure through a computation without crashing. Haskell and Rust make these patterns explicit with monadic types; R keeps them implicit in `NA` semantics and `tryCatch` mechanics, but the underlying structure is identical.
+In functional programming, the answer is the *Either* type (or *Result* in Rust). A computation either succeeds with a value or fails with an error. `tryCatch` runs the expression; if it succeeds, you get the result; if it throws, you get the error handler's output. This is the same 'value or absence' logic as `NA` propagation (@sec-missing-values), but for errors instead of missing data. `NA` implements Maybe (present or absent); `tryCatch` implements Either (success or failure). Both are ways of threading the possibility of failure through a computation without crashing. Haskell and Rust make these patterns explicit with monadic types; R keeps them implicit in `NA` semantics and `tryCatch` mechanics, but the underlying structure is identical.
 
 ::: callout-tip
 ## Opinion

@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-You have been calling functions since Chapter 3. `sqrt(9)`, `c(1, 2, 3)`, `sum(x > 70)`: each one takes arguments and returns a value. Now you make your own.
+`sqrt(9)`, `c(1, 2, 3)`, `sum(x > 70)`: every piece of R code so far has relied on functions that someone else wrote. The obvious next question is what it takes to write one yourself.
 
 
 ## Anatomy of a function {#sec-anatomy-function}
@@ -193,7 +193,7 @@ The general rule: if you want your function to show a result, make sure the last
 
 ## Functions are just values {#sec-functions-are-values}
 
-In @sec-calling-functions, you saw that typing `sqrt` without parentheses prints the function itself. That's because a function is a value, the same kind of thing as a number or a string. You can assign it, put it in a list, or check its type:
+Type `sqrt` without parentheses and R prints the function itself. A function is a value, the same kind of thing as a number or a string. You can assign it, put it in a list, or check its type:
 
 ```{r}
 f <- double
@@ -280,7 +280,7 @@ n
 
 `increment` created its own local `n`, set it to 1, and returned it. The `n` in the workspace is still 0. The function read the outer `n` but didn't modify it; it created a new local binding with the same name. This is R's copy-on-modify philosophy: values don't change; you create new values.
 
-This section is just a first look. Scope, environments, and closures get a full treatment in @sec-closures-and-scope. For now, the practical rule is that what happens inside a function stays inside the function.
+The practical rule: what happens inside a function stays inside the function. The full machinery behind this (environments, closures, and the scope chain) is in @sec-closures-and-scope.
 
 
 ### Exercises {.unnumbered}
@@ -452,7 +452,7 @@ Each step is a single function call that replaces itself with another function c
 
 This is a general pattern: any function with multiple recursive calls can be rewritten as a single recursive call with extra arguments that carry the intermediate results. The trick is to figure out what state you need to pass forward. For Fibonacci, it's the last two numbers. For a tree traversal, it might be an accumulator list.
 
-R has a limit on how deep recursion can go (around 1000 calls by default). For most day-to-day R work, vectorized operations and functions like `map()` (@sec-iteration-without-loops) are better tools. But recursion is worth understanding because it connects programming to the deepest ideas in logic and mathematics, as the next section shows.
+R has a limit on how deep recursion can go (around 1000 calls by default). For most day-to-day R work, vectorized operations and functions like `map()` (@sec-iteration-without-loops) are better tools. But there is something strange about `factorial`: its base case and inductive step look exactly like a proof by mathematical induction. That resemblance is not a coincidence.
 
 
 ### Exercises {.unnumbered}

@@ -43,7 +43,7 @@ df <- arrange(df, body_mass_g)
 
 Compact, but fragile. You cannot re-run a single line without re-running everything above it, because each line depends on the previous value of `df`.
 
-All three approaches work, but none compose well. Pipes solve this problem.
+All three approaches work, but none compose well. What would it look like if each step simply fed into the next?
 
 
 ## The pipe: `|>` {#sec-pipe}
@@ -93,7 +93,7 @@ penguins |>
 
 "Take penguins, remove NAs, group by species, compute mean mass, sort descending." The code reads like the sentence.
 
-Build incrementally. Run the first line, check the output. Add the next step, check again. Pipes invite exploration: you grow a pipeline one verb at a time, inspecting the intermediate data frame at each stage. When the result looks right, the pipeline is done.
+Build incrementally. Run the first line, check the output. Add the next step, check again. You grow a pipeline one verb at a time, inspecting the intermediate data frame at each stage. When the result looks right, the pipeline is done.
 
 ```{r}
 penguins |>
@@ -120,13 +120,13 @@ Each verb does one thing. `filter` removes rows. `group_by` sets the grouping. `
 
 ## Function composition {#sec-function-composition}
 
-In @sec-church, you saw that lambda calculus is built on applying functions to arguments. Composition is the next step: apply one function, then apply another to the result.
+Lambda calculus (@sec-church) is built on applying functions to arguments. Composition is the next step: apply one function, then apply another to the result.
 
 `x |> f() |> g()` is `g(f(x))`. In mathematical notation, that is (g . f)(x): the composition of g and f, applied to x. The pipe rewrites composition from inside-out to left-to-right. Nothing else changes.
 
 This is why dplyr verbs all follow the same contract: take a data frame as the first argument, return a data frame. Functions that follow this contract compose via the pipe. Functions that don't (first argument is a formula, a filename, a model object) require workarounds. The convention exists so that verbs compose via the pipe.
 
-In @sec-functions-are-values-chapter, you saw that functions are values you can pass around. Here, you see the other side: functions are things you compose. Passing and composing are the two fundamental operations on functions, and together they account for most of what makes R code concise.
+Functions are values you can pass around (@sec-functions-are-values-chapter). They are also things you compose. Passing and composing are the two fundamental operations on functions, and together they account for most of what makes R code concise.
 
 ```{r}
 clean_and_summarise <- function(df) {
@@ -139,7 +139,7 @@ clean_and_summarise <- function(df) {
 penguins |> clean_and_summarise()
 ```
 
-Wrapping a pipeline in a function gives the composition a name. `clean_and_summarise` is a single function built from four composed steps. You can pass it around, store it in a list, or use it inside another pipeline, exactly as @sec-functions-are-values-chapter described. Notice that the pipeline describes the transformation without naming intermediates:
+Wrapping a pipeline in a function gives the composition a name. `clean_and_summarise` is a single function built from four composed steps. You can pass it around, store it in a list, or use it inside another pipeline. The pipeline describes the transformation without naming intermediates:
 
 ```r
 penguins |> filter(species == "Adelie") |> nrow()
@@ -150,7 +150,7 @@ In Haskell, this style is called "point-free" or "tacit" programming, tracing ba
 
 ## The placeholder `_` {#sec-placeholder}
 
-The pipe inserts the left side as the first argument. Sometimes you need it somewhere else.
+The pipe inserts the left side as the first argument. What happens when the data belongs somewhere else?
 
 ```{r}
 penguins |>
@@ -208,7 +208,7 @@ Use `|>`. It is in base R, it is faster, and it is the future of the language. T
 
 ## When not to pipe {#sec-when-not-to-pipe}
 
-Pipes are for linear sequences: A then B then C. They are not for everything.
+Pipes are for linear sequences: A then B then C. Not every problem is linear.
 
 **Multiple inputs.** If two data frames need to interact, pipe one and pass the other as an argument. A join is fine in a pipeline; a complex merge of three data frames with different preparation steps is not.
 

@@ -28,7 +28,7 @@ sapply(c(-3, 0, 4, -1, 7), abs)
 sapply(c("hello", "world"), nchar)
 ```
 
-Any function that takes a single argument works here. `abs` computes absolute values. `nchar` counts characters. You can pass any of them to `sapply` the same way.
+Any function that takes a single argument works here. `abs` computes absolute values. `nchar` counts characters. You can pass any of them to `sapply` the same way --- but what exactly is `sapply` doing with the function you hand it?
 
 In lambda calculus notation (@sec-church), passing a function to another function is just application:
 
@@ -37,7 +37,7 @@ sapply = λxs. λf. [f(xs₁), f(xs₂), ..., f(xsₙ)]
 sapply([1,2,3,4,5])(sqrt) = [sqrt(1), sqrt(2), sqrt(3), sqrt(4), sqrt(5)]
 ```
 
-The function `sapply` takes a list and a function, and produces a new list by applying the function to each element. This is the same term replacement from @sec-atomic-vectors: replace each `f(xsᵢ)` with its value, and the expression reduces to a vector of results. A function that takes another function as an argument is called a *higher-order function*. `sapply` is one. You will meet many more.
+The function `sapply` takes a list and a function, and produces a new list by applying the function to each element. This is the same term replacement from @sec-atomic-vectors: replace each `f(xsᵢ)` with its value, and the expression reduces to a vector of results. A function that takes another function as an argument is called a *higher-order function*. `sapply` is one; most of R's power comes from others.
 
 The structure of `sapply` is the functor pattern from @sec-vectorized-ops: take a container (a vector or list), apply a function to each element, return a container of the same shape with transformed contents. In @sec-vectorized-ops, R did this implicitly with vectorization (`sqrt(c(1,4,9))`). Here, `sapply` does it explicitly: you choose the function, and `sapply` handles the mapping. The abstraction is the same; only the interface changes.
 
@@ -124,7 +124,7 @@ summarizers$character(c("a", "b", "a", "c"))
 summarizers$logical(c(TRUE, FALSE, TRUE, TRUE))
 ```
 
-The list acts as a dispatch table: given a type name, it returns the appropriate function. This pattern appears in real R code more often than you might expect. Package internals, Shiny applications, and testing frameworks all use lists of functions to select behavior at runtime.
+The list acts as a dispatch table: given a type name, it returns the appropriate function. Package internals, Shiny applications, and testing frameworks all use lists of functions to select behavior at runtime. The dispatch table stores functions that already exist --- but you can also create new functions on the fly.
 
 
 ### Exercises {.unnumbered}
@@ -160,7 +160,7 @@ add10(3)
 
 How does the returned function "remember" `n`? When `make_adder(5)` runs, it creates a local environment where `n = 5`. The returned function `function(x) x + n` was defined inside that environment. When you later call `add5(3)`, R looks for `n` in the function's own environment, doesn't find it, and looks in the environment where the function was defined, the one created by `make_adder(5)`. There it finds `n = 5`. This is the same lexical scoping from @sec-scope-first-look, taken one step further.
 
-A function that carries its creation environment with it is called a *closure*. Every function in R is technically a closure, but the term is most useful when a function returned by another function captures variables from the enclosing scope. Closures are powerful enough to deserve their own chapter (@sec-closures-and-scope); for now, the important thing is that `make_adder` works because each returned function carries its creation environment with it.
+A function that carries its creation environment with it is called a *closure*. Every function in R is technically a closure, but the term is most useful when a function returned by another function captures variables from the enclosing scope. Closures are powerful enough to deserve their own chapter (@sec-closures-and-scope); the mechanism that makes `make_adder` work has consequences far beyond adding numbers.
 
 In lambda calculus notation:
 
@@ -185,7 +185,7 @@ double(7)
 triple(7)
 ```
 
-`make_multiplier` is another function factory. It produces `double` and `triple` from the same template, with different values baked in. You will see function factories used throughout R for creating specialized functions from general patterns: custom plot themes, parameterized statistical tests, configured data transformations. Chapter @sec-function-factories covers them in depth.
+`make_multiplier` is another function factory. It produces `double` and `triple` from the same template, with different values baked in. Function factories appear throughout R: custom plot themes, parameterized statistical tests, configured data transformations. Chapter @sec-function-factories covers them in depth.
 
 
 ### Exercises {.unnumbered}

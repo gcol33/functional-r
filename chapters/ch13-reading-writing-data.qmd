@@ -33,7 +33,7 @@ here::here("data", "penguins.csv")
 
 `here::here()` finds the project root (by looking for `.Rproj` files, `.git` directories, or other markers) and constructs the path from there. It works on any machine, any OS, any subdirectory. Every file path in this chapter uses `here::here()`.
 
-Forward slashes work on Windows in R: `"data/penguins.csv"` is valid everywhere. Backslashes need escaping (`"data\\penguins.csv"`), which is easy to forget. Just use forward slashes.
+Paths have one more trap: slash direction. Forward slashes work on Windows in R: `"data/penguins.csv"` is valid everywhere. Backslashes need escaping (`"data\\penguins.csv"`), which is easy to forget. Just use forward slashes.
 
 Before reading a file, check that it exists. A clear error you write yourself is better than a cryptic one from `read.csv()`:
 
@@ -66,9 +66,9 @@ Base R reads CSVs with `read.csv()`:
 df <- read.csv(here::here("data", "penguins.csv"))
 ```
 
-It works, but the defaults are quirky. In older versions of R, `read.csv()` converted strings to factors automatically (`stringsAsFactors = TRUE`), the same pain point from @sec-data-frames. Since R 4.0, the default is `FALSE`, but you may still encounter old code or old advice that assumes otherwise.
+It works, but the defaults are quirky. In older versions of R, `read.csv()` converted strings to factors automatically (`stringsAsFactors = TRUE`), the same pain point from @sec-data-frames. Since R 4.0, the default is `FALSE`, but you may still encounter old code or old advice that assumes otherwise. The quirks go deeper than `stringsAsFactors`.
 
-The tidyverse alternative is `readr::read_csv()`:
+`readr::read_csv()` addresses most of them:
 
 ```{r}
 #| eval: false
@@ -139,7 +139,7 @@ write.csv(df, here::here("output", "clean_data.csv"), row.names = FALSE)
 
 The `row.names = FALSE` argument is easy to forget, which is one more reason to prefer `write_csv()`. Row names in CSV files connect back to the same problem from @sec-data-frames: they cause more confusion than they solve.
 
-CSV is the right format for small to medium data that needs to be human-readable or shared across tools. When CSV falls short (large files, complex types, preserving R-specific structure), other formats are better choices (@sec-binary-columnar).
+CSV is the right format for small to medium data that needs to be human-readable or shared across tools. But "small to medium" has a ceiling, and CSV hits it faster than you might expect.
 
 
 ### Exercises {.unnumbered}
@@ -189,7 +189,7 @@ path <- here::here("data", "survey.xlsx")
 all_sheets <- purrr::map(excel_sheets(path), \(s) read_excel(path, sheet = s))
 ```
 
-This uses `purrr::map()` to apply `read_excel()` to each sheet name, returning a list. You will see `map()` in depth in @sec-iteration-without-loops.
+This uses `purrr::map()` to apply `read_excel()` to each sheet name, returning a list. The full treatment of `map()` comes in @sec-iteration-without-loops.
 
 For writing Excel files, `writexl::write_xlsx()` is lightweight and sufficient for most cases:
 
@@ -256,7 +256,7 @@ tbl(con, "measurements") |>
 
 dplyr generates the SQL for you. The full treatment of database-backed dplyr is in @sec-databases.
 
-This section covers the basics. The rest comes from writing queries against your own data.
+The basics are enough to get started. The rest comes from writing queries against your own data.
 
 
 ### Exercises {.unnumbered}
@@ -267,7 +267,7 @@ This section covers the basics. The rest comes from writing queries against your
 
 ## Binary and columnar formats {#sec-binary-columnar}
 
-CSV is human-readable but slow and wasteful for large data. The reason is structural: CSV is row-oriented, storing each record together. This is fast for inserting one row but slow for scanning one column across millions of rows. Columnar formats (Parquet, DuckDB, Arrow) store each column together, making analytical queries that touch few columns but many rows dramatically faster. This row-vs-column distinction shapes every file format decision in data engineering. Several binary formats trade readability for speed and compression.
+CSV is human-readable but slow and wasteful for large data. The bottleneck is structural: CSV is row-oriented, storing each record together. This is fast for inserting one row but slow for scanning one column across millions of rows. Columnar formats (Parquet, DuckDB, Arrow) store each column together, making analytical queries that touch few columns but many rows dramatically faster. This row-vs-column distinction shapes every file format decision in data engineering. Several binary formats trade readability for speed and compression.
 
 `saveRDS()` and `readRDS()` serialize any R object to disk:
 
@@ -277,9 +277,9 @@ saveRDS(df, here::here("cache", "processed.rds"))
 df <- readRDS(here::here("cache", "processed.rds"))
 ```
 
-RDS is fast, compact, and preserves R types exactly (factors, dates, attributes, everything). The catch: it's R-only. Python can't read it, Excel can't read it. Use RDS for caching intermediate results in R-only workflows.
+RDS is fast, compact, and preserves R types exactly (factors, dates, attributes, everything). The catch: it's R-only. Python can't read it, Excel can't read it. Use RDS for caching intermediate results in R-only workflows, but the moment a collaborator uses Python, you need something else.
 
-For cross-language work, Parquet is the modern standard:
+Parquet is that something else:
 
 ```{r}
 #| eval: false
@@ -365,7 +365,7 @@ Encoding(x)
 x_utf8 <- iconv(x, from = "latin1", to = "UTF-8")
 ```
 
-Encoding issues are covered in more depth in @sec-character-vectors, but the practical advice fits in two sentences: use `readr` (it assumes UTF-8), and when that doesn't work, specify the encoding explicitly.
+The practical advice fits in two sentences: use `readr` (it assumes UTF-8), and when that doesn't work, specify the encoding explicitly.
 
 
 ### Exercises {.unnumbered}

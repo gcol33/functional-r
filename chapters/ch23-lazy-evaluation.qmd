@@ -11,7 +11,7 @@ R doesn't evaluate function arguments when you pass them. It waits. Arguments ar
 
 The idea has a history. In the early days of programming languages, there were two camps. Fortran and C evaluated arguments before passing them (call-by-value): compute the result, hand it over. Algol 60 (1960) tried call-by-name: pass the expression itself, re-evaluate it every time the function uses it. Call-by-name turned out to be expensive and confusing. In 1976, Dan Friedman and David Wise, and independently Peter Henderson and James Morris, proposed a compromise: pass the expression unevaluated, but cache the result after the first evaluation. Evaluate at most once, not eagerly, not repeatedly. They called it *lazy evaluation*. Haskell (1990) made laziness the default for everything. R took a narrower path: function arguments are lazy, everything else is eager. This middle ground, inherited through Scheme and S, gives R the power of expression capture without the performance puzzles of pervasive laziness.
 
-This chapter traces the path from promises to `{{ }}`. You will understand how R's laziness powers non-standard evaluation, why data masking feels like magic, and how to write functions that pass column names through to dplyr. Full metaprogramming is in @sec-metaprogramming; here, the goal is understanding the mechanism well enough to use it.
+The mechanism behind all of this is promises. Once you see how they work, non-standard evaluation, data masking, and `{{ }}` follow as consequences. Full metaprogramming is in @sec-metaprogramming; here, the goal is understanding the mechanism well enough to use it.
 
 
 ## Promises {#sec-promises}
@@ -83,8 +83,6 @@ The default `n = length(x)` is an expression, not a value. It's evaluated when `
 
 ## Consequences of laziness {#sec-consequences-laziness}
 
-Lazy evaluation has several consequences that surprise people coming from other languages.
-
 In R, only function arguments are lazy; everything else is eager. Haskell took the opposite approach: *everything* is lazy. `let xs = [1..]` creates an infinite list without computing all elements, enabling infinite streams and on-demand computation, but making reasoning about performance harder. R chose a middle ground: arguments are lazy (enabling NSE and flexible defaults), the rest is eager.
 
 **Side effects in arguments may never happen.** If a function doesn't use an argument, the argument's expression is never evaluated. That means side effects (printing, writing files, raising errors) inside the expression never occur:
@@ -151,7 +149,7 @@ funs[[2]]()
 
 Standard evaluation is simple: R evaluates an expression, gets a value, and passes the value to a function. When you write `mean(c(1, 2, 3))`, R evaluates `c(1, 2, 3)` to produce a numeric vector, then passes that vector to `mean`. The function never sees the expression `c(1, 2, 3)`. It only sees `[1] 1 2 3`.
 
-Non-standard evaluation (NSE) is different. The function captures the *expression* before evaluating it, then decides what to do with it. Consider `subset()`:
+But `subset(df, x > 3)` cannot work that way. If R evaluated `x > 3` in your environment, it would fail: there is no `x`. Instead, `subset` captures the *expression* before evaluating it, then decides where to evaluate it. Consider what happens:
 
 ```{r}
 df <- data.frame(x = 1:5, y = c(10, 20, 30, 40, 50))
@@ -233,7 +231,7 @@ my_filter(df, x > 3)
 
 `substitute(expr)` captures the caller's expression (`x > 3`) without evaluating it, exactly as a promise holds an unevaluated expression (@sec-promises). `list2env(.data, parent = parent.frame())` creates a new environment whose bindings are the columns of the data frame, with the caller's environment as the parent (so variables not in the data frame are still found). `eval(e, envir = env)` forces the expression in that environment, where `x` resolves to the column, not to anything in the global environment. The entire mechanism rests on the laziness you learned at the start of this chapter: arguments arrive as unevaluated promises, and NSE exploits that window between arrival and evaluation to inspect and redirect them. This is, in essence, what `dplyr::filter()` does, with more machinery for tidy evaluation, error handling, and grouped data frames layered on top.
 
-Data masking is optimized for the common case (interactive analysis) at the expense of the less common case (programming). The tidyverse's answer to this trade-off is tidy evaluation.
+Data masking is optimized for the common case (interactive analysis) at the expense of the less common case (programming). But the moment you wrap a data-masked function inside another function, the column name is trapped in your wrapper's scope, and the caller has no way to pass it through. That's the problem tidy evaluation exists to solve.
 
 
 ### Exercises {.unnumbered}

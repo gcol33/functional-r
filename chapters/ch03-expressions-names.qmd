@@ -13,7 +13,7 @@ Open R. Type `1 + 1` and press Enter.
 
 You just wrote a complete R program. It has no variables, no functions, no setup. It is an expression, and R evaluated it and printed the result. Every piece of R code you will ever write works this way: you give R an expression, R gives you back its value.
 
-This chapter teaches you three things: how R's interactive loop works, what expressions are, and how to give names to values so you can use them later.
+Three things make this work: R's interactive loop, expressions themselves, and the mechanism for giving names to values so you can use them later.
 
 
 ## The REPL {#sec-repl}
@@ -173,7 +173,7 @@ This "everything is an expression" rule comes directly from Church's lambda calc
 
 ## Calling functions {#sec-calling-functions}
 
-You have already called a function: `sqrt(9)`. Let's look at what that means.
+You have already called a function: `sqrt(9)`. But what is actually happening when R sees those parentheses?
 
 `sqrt` is a name bound to a function (the same way `x` was a name bound to 3). The parentheses `()` tell R to *call* the function, passing `9` as an argument. R evaluates the call and returns the result:
 
@@ -251,7 +251,7 @@ rm(x)
 
 After `rm(x)`, the name `x` is gone. The value it pointed to gets cleaned up by garbage collection if nothing else refers to it.
 
-The workspace is simple for now, but there is more going on under the surface. Functions have their own local environments, and R looks up names by searching through a chain of environments. @sec-closures-and-scope covers this in detail. For now, it's enough to know that `ls()` shows you what's in your workspace and `rm()` removes things from it.
+The workspace is simple: `ls()` shows what's in it, `rm()` removes things from it. But there is more going on under the surface. Functions have their own local environments, and R looks up names by searching through a chain of environments (@sec-closures-and-scope).
 
 ::: callout-note
 ## Saving your workspace

@@ -26,7 +26,7 @@ length(TRUE)
 
 This is a design choice from S (@sec-s-language). S was built for people who work with columns of data, not individual numbers. A temperature reading is rarely interesting on its own; you care about the whole column: all 365 days, all 50 stations, all 10 years. So S made the column the basic unit of computation, and R inherited that decision. There is no separate type for "one number" versus "many numbers." There are only vectors, and some of them happen to have length 1.
 
-Once you see this, half of R's behavior makes sense. `x * 2` works the same whether `x` has one element or a million, because `x` is always a vector. R doesn't need a special case for scalars; it just operates on vectors.
+`x * 2` works the same whether `x` has one element or a million, because `x` is always a vector. R doesn't need a special case for scalars; it just operates on vectors. The question is how to build them.
 
 
 ## Atomic vectors {#sec-atomic-vectors}

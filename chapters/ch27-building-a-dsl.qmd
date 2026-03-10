@@ -16,7 +16,7 @@ Peter Landin described this idea in 1966: instead of forcing programmers to thin
 
 ## R's existing DSLs {#sec-existing-dsls}
 
-Before building a DSL, study the ones you already use. Each takes a different approach.
+What makes a DSL work is not syntax tricks but a consistent mapping between domain concepts and language constructs. R's existing DSLs each demonstrate a different approach.
 
 **Formulas.** `y ~ x1 + x2` is R's oldest DSL. The `~` operator does not compute anything; it creates a formula object that stores two expressions (the left- and right-hand sides) plus the environment where it was created. Inside the formula, `+` does not mean addition; it means "include this term." `*` means "include main effects and their interaction." `:` means "interaction only." This is code that means something completely different from its usual meaning, interpreted not by R's evaluator but by `model.matrix()`. You explored this in @sec-formulas-as-expressions.
 
@@ -64,14 +64,14 @@ rlang::get_expr(mapping$x)
 
 When ggplot2 eventually builds the plot, it evaluates these quosures against the data frame. `wt` is looked up in `mtcars`, not in the global environment. The separation of capture and evaluation is the mechanism that makes the whole system work.
 
-The `+.gg` method is simpler than you might expect. It takes the existing plot object, attaches the new component (a layer, a scale, a theme), and returns the modified plot. The plot is a list that grows with each `+`. Rendering happens only when you print it.
+The `+.gg` method just takes the existing plot object, attaches the new component (a layer, a scale, a theme), and returns the modified plot. The plot is a list that grows with each `+`. Rendering happens only when you print it.
 
 This two-phase design (build, then execute) appears in SQL query builders, in compiler intermediate representations, and in ggplot2. The user describes *what* they want; the system decides *how* to produce it.
 
 
 ## Building a unit-aware DSL {#sec-unit-dsl}
 
-Now build something. The goal: a small DSL for arithmetic with physical units. `meters(5) + meters(3)` should return 8 meters. `meters(5) + seconds(3)` should error. `meters(100) |> to("km")` should return 0.1 km. The DSL is deliberately small, but it exercises every technique from the last three chapters: S3 classes, operator overloading, constructors, validation, and dispatch.
+Unit arithmetic is error-prone: adding meters to seconds is meaningless, but nothing in base R stops you. A small DSL can enforce dimensional correctness at the language level. `meters(5) + meters(3)` should return 8 meters. `meters(5) + seconds(3)` should error. `meters(100) |> to("km")` should return 0.1 km. The DSL is deliberately small, but it exercises every technique from the last three chapters: S3 classes, operator overloading, constructors, validation, and dispatch.
 
 Start with the class. A unit value is a number paired with a unit string:
 
@@ -148,7 +148,7 @@ You now have a language for unit-safe arithmetic. `meters(5) + meters(3)` reads 
 
 ### Unit conversion {#sec-unit-conversion}
 
-Add a conversion function. A lookup table maps unit pairs to conversion factors:
+Arithmetic alone is not enough; you also need to move between scales. A lookup table maps unit pairs to conversion factors:
 
 ```{r}
 conversions <- list(
@@ -228,7 +228,7 @@ Every operator enforces the invariant: you cannot mix units. The type system (S3
 
 ## Techniques for DSL construction {#sec-dsl-techniques}
 
-The unit DSL used three techniques: S3 classes, operator overloading, and constructor functions. Here is the full toolkit.
+The unit DSL used three techniques: S3 classes, operator overloading, and constructor functions. More ambitious DSLs draw on a larger set.
 
 **Operator overloading.** R lets you define methods for `+`, `-`, `*`, `/`, `[`, `[[`, `<`, `>`, `==`, `|`, `&`, and more. You can also create custom infix operators with the `%op%` syntax:
 
@@ -313,7 +313,7 @@ If you find yourself writing `eval(parse(text = ...))`, stop and ask whether the
 
 ## Design principles {#sec-dsl-design}
 
-A DSL is an interface. The same principles that make functions usable (@sec-contracts-and-defensive-code) apply here, scaled up.
+A DSL is an interface, and the same mistakes that make function APIs hard to use make DSLs worse, because the user has fewer escape hatches.
 
 **Keep the surface small.** A DSL with fifty special operators is not a DSL; it is a burden. The formula interface has about six operators (`~`, `+`, `*`, `:`, `-`, `I()`). ggplot2 has a handful of geom types and a `+`. Resist adding syntax; each new operator is a concept the user must learn.
 
@@ -338,7 +338,7 @@ The chapter's DSL used five ingredients:
 
 A more ambitious DSL would add NSE to capture column names or expressions, use S3 generics to dispatch across backends, and build expression objects that defer evaluation. ggplot2 uses all of these. The progression from "simple class with overloaded operators" to "full expression-builder DSL with lazy evaluation and multiple backends" is a continuum. You do not need the full machinery for every problem. Start with the simplest technique that makes your interface read well, and add complexity only when the domain demands it.
 
-The broader point is this: R gives you the tools to reshape the language around your problem. Formulas reshape arithmetic into model specification. ggplot2 reshapes `+` into layer composition. dplyr reshapes function calls into data queries. When you find yourself writing repetitive, mechanical code, consider whether a small DSL, even just a class with a few overloaded operators, would let you express the same ideas more directly. That is what Landin meant by "a language appropriate to the problem," and it is what R, more than most languages, makes practical.
+R gives you the tools to reshape the language around your problem. Formulas reshape arithmetic into model specification. ggplot2 reshapes `+` into layer composition. dplyr reshapes function calls into data queries. When you find yourself writing repetitive, mechanical code, consider whether a small DSL, even just a class with a few overloaded operators, would let you express the same ideas more directly. That is what Landin meant by "a language appropriate to the problem," and it is what R, more than most languages, makes practical.
 
 
 ### Exercises {.unnumbered}

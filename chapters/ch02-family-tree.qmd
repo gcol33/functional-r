@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-Chapter 1 ended with two models of computation and a claim: R descends from Church's. But how did a mathematical notation from 1936, written decades before computers existed, end up inside a language used by statisticians and data scientists? The answer involves four stops: an AI lab at MIT in the late 1950s, a pair of graduate students at the same lab in the 1970s, a statistics department at Bell Labs, and a classroom in Auckland. Each stop left a mark on R, and most of R's distinctive features trace back to one of them.
+A mathematical notation from 1936, no computers, no hardware, nothing but pencil and paper. A statistical programming language used by millions in 2025. Between those two points: four stops, each of which left a permanent mark on R. An AI lab at MIT in the late 1950s, a pair of graduate students at the same lab in the 1970s, a statistics department at Bell Labs, and a classroom in Auckland.
 
 
 ## Church's lambda calculus becomes a programming language {#sec-lisp}
@@ -33,7 +33,7 @@ my_function(5)
 #> [1] 6
 ```
 
-`my_function` is a value. You could put it in a list, pass it to another function, or replace it. That idea came from Lisp, and R still uses it everywhere.
+`my_function` is a value. You could put it in a list, pass it to another function, or replace it. That idea came from Lisp. But Lisp itself had a problem.
 
 
 ## Scheme strips it down {#sec-scheme}
@@ -67,10 +67,12 @@ add_ten(3)
 
 `add_ten` remembers that `n` was 10 when it was created, even though `make_adder` has already finished running. The function looks for `n` where it was *defined* (inside `make_adder`), not where it's *called*. That's lexical scoping, straight from Scheme. @sec-closures-and-scope builds on this to create functions that remember things.
 
+Lisp and Scheme were built by computer scientists for computer scientists. Neither had anything to say about data.
+
 
 ## S makes it practical {#sec-s-language}
 
-The story so far has been about computer scientists building languages for other computer scientists. S is where the chain takes a turn toward data.
+That changed at Bell Labs.
 
 In 1976 at Bell Labs, the computer center had a Honeywell 645 mainframe running an operating system called GCOS. If you wanted to do statistics, you used a Fortran library called SCS (Statistical Computing Subroutines): you wrote a Fortran program that called library functions, compiled it, submitted it to the batch queue, and waited. Rick Becker, John Chambers, Doug Dunn, and Allan Wilks held a series of meetings in the spring of that year. The question was simple: could they build something interactive, where a statistician types a command and gets an answer back immediately?
 
@@ -96,18 +98,18 @@ temperatures - 32
 
 No loop. You subtracted 32 from five numbers in one expression. In Fortran or C you would write a loop, manage an index, and store the result somewhere. S (and R after it) made this the default way of working with data.
 
-S was eventually commercialized as S-PLUS, sold first by StatSci, then by Insightful Corporation, and finally by TIBCO, which acquired Insightful for $25 million in 2008. By then, S had a free competitor that had already overtaken it.
+S was eventually commercialized as S-PLUS, sold first by StatSci, then by Insightful Corporation, and finally by TIBCO, which acquired Insightful for $25 million in 2008. By then, S had a free competitor that had already overtaken it. It started with a corridor conversation in New Zealand.
 
 
 ## R starts in Auckland {#sec-r-auckland}
 
-In 1991, on the other side of the world, Ross Ihaka and Robert Gentleman were lecturers in the Department of Statistics at the University of Auckland. They wanted to teach their students with S, but S-PLUS was commercial software, expensive for a university department. After a corridor conversation about the clunky programs their students were using for data analysis, they decided to write their own implementation.
+In 1991, Ross Ihaka and Robert Gentleman were lecturers in the Department of Statistics at the University of Auckland. They wanted to teach their students with S, but S-PLUS was commercial software, expensive for a university department. After a corridor conversation about the clunky programs their students were using for data analysis, they decided to write their own implementation.
 
 Ihaka, of Māori descent (Ngāti Kahungunu and Rangitāne), had studied at Berkeley and knew the S language well. Gentleman, originally from Canada, was a specialist in computational statistics. They named their language R, a play on their first initials and a nod to S. The language was not a port of S; it was a new implementation from scratch, with a different memory model and (eventually) a different package system. But it followed S's design decisions closely, which means it also followed Scheme's, which means it also followed Church's.
 
 In 1993, Ihaka and Gentleman made R publicly available. In 1995, Martin Mächler at ETH Zurich convinced them to release it under the GNU General Public License, making it free and open-source. The R Core Group formed in 1997. Version 1.0.0 shipped in February 2000. CRAN (the Comprehensive R Archive Network) began growing, and by the mid-2000s R had become the standard tool for statistical computing in academia.
 
-R looks almost identical to S on the surface, but under the hood it is semantically closer to Scheme.
+R looks almost identical to S on the surface, but under the hood it is semantically closer to Scheme. The question is which pieces came from where.
 
 
 ## What R inherited {#sec-what-r-inherited}
@@ -135,4 +137,4 @@ with_tax
 
 `function(price, rate)` creates a function and stores it in a variable, the way you'd store a number. That's Lisp (1958): functions are data. `prices * (1 + rate)` inside the function operates on the whole vector at once, no loop. That's S (1976): vectorized operations. `sapply(prices, add_tax, rate = 0.2)` passes a function *to* another function. That's Church (1936): functions as arguments. And `add_tax` finds `rate` based on where it was defined, not where it's called. That's Scheme (1975): lexical scoping.
 
-The rest of this book teaches you to use these features. The next chapter starts with the most fundamental one: in R, everything is an expression, and every expression has a value.
+Five lines, four ancestors. The rest of this book is about what you can do with these features once you understand them. The most fundamental one: in R, everything is an expression, and every expression has a value.

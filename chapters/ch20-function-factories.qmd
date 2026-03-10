@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-A function factory doesn't compute a result. It builds a tool that computes results. You give it parameters once, and it gives you back a specialized function you can use forever. In @sec-functions-returning-functions, you saw `make_adder`: a function that returns a function. In @sec-closures-and-scope, you learned why it works: the returned function is a closure that captures its creation environment. This chapter puts both ideas to work.
+A function factory doesn't compute a result. It builds a tool that computes results. You give it parameters once, and it gives you back a specialized function you can use forever. In @sec-functions-returning-functions, you saw `make_adder`: a function that returns a function. In @sec-closures-and-scope, you learned why it works: the returned function is a closure that captures its creation environment. This chapter puts both ideas to work: building families of functions from a single template.
 
 
 ## The pattern {#sec-factory-pattern}
@@ -122,7 +122,7 @@ Every factory should `force()` every argument that the manufactured function use
 
 ## Practical factories {#sec-practical-factories}
 
-Function factories appear everywhere once you start looking.
+Formatting, filtering, statistical transformations — any task where you repeat the same logic with different parameters is a factory waiting to happen.
 
 **Parameterized formatters.** A factory can bake a prefix and suffix into a formatting function:
 
@@ -173,9 +173,7 @@ bc1(c(1, 2, 4))
 bc0(c(1, 2, 4))
 ```
 
-The `if` runs once, when the factory is called, not every time the produced function is called. The factory picks the right formula at creation time and returns a function that does no branching.
-
-Factories are common in ggplot2 as well. Functions like `scale_color_brewer()` and `theme_minimal()` are factories or factory-like: they take parameters and return objects that modify a plot.
+The `if` runs once, when the factory is called, not every time the produced function is called. The factory picks the right formula at creation time and returns a function that does no branching. The same pattern drives much of ggplot2. Functions like `scale_color_brewer()` and `theme_minimal()` are factories or factory-like: they take parameters and return objects that modify a plot.
 
 
 ### Exercises {.unnumbered}
@@ -226,9 +224,7 @@ forget(fast_square)
 
 ## Function operators {#sec-function-operators}
 
-A function operator takes a function as input and returns a modified function as output. Like a factory, but the raw material is a function, not a number or string. This pattern is called a "decorator" in Python (where `@decorator` syntax makes it first-class) and appeared in the Gang of Four design patterns book (1994) as the Decorator Pattern. R has no `@`-syntax, but `safely()`, `memoise()`, and `with_logging()` are all decorators: they modify behavior by wrapping, without changing the original.
-
-purrr provides three useful operators:
+A function operator takes a function as input and returns a modified function as output. Like a factory, but the raw material is a function, not a number or string. This pattern is called a "decorator" in Python (where `@decorator` syntax makes it first-class) and appeared in the Gang of Four design patterns book (1994) as the Decorator Pattern. R has no `@`-syntax, but `safely()`, `memoise()`, and `with_logging()` are all decorators: they modify behavior by wrapping, without changing the original. What do you do when a function might fail on some inputs but you need to apply it to hundreds?
 
 `safely()` wraps a function so it never errors. Instead, it returns a list with `$result` and `$error`:
 
@@ -292,9 +288,7 @@ results <- map(list(1, -1, "a", 10), safe_log)
 str(results)
 ```
 
-`safely(log)` is a function operator applied to `log`. The result is passed to `map()`, a functional from @sec-passing-functions. Three concepts from three chapters, working together.
-
-You can also compose operators. A function that is both safe and logged:
+`safely(log)` is a function operator applied to `log`. The result is passed to `map()`, a functional from @sec-passing-functions. Three concepts from three chapters, working together. What if you need both safety *and* logging on the same function?
 
 ```{r}
 safe_logged_log <- with_logging(safely(log))

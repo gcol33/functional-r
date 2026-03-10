@@ -320,7 +320,7 @@ Replace a loop with a functional when the pattern is "do this to each thing inde
 
 ## `across()` revisited {#sec-across-revisited}
 
-In @sec-column-wise, you saw `across()` for applying a function to multiple columns inside a dplyr verb. Now you can see what it really is: `map()` thinking applied inside a pipeline.
+In @sec-column-wise, you saw `across()` for applying a function to multiple columns inside a dplyr verb. It is `map()` thinking applied inside a pipeline.
 
 ```{r}
 penguins |>
@@ -349,9 +349,7 @@ penguins |>
 
 `across()` replaces the older `summarise_at()`, `summarise_if()`, and `summarise_all()`, which are now superseded. If you encounter them in older code, they do the same thing with less flexible syntax.
 
-The connection to `map()` is more than an analogy. Under the hood, `across()` iterates over the selected columns, applies the function to each one, and assembles the results. It is `map()` specialized for the column-wise case inside dplyr verbs. Once you see the shared pattern, the two tools feel like variations of the same idea, because they are.
-
-The pattern is always the same: hand a function to something that knows how to iterate. `map()` iterates over list entries, `across()` over data frame columns, and `sapply()` over vector values; the mechanism is identical in every case, and only the container differs.
+The connection to `map()` is more than an analogy. Under the hood, `across()` iterates over the selected columns, applies the function to each one, and assembles the results. It is `map()` specialized for the column-wise case inside dplyr verbs. Once you see the shared pattern, the two tools feel like variations of the same idea, because they are. `map()` iterates over list entries, `across()` over data frame columns, `sapply()` over vector values — the mechanism is identical, and only the container differs.
 
 ### Exercises {.unnumbered}
 

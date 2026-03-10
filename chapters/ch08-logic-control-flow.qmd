@@ -20,7 +20,7 @@ length(x)
 
 Logical vectors are the result of every comparison, every filter, every conditional check. `sum(x > 5)` works because `x > 5` produces a logical vector and `sum()` coerces `TRUE` to 1, `FALSE` to 0 (@sec-coercion).
 
-A logical value is one of exactly two things: `TRUE` or `FALSE`. There is no third option. In type theory, this is a *sum type* (also called a tagged union or variant): a type defined by listing its variants. `Bool = TRUE | FALSE`. A data frame row combines fields with AND (a penguin has a species AND a mass AND a flipper length); a sum type chooses one variant with OR. You will see sum types again when factors define a fixed set of levels (@sec-why-factors) and when S3 dispatch selects a method based on class (@sec-s3-basics). Where product types (like data frames) say 'all of these together,' sum types say 'exactly one of these.'
+A logical value is one of exactly two things: `TRUE` or `FALSE`. There is no third option. In type theory, this is a *sum type* (also called a tagged union or variant): a type defined by listing its variants. `Bool = TRUE | FALSE`. A data frame row combines fields with AND (a penguin has a species AND a mass AND a flipper length); a sum type chooses one variant with OR. Sum types appear again when factors define a fixed set of levels (@sec-why-factors) and when S3 dispatch selects a method based on class (@sec-s3-basics). Where product types (like data frames) say 'all of these together,' sum types say 'exactly one of these.'
 
 R also has `T` and `F` as shortcuts for `TRUE` and `FALSE`. Do not use them.
 
@@ -161,7 +161,7 @@ You won't need `xor()` often, but it exists.
 
 You now know R's logical operators well enough to filter data and write conditionals. But these operators did not originate in programming languages; they describe physical reality. The `&` you use to combine filter conditions is the same AND operation that electrical engineers wire into silicon, described by the same truth tables George Boole formalized in 1854 and that Claude Shannon, in his 1937 master's thesis, showed could be implemented with electrical switches. Understanding this connection, from the code you write to the circuits that execute it, reveals why Boolean algebra is not just a convenience but the foundation on which all digital computation is built.
 
-The `&`, `|`, `!`, and `xor()` you just learned are physical operations, implemented as tiny circuits called *logic gates* inside every processor.
+The `&`, `|`, `!`, and `xor()` you use in R are physical operations, implemented as tiny circuits called *logic gates* inside every processor.
 
 An AND gate has two input wires and one output wire. The output is 1 (high voltage) only when both inputs are 1. An OR gate outputs 1 when at least one input is 1. A NOT gate (also called an inverter) has one input and flips it: 1 becomes 0, 0 becomes 1. An XOR gate outputs 1 when the inputs differ.
 
@@ -316,7 +316,7 @@ A logic gate on its own computes one result and stops. Add a clock (an electrica
 
 ## How numbers are stored {#sec-numbers-stored}
 
-In @sec-atomic-vectors, you saw that R has `double` and `integer` types. The difference matters because of how computers store numbers.
+R has `double` and `integer` types (@sec-atomic-vectors). The difference matters because of how computers store numbers.
 
 A computer stores everything as bits: 0s and 1s. An integer is stored as a binary number. The integer 42 in binary is `101010`:
 
@@ -358,7 +358,7 @@ typeof(42)
 typeof(42L)
 ```
 
-`42` is a 64-bit floating-point number. `42L` is a 32-bit integer. For most data analysis, you won't need to think about this distinction. But when you compare computed values with `==`, or when you work with very large counts, the difference between integer and double can produce surprises. @sec-numerical-computing covers this in depth.
+`42` is a 64-bit floating-point number. `42L` is a 32-bit integer. For most data analysis, the distinction is invisible --- until you compare computed values with `==` or work with very large counts. @sec-numerical-computing covers the traps in depth.
 
 
 ## `if/else` as an expression {#sec-if-else-expression}
@@ -401,7 +401,7 @@ The connection to lambda calculus: in @sec-recursion, we saw Church's encoding o
 if (c(TRUE, FALSE)) "yes"
 ```
 
-`if` expects a single logical value. If you give it a vector, R uses only the first element and warns you. For element-wise conditionals on vectors, you need `ifelse()` or `dplyr::if_else()`.
+`if` expects a single logical value. If you give it a vector, R uses only the first element and warns you. But data analysis rarely involves a single value --- you usually need to test every element of a column at once.
 
 
 ### Exercises {.unnumbered}

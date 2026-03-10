@@ -53,7 +53,7 @@ typeof(mean)
 
 Some of these are familiar from earlier chapters. `CLOSXP` is the closure from @sec-closures. `ENVSXP` is the environment from @sec-environments. `PROMSXP` is the promise from @sec-lazy-evaluation. The new ones (LANGSXP, SYMSXP) are the building blocks of R's metaprogramming system (@sec-metaprogramming).
 
-Notice that `sum` and `mean` have different types. `sum` is a `builtin` (implemented directly in C, evaluates all its arguments before being called). `mean` is a `closure` (a regular R function with formals, a body, and an environment). The distinction matters at the C level but rarely at the R level.
+Notice that `sum` and `mean` have different types. `sum` is a `builtin` (implemented directly in C, evaluates all its arguments before being called). `mean` is a `closure` (a regular R function with formals, a body, and an environment). The distinction matters at the C level but rarely at the R level. What matters at both levels is being able to see inside these objects.
 
 
 ## Inspecting objects {#sec-inspect}
@@ -92,7 +92,7 @@ y[1] <- 99
 ref(x, y)
 ```
 
-After modification, `y` points to a different address. R copied the vector when `y` was modified, because `x` still needed the original.
+After modification, `y` points to a different address. R copied the vector when `y` was modified, because `x` still needed the original. The copy decision depends on how many names point to the same data, which raises the question: how does R know?
 
 ### Exercises {.unnumbered}
 
@@ -137,7 +137,7 @@ b <- "hello"
 
 The outer `STRSXP` addresses differ (they are separate character vectors), but the inner `CHARSXP` they point to is the same object. This interning saves memory when the same strings appear repeatedly, as in a factor or a character column with many repeated levels.
 
-A list (`VECSXP`) is a vector of SEXP pointers. Each element can point to any R object of any type. This is why lists are heterogeneous: the list itself is just an array of pointers, and the pointed-to objects can be anything.
+A list (`VECSXP`) is a vector of SEXP pointers. Each element can point to any R object of any type. This is why lists are heterogeneous: the list itself is just an array of pointers, and the pointed-to objects can be anything. This pointer-based layout has consequences for data frames.
 
 **Data frames and cache friendliness.** A data frame is a list of column vectors. Each column is a contiguous array. Operations that scan down a column (summing, filtering, grouping) touch sequential memory and benefit from cache prefetching. Operations that scan across rows jump between columns, touching non-sequential memory. This is why column-wise operations in R are generally faster than row-wise ones, and why `apply(df, 1, f)` (row-wise) is slower than `lapply(df, f)` (column-wise).
 
@@ -152,7 +152,7 @@ A list (`VECSXP`) is a vector of SEXP pointers. Each element can point to any R 
 
 ## Reference counting and copy-on-modify {#sec-refcount}
 
-In @sec-space-complexity, you learned that R copies objects only when they are modified and shared. The mechanism behind this decision is reference counting.
+In @sec-space-complexity, you learned that R copies objects only when they are modified and shared. How does R decide whether copying is necessary?
 
 Every SEXPREC header contains a reference count: the number of names (bindings) currently pointing to this object. When you assign `y <- x`, R increments the reference count on the underlying object instead of copying it. When you modify `y`, R checks the reference count. If it is 1 (only `y` points to the object), R can modify in place. If it is greater than 1, R must copy first.
 
@@ -247,7 +247,7 @@ SEXP add_one(SEXP x) {
 }
 ```
 
-The `PROTECT(allocVector(...))` call allocates a new vector *and* protects it in a single line. The `UNPROTECT(1)` at the end removes it from the protection stack just before returning. Between those two points, the GC knows not to collect `result`.
+The `PROTECT(allocVector(...))` call allocates a new vector *and* protects it in a single line. The `UNPROTECT(1)` at the end removes it from the protection stack just before returning. Between those two points, the GC knows not to collect `result`. Get the count wrong, and you get either a segfault or a stack overflow -- which is why higher-level interfaces like Rcpp exist.
 
 ### Exercises {.unnumbered}
 
@@ -285,7 +285,7 @@ SEXP eval(SEXP e, SEXP rho) {
 
 When the expression is a symbol (`SYMSXP`), the evaluator looks it up in the environment `rho` by walking the chain of parent environments. When it is a function call (`LANGSXP`), the evaluator finds the function, evaluates the arguments (wrapping them in promises for closures), and calls the function. When it is a literal (a number, a string), it returns the value unchanged.
 
-This is why R is slower than compiled languages for tight loops: every iteration goes through this switch statement, every variable access is an environment lookup, and every function call involves promise creation and argument matching. Vectorized code avoids most of this overhead by dropping into C for the inner loop.
+This is why R is slower than compiled languages for tight loops: every iteration goes through this switch statement, every variable access is an environment lookup, and every function call involves promise creation and argument matching. Vectorized code avoids most of this overhead by dropping into C for the inner loop. The environments that the evaluator searches through are themselves data structures worth understanding.
 
 **Environments as linked frames.** An environment in R is a hash table of bindings (name-to-SEXP mappings) plus a pointer to a parent environment. Variable lookup walks the chain: check the current environment's hash table, then the parent's, then the grandparent's, up to the global environment and then the search path of attached packages. The hash table uses a simple chaining scheme. Small environments (fewer than about 5 bindings) skip the hash table and use linear search through a pairlist, because the overhead of hashing is not worth it for tiny frames.
 
@@ -319,7 +319,7 @@ f <- function(x) {
 f(1 + 1)
 ```
 
-If R provided a way to get the type without forcing, you would see `"promise"`. But calling `typeof(x)` is itself an access of `x`, which forces the promise. By the time the result is printed, `x` is already `"double"`. The promise is deliberately invisible from R's perspective: any inspection forces evaluation, which is precisely why `substitute()` exists as a separate mechanism to read the expression without triggering it.
+If R provided a way to get the type without forcing, you would see `"promise"`. But calling `typeof(x)` is itself an access of `x`, which forces the promise. By the time the result is printed, `x` is already `"double"`. The promise is deliberately invisible from R's perspective: any inspection forces evaluation, which is precisely why `substitute()` exists as a separate mechanism to read the expression without triggering it. Closures, the other major abstraction from earlier chapters, have their own three-field structure at the C level.
 
 
 ## Closures at C level {#sec-closure-internals}
@@ -342,7 +342,7 @@ environment(add5)
 
 `formals()`, `body()`, and `environment()` are R-level accessors to the three fields of the CLOSXP. The environment of `add5` is the execution environment created when `adder(5)` was called, and it contains the binding `n = 5`. This is lexical scoping made concrete: the closure carries a pointer to the environment where it was born, and that environment stays alive as long as the closure exists (because the GC sees the pointer and keeps the environment reachable).
 
-Every user-defined function in R is a CLOSXP. Even a simple `function(x) x + 1` carries all three fields. The distinction between "function" and "closure" that some languages make does not exist in R's implementation: all functions are closures.
+Every user-defined function in R is a CLOSXP. Even a simple `function(x) x + 1` carries all three fields. The distinction between "function" and "closure" that some languages make does not exist in R's implementation: all functions are closures. But not all callable things in R are closures -- and the mechanisms for reaching compiled code differ in important ways.
 
 ### Exercises {.unnumbered}
 
@@ -419,7 +419,7 @@ typeof(`+`)        # "builtin"  - primitive, evaluates all args
 typeof(mean)       # "closure"  - R function, may use .Internal inside
 ```
 
-The distinction between `builtin` and `special` is about argument evaluation. Builtins evaluate all arguments before calling the C function (like normal function calls). Specials handle argument evaluation themselves, which is how `if` can avoid evaluating the branch not taken and `&&` can short-circuit.
+The distinction between `builtin` and `special` is about argument evaluation. Builtins evaluate all arguments before calling the C function (like normal function calls). Specials handle argument evaluation themselves, which is how `if` can avoid evaluating the branch not taken and `&&` can short-circuit. With all these pieces in view -- SEXPs, memory layout, reference counting, garbage collection, the evaluator, promises, closures, and the roads to C -- the full lifecycle of an R object comes into focus.
 
 
 ## Putting it together {#sec-internals-summary}

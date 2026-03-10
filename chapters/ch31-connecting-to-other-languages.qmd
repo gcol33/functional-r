@@ -48,7 +48,7 @@ dyn.load("sum_c.so")  # sum_c.dll on Windows
 
 A few things to notice. `REAL(x)` extracts the underlying C `double*` array from a numeric SEXP. `ScalarReal()` wraps a C double back into a SEXP. This function does not allocate any new R objects, so there is nothing to `PROTECT`. If it did (say, allocating a result vector with `allocVector(REALSXP, n)`), you would need to `PROTECT` that allocation and `UNPROTECT(1)` before returning.
 
-The `PROTECT`/`UNPROTECT` protocol is the source of most bugs in hand-written C extensions. Forget a `PROTECT` and the garbage collector frees your object mid-computation, causing a segfault. Add a `PROTECT` without a matching `UNPROTECT` and you overflow the protection stack. The count passed to `UNPROTECT` must match the number of `PROTECT` calls exactly. This bookkeeping is tedious and error-prone, which is precisely why higher-level interfaces exist.
+The `PROTECT`/`UNPROTECT` protocol is the source of most bugs in hand-written C extensions. Forget a `PROTECT` and the garbage collector frees your object mid-computation, causing a segfault. Add a `PROTECT` without a matching `UNPROTECT` and you overflow the protection stack. The count passed to `UNPROTECT` must match the number of `PROTECT` calls exactly. This bookkeeping is tedious and error-prone, which is precisely why higher-level interfaces exist. But the accessor macros underneath those interfaces are still worth knowing.
 
 Other accessor macros follow the same pattern: `INTEGER(x)` for integer vectors, `LOGICAL(x)` for logical vectors, `STRING_ELT(x, i)` for string vectors (which are arrays of `CHARSXP` pointers, not C strings), `VECTOR_ELT(x, i)` for list elements.
 
@@ -94,7 +94,7 @@ Rcpp::sourceCpp("sum_rcpp.cpp")
 sum_rcpp(as.numeric(1:1000))
 ```
 
-One function call compiles, links, loads, and registers the function. The turnaround from edit to test is seconds.
+One function call compiles, links, loads, and registers the function. The turnaround from edit to test is seconds. The convenience extends beyond compilation: Rcpp handles type conversion on both sides.
 
 Rcpp provides wrapper classes for all common R types: `NumericVector`, `IntegerVector`, `CharacterVector`, `LogicalVector`, `List`, `DataFrame`, `NumericMatrix`. These proxy the underlying SEXP without copying, so you pay no conversion cost on the way in. Return values are converted back to R objects automatically.
 
@@ -183,7 +183,7 @@ fib(10)
 #> [1] 55
 ```
 
-No `PROTECT`, no `UNPROTECT`, no `SEXP`. The type conversion between R and Rust is handled by extendr's `#[extendr]` macro (used in source files) or inferred by `rust_function()`.
+No `PROTECT`, no `UNPROTECT`, no `SEXP`. The type conversion between R and Rust is handled by extendr's `#[extendr]` macro (used in source files) or inferred by `rust_function()`. The question is whether the safety gains justify the ecosystem trade-off.
 
 **Rcpp vs extendr**: Rcpp has over 2,600 reverse dependencies on CRAN and has been battle-tested for 15 years. Its documentation, Stack Overflow coverage, and library of examples are unmatched. extendr is younger (relatively new as of this writing) and has a smaller ecosystem. The trade-off is safety: Rcpp inherits C++'s memory model, where segfaults and undefined behavior are possible if you make mistakes. Rust eliminates those categories of bug at compile time.
 
@@ -267,7 +267,7 @@ reticulate::use_virtualenv("myproject")
 reticulate::use_condaenv("myenv")
 ```
 
-Set this early, before calling `import()`. Once the Python interpreter starts, you cannot switch to a different one within the same R session.
+Set this early, before calling `import()`. Once the Python interpreter starts, you cannot switch to a different one within the same R session. Get this wrong, and you will spend an hour debugging import errors that have nothing to do with your code.
 
 ### Exercises {.unnumbered}
 
@@ -313,7 +313,7 @@ result$result
 
 `.Fortran()` returns a named list with all arguments, including outputs. This copy-in-copy-out semantics is simple but wasteful for large data. The newer `.Call()` interface with C wrappers around Fortran code avoids the copies.
 
-You will rarely write new Fortran for R. The interface matters for two reasons: reading legacy code (many statistical packages on CRAN have Fortran backends dating to the 1990s), and understanding why R's numerical performance is strong despite its interpreted overhead. When someone says "R is slow," they are talking about R's interpreter loop, not about the compiled Fortran that does the actual linear algebra.
+You will rarely write new Fortran for R. The interface matters for two reasons: reading legacy code (many statistical packages on CRAN have Fortran backends dating to the 1990s), and understanding why R's numerical performance is strong despite its interpreted overhead. When someone says "R is slow," they are talking about R's interpreter loop, not about the compiled Fortran that does the actual linear algebra. With four language interfaces available (C, C++, Rust, Python) plus Fortran, the practical question is which one to reach for.
 
 
 ## When to use what {#sec-language-choice}

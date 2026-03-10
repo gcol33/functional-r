@@ -44,7 +44,7 @@ R also has three special floating-point values:
 
 R's numbers are approximations. For most work, the approximation is excellent. But "excellent" is not "exact", and the difference matters in specific situations. There is a deep idea here: lambda calculus and mathematical logic operate on exact symbolic terms, but physical computers operate on finite approximations. The gap between `0.1` (the mathematical real number) and `0.1` (the closest IEEE 754 double) is the gap between the abstract model of computation and the physical machine running it.
 
-You can see the stored representation with `sprintf()`:
+How big is the gap? You can see the stored representation with `sprintf()`:
 
 ```{r}
 sprintf("%.20f", 0.1)
@@ -218,7 +218,7 @@ This is usually harmless, but it means you cannot always assume the type of an a
 The sections above (storage, floating-point traps, cancellation, integers) are essential knowledge for any R user. The sections below (condition numbers, matrix algebra, log-space) are more specialized. If you are working through the book sequentially, you can skip ahead to @sec-functions-are-values-chapter and return here when you encounter these topics in practice, for instance when reading @sec-performance or @sec-connecting-languages.
 :::
 
-Beyond individual floating-point traps, entire computations can be numerically stable or unstable. The distinction matters whenever you solve linear systems, fit models, or invert matrices.
+Individual floating-point traps lose a few digits. But when traps compound across a chain of operations, the entire result can become meaningless. The question is how to tell in advance.
 
 ### Condition numbers
 
@@ -255,7 +255,7 @@ x_solved <- solve(H, b)
 max(abs(x_solved - x_true))  # should be 0, will not be
 ```
 
-The error can be many orders of magnitude larger than machine epsilon. The matrix is not singular, the code is correct, but the problem itself amplifies rounding errors.
+The error can be many orders of magnitude larger than machine epsilon. The matrix is not singular and the code is correct --- the problem itself amplifies rounding errors. What, then, can an algorithm guarantee?
 
 ### Forward and backward stability
 
@@ -264,11 +264,11 @@ Two notions of stability matter in numerical linear algebra:
 - A *forward-stable* algorithm produces answers close to the true answer.
 - A *backward-stable* algorithm produces the exact answer to a slightly perturbed problem. That is, the computed solution $\hat{x}$ satisfies $(A + \delta A)\hat{x} = b + \delta b$ where $\delta A$ and $\delta b$ are small.
 
-Most LAPACK routines (which R calls internally for `solve()`, `qr()`, `svd()`, `chol()`) are backward-stable. This is the best you can ask for: when the problem itself is well-conditioned, backward stability guarantees accurate results. When the problem is ill-conditioned, no algorithm can save you.
+Most LAPACK routines (which R calls internally for `solve()`, `qr()`, `svd()`, `chol()`) are backward-stable. This is the best you can ask for: when the problem itself is well-conditioned, backward stability guarantees accurate results. When the problem is ill-conditioned, no algorithm can save you --- but you can sometimes reformulate the problem so that it becomes well-conditioned.
 
 ### Polynomial fitting: a practical demonstration
 
-Fitting a high-degree polynomial shows how numerical instability appears in practice. The naive approach constructs a Vandermonde matrix (columns $1, x, x^2, \ldots, x^{15}$), which becomes badly conditioned as the degree grows:
+Fitting a high-degree polynomial shows both the problem and the reformulation in action. The naive approach constructs a Vandermonde matrix (columns $1, x, x^2, \ldots, x^{15}$), which becomes badly conditioned as the degree grows:
 
 ```{r}
 set.seed(42)

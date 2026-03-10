@@ -34,7 +34,7 @@ identical(environment(), globalenv())
 
 The global environment is special in three ways. First, it never gets garbage-collected; it lives for the entire R session. Second, it has no fixed parent: its parent is the last package you attached with `library()`. Third, it is the only environment you routinely modify by hand. Functions create and destroy execution environments automatically (@sec-execution-environments); the global environment accumulates bindings as you work.
 
-This accumulation is both convenient and dangerous. Convenient because you can explore interactively, building up data objects step by step. Dangerous because any function you define in the global environment can see and depend on those objects. A function that works in your current session may break in a fresh one because it relied on a global variable you forgot to pass as an argument. This is the free variable problem from lambda calculus: a function with unbound names is an *open term*, and its behavior depends on the context where it runs. Making all dependencies explicit (passing them as arguments) turns it into a *closed term*, a closure in the formal sense, and makes it portable.
+This accumulation is both convenient and dangerous. Convenient because you can explore interactively, building up data objects step by step. Dangerous because any function you define in the global environment can see and depend on those objects. A function that works in your current session may break in a fresh one because it relied on a global variable you forgot to pass as an argument. This is the free variable problem from lambda calculus: a function with unbound names is an *open term*, and its behavior depends on the context where it runs. Making all dependencies explicit (passing them as arguments) turns it into a *closed term*, a closure in the formal sense, and makes it portable. But where exactly does R look when a name *isn't* passed as an argument?
 
 ### The search path
 
@@ -56,7 +56,7 @@ The global environment sits at the bottom, with attached packages stacked above 
 
 ## Lexical scoping {#sec-lexical-scoping}
 
-R uses lexical scoping: a function looks for names where it was *defined*, not where it was *called*. This choice traces back to Scheme (1975), which adopted lexical scoping over Lisp's dynamic scoping and changed programming history. Dynamic scoping searches the call stack, which is simpler to implement but makes functions unpredictable: the same function returns different results depending on who calls it. R inherited lexical scoping from Scheme, not from S (which originally used dynamic scoping; see @sec-s-language), and this one design decision is why closures work in R at all.
+R uses lexical scoping: a function looks for names where it was *defined*, not where it was *called*. This choice traces back to Scheme (1975), which adopted lexical scoping over Lisp's dynamic scoping and changed programming history. Dynamic scoping searches the call stack, which is simpler to implement but makes functions unpredictable: the same function returns different results depending on who calls it. R inherited lexical scoping from Scheme, not from S (which originally used dynamic scoping; see @sec-s-language), and this one design decision is why closures work in R at all. The principle is simple, but the interactions are not.
 
 ```{r}
 x <- 10
@@ -154,7 +154,7 @@ outer <- function() {
 outer()
 ```
 
-`inner` was defined inside `outer`, so its enclosing environment is `outer`'s execution environment. When `inner` looks for `x`, it finds `"outer"`, not `"global"`.
+`inner` was defined inside `outer`, so its enclosing environment is `outer`'s execution environment. When `inner` looks for `x`, it finds `"outer"`, not `"global"`. But `outer`'s execution environment is temporary — what happens when `inner` escapes it?
 
 Normally, local variables live and die with the call: when the function returns, its execution environment gets garbage-collected. But if the function returns another function that was defined inside it, that returned function holds a reference to the execution environment, keeping it alive. This is a closure.
 
@@ -194,7 +194,7 @@ count()
 count()
 ```
 
-When you call `make_counter()`, R creates an execution environment with `n <- 0`. The inner function is defined in that environment, making it the inner function's enclosing environment. When `make_counter` returns the inner function, the execution environment would normally be garbage-collected, but the returned function still points to it, so it survives. Each subsequent call to `count()` creates its own fresh execution environment, but the enclosing environment (the one from `make_counter` that holds `n`) is shared across all calls. That's how `count` remembers its state between invocations.
+When you call `make_counter()`, R creates an execution environment with `n <- 0`. The inner function is defined in that environment, making it the inner function's enclosing environment. When `make_counter` returns the inner function, the execution environment would normally be garbage-collected, but the returned function still points to it, so it survives. Each subsequent call to `count()` creates its own fresh execution environment, but the enclosing environment (the one from `make_counter` that holds `n`) is shared across all calls. That's how `count` remembers its state between invocations. But the inner function uses `<<-`, not `<-`, and the difference is critical.
 
 `<<-` is the super-assignment operator. Instead of creating a local binding, it searches parent environments for an existing binding named `n` and modifies it in place. Without `<<-`, writing `n <- n + 1` would create a *local* `n` in the execution environment, shadowing the captured one, and the counter would always return 1.
 
@@ -261,9 +261,7 @@ rm(oops, envir = globalenv())
 
 ## Closures as portable state {#sec-closures-portable-state}
 
-A closure bundles a function with its data. No global variables, no side effects visible from outside. This makes closures one of the most practical tools in R.
-
-A running mean:
+A closure bundles a function with its data. No global variables, no side effects visible from outside. This makes closures one of the most practical tools in R. Consider a function that must remember every value it has ever seen — a running mean that updates with each new observation:
 
 ```{r}
 make_running_mean <- function() {

@@ -41,7 +41,7 @@ The second example is *currying*: a two-argument function written as a function 
 
 R can do this because Ihaka and Gentleman gave it Scheme's lexical scoping (@sec-what-r-inherited). When the inner function `function(y) x + y` executes, it looks up `x` in the environment where it was created, not where it was called. That is precisely what lambda calculus requires: a variable refers to the nearest enclosing abstraction that binds it.
 
-Most mainstream languages added lambda expressions late (Java in 2014, C++ in 2011, Python's `lambda` is deliberately crippled to a single expression). R has had full, unrestricted lambdas since 1993. It did not add them as a feature; they are the foundation the entire language sits on.
+Most mainstream languages added lambda expressions late (Java in 2014, C++ in 2011, Python's `lambda` is deliberately crippled to a single expression). R has had full, unrestricted lambdas since 1993. It did not add them as a feature; they are the foundation the entire language sits on. So what can you build on that foundation, using nothing else?
 
 
 ### Exercises {.unnumbered}
@@ -191,7 +191,7 @@ to_int(power(two)(three))   # 2^3 = 8
 to_int(power(three)(two))   # 3^2 = 9
 ```
 
-`power(m)(n)` applies `m` (itself a function-repeater) `n` times. Two applied three times: `2^3`. This one tends to break people's intuition. Stare at it until it clicks.
+`power(m)(n)` applies `m` (itself a function-repeater) `n` times. Two applied three times: `2^3`. This one tends to break people's intuition. Stare at it until it clicks. Once it does, the question becomes: can we go the other direction and ask whether a numeral is zero?
 
 Testing for zero is simpler than you might expect:
 
@@ -273,7 +273,7 @@ head_of(tail_of(tail_of(my_list)))
 # [1] "c"
 ```
 
-Three nested function calls, and you have a linked list. No vectors, no `list()`, no memory allocation beyond closures.
+Three nested function calls, and you have a linked list. No vectors, no `list()`, no memory allocation beyond closures. One thing is still missing: none of these structures can refer to themselves.
 
 
 ### Exercises {.unnumbered}
@@ -381,7 +381,7 @@ You never used R's integers, R's booleans, R's `if`, R's `list()`, or R's abilit
 
 This is Church's result from 1936, and it is the theoretical foundation that R stands on. When @sec-two-models said that R descends from Church's model of computation, this is what that means concretely. R's `function()` is not just a way to organize code; it is a universal computational primitive. Everything else is convenience built on top.
 
-Not every language can do this. You need first-class functions (functions as values), closures (functions that capture their enclosing environment), and unrestricted anonymous functions. R has all three, inherited from Scheme. Python's `lambda` is restricted to a single expression, which makes multi-line Church encodings awkward. Java's lambdas cannot close over mutable local variables. C has function pointers but no closures.
+Not every language can do this. You need first-class functions (functions as values), closures (functions that capture their enclosing environment), and unrestricted anonymous functions. R has all three, inherited from Scheme. Python's `lambda` is restricted to a single expression, which makes multi-line Church encodings awkward. Java's lambdas cannot close over mutable local variables. C has function pointers but no closures. The connection between R and mathematics runs even deeper than Church encoding, though. It extends to the type system itself.
 
 
 ## Types as propositions {#sec-curry-howard}
@@ -402,7 +402,7 @@ When you write a function with signature `A -> B`, you are constructing a proof 
 
 R's type system is too loose to enforce this correspondence strictly (every R function can error, which is like a proof that cheats). Languages like Haskell, Agda, and Coq take it seriously enough to use programs as machine-checked proofs of mathematical theorems. But the connection is there in R, waiting beneath the surface. Every function you write is a little proof.
 
-The Curry-Howard correspondence (named for Haskell Curry, who noticed the connection earlier, and Howard, who formalized it) is one of those ideas that, once you see it, changes how you think about types. A type is not just a tag that says "this is a number." It is a proposition about what values are possible. And a function is not just a block of code. It is evidence that a transformation is possible.
+The Curry-Howard correspondence (named for Haskell Curry, who noticed the connection earlier, and Howard, who formalized it) is one of those ideas that, once you see it, changes how you think about types. A type is not just a tag that says "this is a number." It is a proposition about what values are possible. And a function is not just a block of code. It is evidence that a transformation is possible. Types and functions, then, have structure -- and the study of structure itself has a name.
 
 
 ## Functors, monoids, and friends {#sec-category-connections}
@@ -415,7 +415,7 @@ Category theory provides a vocabulary for patterns that recur across different m
 
 **Natural transformations.** A natural transformation converts one functor into another while preserving the relationships between elements. `pivot_longer()` and `pivot_wider()` (@sec-pivot-longer, @sec-pivot-wider) transform the shape of a data frame without losing information. The data can be recovered by applying the inverse transformation. That reversibility is precisely what makes them natural transformations rather than arbitrary reshaping operations.
 
-You do not need to learn category theory to use R. But if these patterns keep showing up, it is because they are not coincidences. They are reflections of deep mathematical structure, and R's functional design makes them visible in a way that imperative languages tend to obscure.
+You do not need to learn category theory to use R. But if these patterns keep showing up, it is because they are not coincidences. They are reflections of deep mathematical structure, and R's functional design makes them visible in a way that imperative languages tend to obscure. Church encodings prove this at the foundational level; for day-to-day work, R has practical tools that put mathematical computation within reach.
 
 
 ### Exercises {.unnumbered}
@@ -485,7 +485,7 @@ n <- 1:100
 sum(n)^2 - sum(n^2)
 ```
 
-Both solutions are one-liners because R's vectorized operations (@sec-two-models) make arithmetic on sequences natural. The expression-based style that R inherited from lambda calculus maps directly onto mathematical notation.
+Both solutions are one-liners because R's vectorized operations (@sec-two-models) make arithmetic on sequences natural. The expression-based style that R inherited from lambda calculus maps directly onto mathematical notation. That inheritance has a history worth tracing.
 
 
 ### Exercises {.unnumbered}

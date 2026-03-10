@@ -29,7 +29,7 @@ Technically, a list is a *recursive vector*. "Recursive" because its elements ca
 typeof(penguin)
 ```
 
-You already used a list in @sec-functions-in-lists when you stored functions as named elements. Lists are the same structure whether they hold numbers, strings, or functions.
+You already used a list in @sec-functions-in-lists when you stored functions as named elements. Lists are the same structure whether they hold numbers, strings, or functions --- but accessing the right element requires care.
 
 The idea of pairing two values into one object has deep roots. In lambda calculus, a pair is encoded as `λa.λb.λf. f a b`: a function that captures two values and waits for a selector. Pass it `λx.λy. x` (select first) and you get `a`; pass `λx.λy. y` (select second) and you get `b`. Lisp's `cons`, `car`, and `cdr` are exactly these operations with names. R's `list()` is the practical descendant of this construction: a container built from the idea that you can bundle values together and retrieve them with selectors (`[[1]]`, `[[2]]`, `$name`).
 
@@ -149,9 +149,9 @@ study <- list(
 str(study)
 ```
 
-`str()` is the most useful function for inspecting lists. It prints the structure compactly, showing types, lengths, and nesting levels. Use it whenever you receive an unfamiliar object. Every nested list is, in fact, a tree: the top-level list is the root, each element is a branch, and atomic values are leaves. The same structure appears in file systems (directories containing files and subdirectories), HTML (the DOM), and JSON.
+`str()` is the most useful function for inspecting lists. It prints the structure compactly, showing types, lengths, and nesting levels. Use it whenever you receive an unfamiliar object. Every nested list is a tree: the top-level list is the root, each element is a branch, and atomic values are leaves. The same structure appears in file systems (directories containing files and subdirectories), HTML (the DOM), and JSON.
 
-To access nested elements, chain `[[` or `$`:
+Inspecting is half the problem; the other half is reaching into the tree to pull out what you need. Chain `[[` or `$`:
 
 ```{r}
 study$species[[1]]$name
@@ -160,7 +160,7 @@ study[["species"]][[2]][["count"]]
 
 Each `[[` or `$` steps one level deeper. `study$species` is a list of three lists. `study$species[[1]]` is the first of those lists. `study$species[[1]]$name` is the string `"Adelie"`.
 
-Real-world nested lists are everywhere. You will encounter nested lists constantly in practice: JSON from a web API, the output of `lm()`, and configuration files are all nested lists or objects built on them. The access pattern is always the same: `$` or `[[` to step down one level, repeated as many times as needed.
+JSON from a web API, the output of `lm()`, and configuration files are all nested lists or objects built on them. The access pattern is always the same: `$` or `[[` to step down one level, repeated as many times as needed.
 
 
 
@@ -196,7 +196,7 @@ names(fit)
 
 `fit$coefficients`, `fit$residuals`, `fit$fitted.values`: these are all list extractions. The model object is a list with a class attribute (`"lm"`) that tells R how to print and summarize it, but the data access works the same way.
 
-Understanding lists means understanding everything built on top of them. Data frames (@sec-data-frames), model objects, and environments are all lists (or list-like structures) with different rules about what they can contain. The next chapter shows how data frames exploit this structure.
+Data frames (@sec-data-frames), model objects, and environments are all lists (or list-like structures) with different rules about what they can contain. The most important rule is also the simplest: what happens when every element has the same length?
 
 
 
@@ -295,4 +295,4 @@ Why doesn't R use linked lists for everyday work? R was designed for column-orie
 
 ## Looking ahead
 
-Lists hold anything, including other lists. Data frames are lists where every element is a vector of the same length. That single constraint turns a general-purpose container into a table. @sec-data-frames picks up exactly where this chapter leaves off.
+Lists hold anything, including other lists. Constrain that freedom --- require every element to be a vector of the same length --- and the general-purpose container becomes a table.

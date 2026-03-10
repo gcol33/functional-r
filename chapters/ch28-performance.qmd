@@ -23,7 +23,7 @@ system.time({
 })
 ```
 
-The first number (`user`) is CPU time. The third (`elapsed`) is wall-clock time. Good for rough estimates.
+The first number (`user`) is CPU time. The third (`elapsed`) is wall-clock time. Good for rough estimates, but rough estimates lie when differences are small.
 
 **Precise benchmarking** with `bench::mark()`:
 
@@ -52,7 +52,7 @@ profvis::profvis({
 })
 ```
 
-`profvis` produces an interactive flame graph showing which lines take the most time and allocate the most memory. Use it when you do not know where the bottleneck is.
+`profvis` produces an interactive flame graph showing which lines take the most time and allocate the most memory. Use it when you do not know where the bottleneck is, which is most of the time.
 
 Here is a concrete example. The function `slow_analysis` generates data, fits a model, copies residuals in a loop (using `c()` to grow a vector), and computes a summary:
 
@@ -158,9 +158,9 @@ for (i in 1:nrow(mat)) row_totals[i] <- sum(mat[i, ])
 row_totals <- rowSums(mat)
 ```
 
-Not everything can be vectorized. Iterations where each step depends on the previous result (Markov chains, recursive algorithms, some simulations) genuinely need loops. For those cases, @sec-compiled-code offers an escape hatch.
+Not everything can be vectorized. Iterations where each step depends on the previous result (Markov chains, recursive algorithms, some simulations) genuinely need loops. For those cases, @sec-compiled-code offers an escape hatch. But before reaching for compiled code, make sure you are not confusing convenience wrappers with true vectorization.
 
-A common misconception: `sapply()` and `lapply()` are not vectorization. They are convenient wrappers around loops, but they still call your R function once per element. They are not faster than a well-written `for` loop. True vectorization means the loop runs in C, not in R. `sum()`, `cumsum()`, `ifelse()`, `pmin()`, and `rowSums()` are truly vectorized. `sapply(x, my_function)` is not.
+`sapply()` and `lapply()` are not vectorization. They are convenient wrappers around loops, but they still call your R function once per element. They are not faster than a well-written `for` loop. True vectorization means the loop runs in C, not in R. `sum()`, `cumsum()`, `ifelse()`, `pmin()`, and `rowSums()` are truly vectorized. `sapply(x, my_function)` is not.
 
 ### Exercises {.unnumbered}
 
@@ -202,7 +202,7 @@ bench::mark(
 
 Each call to `c(result, value)` allocates a new vector of size `length(result) + 1` and copies all existing elements. For `n` iterations, that is $1 + 2 + 3 + \cdots + n = O(n^2)$ total copies. Pre-allocation avoids this entirely.
 
-Pre-allocate with `numeric(n)`, `character(n)`, `logical(n)`, or `vector("list", n)`. Tell R the final size upfront.
+Pre-allocate with `numeric(n)`, `character(n)`, `logical(n)`, or `vector("list", n)`. Tell R the final size upfront. But pre-allocation only solves the allocation problem; there is a second performance trap hiding in how R shares memory.
 
 **Copy-on-modify**: R copies an object when you modify it *and* another name points to it:
 
@@ -274,7 +274,7 @@ dt <- as.data.table(sales)
 dt[year == 2024, .(total = sum(revenue)), by = region]
 ```
 
-Both produce the same result. The data.table version is more compact and typically faster on large data. The dplyr version is more readable if you are used to the pipe style. Neither is "right"; they serve different priorities.
+Both produce the same result. The data.table version is more compact and typically faster on large data. The dplyr version is more readable if you are used to the pipe style. Neither is "right"; they serve different priorities. Both, however, share a limitation: they operate in memory, on data that fits in RAM.
 
 ### Exercises {.unnumbered}
 
@@ -391,7 +391,7 @@ fn sum_rust(x: &[f64]) -> f64 {
 - Operations that process each element individually (no vectorization possible).
 - Hot loops identified by profiling.
 
-**When not to**: when vectorization solves the problem, when the bottleneck is I/O, when correctness matters more than speed and the code is complex.
+**When not to**: when vectorization solves the problem, when the bottleneck is I/O, when correctness matters more than speed and the code is complex. If none of these apply and you still need more speed, the question becomes which compiled language.
 
 ::: callout-tip
 ## Opinion
@@ -413,7 +413,9 @@ When code is too slow, work through this list in order:
 
 The order matters. Each step is cheaper and lower-risk than the next. Profiling is free. Vectorization is usually a one-line change. Rewriting in C++ is a project. Parallelization introduces concurrency bugs. Start at the top and stop as soon as the code is fast enough. Amdahl's law (1967) formalizes this: if 5% of your code takes 95% of the time, making the other 95% of code infinitely fast gives you only a 5% speedup. The same limit applies to parallelization: if 10% of your work is sequential, you can never get more than a 10x speedup no matter how many cores you add. This is why profiling comes first.
 
-A note on parallelization: R has several frameworks for parallel execution. `parallel::mclapply()` works on Unix but not Windows. `future.apply::future_lapply()` works everywhere and swaps in for `lapply()` with minimal code changes. `furrr::future_map()` is the parallel version of `purrr::map()`. All of them split work across cores.
+The order matters because each step carries increasing cost. Parallelization is last because it introduces the most complexity for the least predictable gain.
+
+R has several frameworks for parallel execution. `parallel::mclapply()` works on Unix but not Windows. `future.apply::future_lapply()` works everywhere and swaps in for `lapply()` with minimal code changes. `furrr::future_map()` is the parallel version of `purrr::map()`. All of them split work across cores.
 
 But parallelization only helps if the work is CPU-bound and divisible. If your bottleneck is reading a file from disk, more cores will not help. If your iterations depend on each other, you cannot parallelize them. And the overhead of spawning workers and collecting results means parallelization only pays off when each unit of work is substantial (milliseconds, not microseconds).
 

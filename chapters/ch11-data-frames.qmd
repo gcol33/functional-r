@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-A data frame is a list where every element is a vector of the same length. That is the entire definition. Chapter 8 showed that lists hold anything; a data frame constrains that freedom to equal-length columns. Once you see this, subsetting, column operations, and the entire tidyverse make sense. The idea is older than R: Edgar Codd's 1970 paper at IBM defined relations as sets of tuples, each row a tuple of typed values. R's data frames, SQL tables, pandas DataFrames, and Spark datasets are all descendants of that same relational algebra.
+A data frame is a list where every element is a vector of the same length. That is the entire definition. Lists hold anything; a data frame constrains that freedom to equal-length columns. Once you see this, subsetting, column operations, and the entire tidyverse make sense. The idea is older than R: Edgar Codd's 1970 paper at IBM defined relations as sets of tuples, each row a tuple of typed values. R's data frames, SQL tables, pandas DataFrames, and Spark datasets are all descendants of that same relational algebra.
 
 
 ## A list of equal-length vectors {#sec-list-of-vectors}
@@ -95,7 +95,7 @@ Pretend row names don't exist. If something is data, put it in a column. `tibble
 
 ## Subsetting data frames {#sec-subsetting-data-frames}
 
-Because a data frame is a list, everything from Chapter 8 works:
+A data frame is a list, so the same accessors work:
 
 ```{r}
 penguins$species[1:3]
@@ -120,7 +120,7 @@ Single brackets return a one-column data frame (a sub-list), not a vector:
 penguins["species"][1:3, ]
 ```
 
-This is the same `[` vs `[[` distinction from Chapter 8: `[` keeps the container, `[[` extracts the contents.
+Same rule as lists: `[` keeps the container, `[[` extracts the contents.
 
 ### Two-dimensional indexing {#sec-two-dim-indexing}
 
@@ -148,7 +148,7 @@ To keep the data frame structure, use `drop = FALSE`:
 class(penguins[, 1, drop = FALSE])
 ```
 
-The `drop` gotcha is a common source of bugs. You write a function that subsets a data frame, test it with two columns, and it works. Someone passes one column, and your function breaks because it suddenly receives a vector instead of a data frame.
+This `drop` behavior is a common source of bugs. You write a function that subsets a data frame, test it with two columns, and it works. Someone passes one column, and your function breaks because it suddenly receives a vector instead of a data frame.
 
 ```{r}
 penguins[1, 2]
@@ -206,7 +206,7 @@ df2 <- within(penguins, {
 head(df2[, c("mass_kg", "bill_ratio")])
 ```
 
-`within()` evaluates the expressions inside the data frame's environment, so you can refer to columns by name without the `df$` prefix. The result is a new data frame. `dplyr::mutate()` does this more cleanly, which you will see in @sec-data-transformation.
+`within()` evaluates the expressions inside the data frame's environment, so you can refer to columns by name without the `df$` prefix. The result is a new data frame. `dplyr::mutate()` (@sec-data-transformation) does this more cleanly.
 
 ```{r}
 #| include: false
@@ -359,4 +359,4 @@ A data frame is a list (@sec-list-of-vectors). Each column is a vector (@sec-ato
 
 One consequence of this structure: R stores data frames column by column. Each column is one contiguous vector in memory, so column operations (`mean(df$x)`) are fast (sequential memory access) while row operations (`apply(df, 1, sum)`) are slow (jumping between columns). This is the same trade-off databases make: columnar stores (DuckDB, Parquet) optimize for analytical aggregation; row stores (PostgreSQL, MySQL) optimize for single-record transactions.
 
-The next chapters build on this foundation. @sec-strings-factors-dates covers the column types you will encounter most often: strings, factors, and dates. @sec-data-transformation introduces `dplyr`, which replaces the `df[df$x > 5, ]` syntax with readable verbs like `filter()`, `mutate()`, and `summarize()`. Those verbs work because data frames are lists of vectors, and you now understand what that representation means in practice.
+@sec-strings-factors-dates covers the column types you will encounter most often: strings, factors, and dates. @sec-data-transformation introduces `dplyr`, which replaces the `df[df$x > 5, ]` syntax with readable verbs like `filter()`, `mutate()`, and `summarize()`. Those verbs work because data frames are lists of vectors --- and you now know what that means at every layer.
