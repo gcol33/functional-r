@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-Consider a line of code that selects columns, filters rows, and sorts the result. Written the conventional way, you read it inside-out: the first operation you want to happen is buried deepest in the expression, the last operation sits on the outside, and somewhere in between you lose track of which parenthesis closes which call. Why does the order you write the code run exactly backwards from the order you think about the problem?
+Mathematicians write g(f(x)). R programmers write `x |> f() |> g()`. Same idea, better reading order. In @sec-church, function composition was one of the fundamental operations: apply one function, then apply another to the result. Pipes make that composition readable. This chapter explains how they work, why they work, and where they break down.
 
 
 ## The problem with nesting {#sec-nesting-problem}
@@ -19,7 +19,7 @@ Real analysis chains multiple operations. Suppose you want to take the `penguins
 arrange(filter(select(penguins, species, body_mass_g), species == "Adelie"), body_mass_g)
 ```
 
-This works for two functions, but at three it strains, and at five you are matching parentheses like a Lisp programmer on a bad day. The first operation you want to happen (`select`) is buried deepest inside the expression.
+This works for two functions. At three, it's hard to read. At five, it's unreadable. The first operation you want to happen (`select`) is buried deepest inside the expression.
 
 **Intermediate variables**: name every step.
 
@@ -30,7 +30,7 @@ b <- filter(a, species == "Adelie")
 c <- arrange(b, body_mass_g)
 ```
 
-Readable, but the environment fills with throwaway names that exist only to shuttle a value from one line to the next: `a`, `b`, `c`, `temp`, `df2`.
+Readable, but the environment fills with throwaway names. `a`, `b`, `c`, `temp`, `df2`: names that exist only to carry a value from one line to the next.
 
 **Overwriting**: reuse the same name.
 
@@ -41,9 +41,9 @@ df <- filter(df, species == "Adelie")
 df <- arrange(df, body_mass_g)
 ```
 
-Compact, but fragile. You cannot re-run a single line without re-running everything above it, because each line depends on whatever `df` was a moment ago.
+Compact, but fragile. You cannot re-run a single line without re-running everything above it, because each line depends on the previous value of `df`.
 
-All three approaches work, yet none compose well. What would it look like if each step simply fed into the next?
+All three approaches work, but none compose well. What would it look like if each step simply fed into the next?
 
 
 ## The pipe: `|>` {#sec-pipe}
@@ -58,17 +58,17 @@ penguins |>
   arrange(body_mass_g)
 ```
 
-Read it top to bottom: take `penguins`, select two columns, keep Adelie rows, sort by mass. Each line transforms the result of the previous one, and the reading order matches the execution order.
+Read it top to bottom: take `penguins`, select two columns, keep Adelie rows, sort by mass. Each line transforms the result of the previous one.
 
-The rule is simple. `x |> f()` is syntactic sugar for `f(x)`: the pipe takes the value on its left and inserts it as the first argument of the function on its right. That is the entire mechanism, no magic, no special evaluation, just a rewriting of `x |> f()` as `f(x)` before the code runs. Chain two pipes and `x |> f() |> g()` becomes `g(f(x))`, which is (g ∘ f)(x) in mathematical notation. The pipe is function composition from lambda calculus (@sec-church), written left-to-right instead of inside-out.
+The rule is simple. `x |> f()` is syntactic sugar for `f(x)`. The pipe takes the value on its left and inserts it as the first argument of the function on its right. That is the entire mechanism. There is no magic, no special evaluation: just rewriting `x |> f()` as `f(x)` before the code runs. And `x |> f() |> g()` is `g(f(x))`, which is (g ∘ f)(x) in mathematical notation. The pipe is function composition from lambda calculus, written left-to-right instead of inside-out.
 
-Function composition is itself a monoid, with `∘` as the operation and the identity function `\(x) x` as the identity element: `f ∘ id = f` and `id ∘ f = f`, just as `x + 0 = x` for addition. You saw the same structure with `c()` and `NULL` (@sec-no-scalars), with string concatenation and `""`, and you will see it again with ggplot's `+` (@sec-ggplot-lambda) and with `Reduce()` (@sec-reduce-and-accumulate). The monoid keeps appearing because composition is the fundamental way to build complex behavior from simple parts.
+Function composition is itself a monoid. The operation is `∘` (compose two functions), and the identity element is the identity function `\(x) x`, which returns its argument unchanged. `f ∘ id = f` and `id ∘ f = f`, just as `x + 0 = x` for addition. You saw the same structure with `c()` and `NULL` (@sec-no-scalars), with string concatenation and `""`, and you will see it again with ggplot's `+` (@sec-ggplot-lambda) and with `Reduce()` (@sec-reduce-and-accumulate). The monoid keeps showing up because composition is the fundamental way to build complex behavior from simple parts.
 
-The native pipe `|>` was introduced in R 4.1 (2021) and is built into the language, requiring no packages. The idea, however, is older than R itself: Doug McIlroy proposed the pipe concept for Unix in 1964, writing "we should have some ways of coupling programs like garden hose." The `|` operator in the Unix shell chains programs, each reading from standard input and writing to standard output; R's `|>` is the same idea applied to data frames, where each dplyr verb takes a data frame and returns one.
+The native pipe `|>` was introduced in R 4.1 (2021) and is built into the language, requiring no packages. The idea is older than R: Doug McIlroy proposed the pipe concept for Unix in 1964, writing "we should have some ways of coupling programs like garden hose." The `|` operator in the Unix shell chains programs, each reading from standard input and writing to standard output. R's `|>` is the same idea applied to data frames: each dplyr verb takes a data frame and returns a data frame, and the pipe connects them.
 
 ::: callout-tip
 ## Opinion
-One verb per line. Put a space before `|>` and a newline after it. A pipeline crammed into a single long line throws away all the readability the pipe was designed to give you.
+One verb per line. Put a space before `|>` and a newline after it. A pipeline formatted as a single long line loses all the readability the pipe was designed to provide.
 :::
 
 
@@ -81,7 +81,7 @@ One verb per line. Put a space before `|>` and a newline after it. A pipeline cr
 
 ## Building a pipeline {#sec-building-pipeline}
 
-The best way to build a pipeline is the way you would give directions: one step at a time, checking the view at each turn.
+Start with the data. Add one step at a time. Read the result like a recipe:
 
 ```{r}
 penguins |>
@@ -93,7 +93,7 @@ penguins |>
 
 "Take penguins, remove NAs, group by species, compute mean mass, sort descending." The code reads like the sentence.
 
-Build incrementally: run the first line, check the output, add the next step, check again. You grow a pipeline one verb at a time, inspecting the intermediate data frame at each stage, and when the result looks right the pipeline is done.
+Build incrementally. Run the first line, check the output. Add the next step, check again. You grow a pipeline one verb at a time, inspecting the intermediate data frame at each stage. When the result looks right, the pipeline is done.
 
 ```{r}
 penguins |>
@@ -107,7 +107,7 @@ penguins |>
   )
 ```
 
-Each verb does one thing: `filter` removes rows, `group_by` sets the grouping, `summarise` collapses groups to summaries, `arrange` sorts. You compose them into a pipeline the same way you compose sentences into a paragraph, one idea at a time, in order. But what happens when you want to reuse a pipeline across different data sets, or embed one inside a larger computation?
+Each verb does one thing. `filter` removes rows. `group_by` sets the grouping. `summarise` collapses groups to summaries. `arrange` sorts. You compose them into a pipeline the same way you compose sentences into a paragraph: one idea at a time, in order.
 
 
 
@@ -124,9 +124,9 @@ Lambda calculus (@sec-church) is built on applying functions to arguments. Compo
 
 `x |> f() |> g()` is `g(f(x))`. In mathematical notation, that is (g . f)(x): the composition of g and f, applied to x. The pipe rewrites composition from inside-out to left-to-right. Nothing else changes.
 
-This is why dplyr verbs all follow the same contract: take a data frame as the first argument, return a data frame. Functions that follow this contract compose via the pipe; functions that don't (first argument is a formula, a filename, a model object) require workarounds. The convention exists precisely so that verbs snap together like sections of garden hose.
+This is why dplyr verbs all follow the same contract: take a data frame as the first argument, return a data frame. Functions that follow this contract compose via the pipe. Functions that don't (first argument is a formula, a filename, a model object) require workarounds. The convention exists so that verbs compose via the pipe.
 
-Functions are values you can pass around (@sec-functions-are-values-chapter), and they are also things you compose. Passing and composing are the two fundamental operations on functions, and together they account for most of what makes R code concise.
+Functions are values you can pass around (@sec-functions-are-values-chapter). They are also things you compose. Passing and composing are the two fundamental operations on functions, and together they account for most of what makes R code concise.
 
 ```{r}
 clean_and_summarise <- function(df) {
@@ -139,7 +139,7 @@ clean_and_summarise <- function(df) {
 penguins |> clean_and_summarise()
 ```
 
-Wrapping a pipeline in a function gives the composition a name. `clean_and_summarise` is a single function built from four composed steps; you can pass it around, store it in a list, or use it inside another pipeline. The pipeline describes the transformation without naming intermediates:
+Wrapping a pipeline in a function gives the composition a name. `clean_and_summarise` is a single function built from four composed steps. You can pass it around, store it in a list, or use it inside another pipeline. The pipeline describes the transformation without naming intermediates:
 
 ```r
 penguins |> filter(species == "Adelie") |> nrow()
@@ -150,7 +150,7 @@ In Haskell, this style is called "point-free" or "tacit" programming, tracing ba
 
 ## The placeholder `_` {#sec-placeholder}
 
-The pipe inserts the left side as the first argument. But what happens when the data belongs somewhere else?
+The pipe inserts the left side as the first argument. What happens when the data belongs somewhere else?
 
 ```{r}
 penguins |>
@@ -167,7 +167,7 @@ c(1, 4, 9, 16) |>
   (\(x) x[x > 3])()
 ```
 
-The `\(x)` syntax from @sec-anonymous-functions creates a function inline, and the trailing `()` calls it immediately with the piped value. This works for any situation where `_` is too restrictive.
+The `\(x)` syntax from @sec-anonymous-functions creates a function inline. The trailing `()` calls it immediately with the piped value. This works for any situation where `_` is too restrictive.
 
 
 ### Exercises {.unnumbered}
@@ -181,9 +181,9 @@ The `\(x)` syntax from @sec-anonymous-functions creates a function inline, and t
 
 The magrittr pipe `%>%` came first (2014). The native pipe `|>` arrived in R 4.1 (2021). Both do the same basic thing: insert the left side as the first argument of the right side. The differences are practical.
 
-`|>` requires parentheses on the right side: `x |> sqrt()`, not `x |> sqrt`. It uses `_` as its placeholder (named argument only, once), while `%>%` uses `.` (anywhere, multiple times). The native pipe is faster because it is a syntax transformation: the parser rewrites `x |> f()` to `f(x)` before evaluation, whereas `%>%` is a function call carrying its own overhead. And `|>` needs no package, while `%>%` needs magrittr (loaded automatically by the tidyverse).
+First, `|>` requires parentheses on the right side: `x |> sqrt()`, not `x |> sqrt`. Second, `|>` uses `_` as its placeholder (named argument only, once), while `%>%` uses `.` (anywhere, multiple times). Third, `|>` is faster because it is a syntax transformation: the parser rewrites `x |> f()` to `f(x)` before evaluation, whereas `%>%` is a function call with its own overhead. Fourth, `|>` needs no package; `%>%` needs magrittr (loaded automatically by the tidyverse).
 
-The theoretical distinction runs deeper. The base pipe `|>` is pure composition: (g . f)(x), with no implicit variable and no branching. The magrittr pipe `%>%` is closer to what Haskell calls *Kleisli composition*, where you chain functions of the form a -> m b and m is some context (a list, a maybe, an I/O action). The `.` pronoun in `%>%` acts like that context: it threads the result through, allowing you to refer to it multiple times, branch on it, or pass it to non-first arguments. This is why the following works with `%>%` but has no direct equivalent with `|>`:
+The theoretical distinction runs deeper. The base pipe `|>` is pure composition: (g . f)(x), with no implicit variable and no branching. The magrittr pipe `%>%` is closer to what Haskell calls *Kleisli composition*. In ordinary composition, you chain functions of the form a -> b. In Kleisli composition, you chain functions of the form a -> m b, where m is some context (a list, a maybe, an I/O action). The `.` pronoun in `%>%` acts like that context: it threads the result through, allowing you to refer to it multiple times, branch on it, or pass it to non-first arguments. This is why the following works with `%>%` but has no direct equivalent with `|>`:
 
 ```r
 x %>% { if (nrow(.) > 0) filter(., cond) else . }
@@ -201,7 +201,7 @@ penguins %>% nrow()
 
 ::: callout-tip
 ## Opinion
-Use `|>`. It lives in base R, it is faster, and it is the future of the language. The only reason to reach for `%>%` is legacy code or the rare case where you need `.` in multiple positions within a single call.
+Use `|>`. It is in base R, it is faster, and it is the future of the language. The only reason to reach for `%>%` is legacy code or the rare case where you need `.` in multiple positions within a single call. For new code, `|>` is the right default.
 :::
 
 
@@ -210,9 +210,9 @@ Use `|>`. It lives in base R, it is faster, and it is the future of the language
 
 Pipes are for linear sequences: A then B then C. Not every problem is linear.
 
-**Multiple inputs.** If two data frames need to interact, pipe one and pass the other as an argument. A join fits naturally in a pipeline; a complex merge of three data frames, each requiring its own preparation steps, does not.
+**Multiple inputs.** If two data frames need to interact, pipe one and pass the other as an argument. A join is fine in a pipeline; a complex merge of three data frames with different preparation steps is not.
 
-**Multiple outputs.** If you need intermediate results for different purposes later, name them. A pipeline produces one result, so if you need both the filtered data and the summary, use two separate pipelines from a shared intermediate.
+**Multiple outputs.** If you need intermediate results for different purposes later, name them. A pipeline produces one result. If you need the filtered data *and* the summary, use two separate pipelines from a shared intermediate.
 
 ```{r}
 adelie <- penguins |> filter(species == "Adelie")
@@ -222,18 +222,17 @@ adelie |> summarise(mean_mass = mean(body_mass_g, na.rm = TRUE))
 adelie |> count(island)
 ```
 
-**Long chains.** Past eight or ten steps, break the pipeline and name the intermediate result at a meaningful boundary. A pipeline that scrolls off the screen tells a run-on story, and run-on stories lose their audience.
+**Long chains.** Past eight or ten steps, break the pipeline. Name the intermediate result at a meaningful boundary. A pipeline that scrolls off the screen tells a run-on story.
 
-**Side effects in the middle.** `print()`, `write.csv()`, and `plot()` produce side effects; they belong at the end of a pipeline, not wedged between two transformations where they interrupt the data flow and make the pipeline harder to reason about.
+**Side effects in the middle.** `print()`, `write.csv()`, and `plot()` produce side effects. They belong at the end of a pipeline, not in the middle. Putting a side effect between two transformations interrupts the data flow and makes the pipeline harder to reason about.
 
-**Debugging.** When a pipeline produces unexpected output, break it apart. Assign intermediates, inspect each one, find the step that goes wrong, fix it, and reassemble the pipeline.
+**Debugging.** When a pipeline produces unexpected output, break it apart. Assign intermediates, inspect each one, find the step that goes wrong. Once you've fixed it, reassemble the pipeline.
 
 ::: callout-tip
 ## Opinion
-A pipe should tell a story. If it reads like a run-on sentence, break it into paragraphs and name the paragraph boundaries with meaningful variable names, not `temp1` and `temp2`.
+A pipe should tell a story. If it reads like a run-on sentence, break it into paragraphs. Name the paragraph boundaries with meaningful variable names, not `temp1` and `temp2`.
 :::
 
-The pipe gives you composition in a readable notation, but composition is only the beginning. Once you can chain transformations, the next question is how to apply them to many things at once: to every column, every group, every element of a list. That is the territory of @sec-functional-programming-map.
 
 ### Exercises {.unnumbered}
 

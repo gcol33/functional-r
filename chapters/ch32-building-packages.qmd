@@ -5,14 +5,16 @@
 source(here::here("_common.R"))
 ```
 
-You email `analysis.R` to a colleague. They run it and get an error because they don't have the `janitor` package. They install it, try again, and hit a different wall: your script calls `source("helpers.R")`, a file they don't have. You send it. They put it in the wrong directory. Two days later, they give up. The problem isn't your code; it's that scripts have no way to declare what they need, no way to carry their own context, no mechanism for self-description. Packages solve all three problems at once, and once you see the structure, you can build one in ten minutes.
+An R package is just a folder with a specific structure. Once you know the structure, you can make one in ten minutes. The hard part is not the packaging but the discipline of writing functions worth packaging.
 
 
 ## Why packages {#sec-why-packages}
 
-A package is the unit of shareable, testable, documented R code. Scripts depend on `source()` calls, hardcoded paths, and the hope that the right libraries happen to be installed; packages carry their dependencies, their documentation, and their tests as a single installable unit that either works or tells you exactly why it doesn't.
+A package is the unit of shareable, testable, documented R code. Scripts share poorly: they depend on `source()` calls, hardcoded paths, and the hope that someone has the right packages installed. Packages share well.
 
-Compare the email scenario with what happens when you share a package. Your colleague runs `pak::pak("username/mypackage")`, and everything installs: functions, documentation, dependencies. They type `?my_function` and see how to use it. No back-and-forth. No guessing.
+Consider what happens when you share a script. You email `analysis.R` to a colleague. They run it and get an error because they do not have the `janitor` package installed. They install it, try again, and get a different error because your script calls `source("helpers.R")` and they do not have that file. They ask you for it. You send it. They put it in the wrong directory. Another error. Two days later, they give up.
+
+Now consider sharing a package. They run `pak::pak("username/mypackage")`. Everything installs: your functions, your documentation, your dependencies. They type `?my_function` and see how to use it. It just works.
 
 Even if you never publish to CRAN, a package gives you:
 
@@ -21,7 +23,7 @@ Even if you never publish to CRAN, a package gives you:
 - **Dependency management**: you declare what you need.
 - **Namespace control**: your names do not collide with other packages' names.
 
-In @sec-functions-are-values-chapter, you saw that functions are values. A package is a named collection of functions with metadata, and that metadata is what separates "a folder of scripts" from "something someone else can install and use." The metadata has a specific shape, which raises an immediate question: what does it look like?
+In @sec-functions-are-values-chapter, you saw that functions are values. A package is a named collection of functions with metadata. The metadata is what makes the difference between "a folder of scripts" and "something someone else can install and use." The metadata has a specific shape.
 
 ::: callout-tip
 ## Opinion
@@ -48,7 +50,7 @@ mypackage/
 └── LICENSE           # license file
 ```
 
-**DESCRIPTION** is the most important file. It declares the package name, title, version, authors, license, and dependencies, and every field matters because CRAN checks it, `install.packages()` reads it, and other packages' `Imports` reference it. A minimal example:
+**DESCRIPTION** is the most important file. It declares the package name, title, version, authors, license, and dependencies. Every field matters: CRAN checks it, `install.packages()` reads it, and other packages' `Imports` reference it. A minimal example:
 
 ```
 Package: mypackage
@@ -65,9 +67,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 ```
 
-**NAMESPACE** controls what is visible to users (exports) and what you borrow from other packages (imports). Never edit it by hand; let roxygen2 generate it. Two hooks let you run code when the package loads: `.onLoad()` fires when the namespace is loaded (even by `::` access), while `.onAttach()` fires only when someone calls `library()`. Use `.onLoad()` for setup that must happen before any function runs (registering S3 methods, setting default options, initializing connections) and `.onAttach()` only for startup messages. Both go in `R/zzz.R` by convention. For full details, see R Packages (2e), chapter 10.
+**NAMESPACE** controls what is visible to users (exports) and what you borrow from other packages (imports). Never edit it by hand; let roxygen2 generate it. Two hooks let you run code when the package loads: `.onLoad()` runs when the namespace is loaded (even by `::` access), and `.onAttach()` runs when the package is attached with `library()`. Use `.onLoad()` for setup that must happen before any function is called (registering S3 methods, setting default options, initializing connections). Use `.onAttach()` only for startup messages. Both go in `R/zzz.R` by convention. For full details, see R Packages (2e), chapter 10.
 
-The namespace is an environment (the concept from @sec-functions-returning-functions), and `NAMESPACE` defines what names are visible in that environment. When you call `dplyr::filter()`, R looks in dplyr's namespace environment; when you call just `filter()`, R searches the environment chain, and which `filter` it finds depends on what is attached. In lambda calculus terms, a package namespace is a closure at the module level: functions inside can reference each other because they share the namespace environment, but the outside world only sees what is explicitly exported. The `NAMESPACE` file draws the same boundary that a lambda abstraction draws between bound and free variables. ML's module system (1980s), Haskell's module system, and OCaml's functors all solve the same problem of controlling visibility and preventing conflicts; R's approach is simpler, but the underlying idea is identical.
+The namespace is an environment (the concept from @sec-functions-returning-functions). `NAMESPACE` defines what names are visible in that environment. When you call `dplyr::filter()`, R looks in dplyr's namespace environment. When you call just `filter()`, R searches the environment chain, and which `filter` it finds depends on what is attached. In lambda calculus terms, a package namespace is a closure at the module level: functions inside can reference each other (they share the namespace environment), but the outside world only sees what is explicitly exported. The `NAMESPACE` file draws the same boundary that a lambda abstraction draws between bound and free variables. ML's module system (1980s), Haskell's module system, and OCaml's functors all solve the same problem: controlling what names are visible and preventing conflicts. R's approach is simpler but the underlying idea is the same.
 
 
 ## Creating a package {#sec-creating-package}
@@ -79,7 +81,7 @@ One function call scaffolds everything:
 usethis::create_package("path/to/mypackage")
 ```
 
-This creates the directory, `DESCRIPTION`, `NAMESPACE`, `R/`, `.Rbuildignore`, and `.gitignore`. The package is immediately loadable, which means you can start writing functions right away.
+This creates the directory, `DESCRIPTION`, `NAMESPACE`, `R/`, `.Rbuildignore`, and `.gitignore`. The package is immediately loadable.
 
 The development loop has four verbs:
 
@@ -91,7 +93,7 @@ devtools::test()        # run all tests (Ctrl+Shift+T)
 devtools::check()       # run R CMD check (Ctrl+Shift+E)
 ```
 
-`load_all()` is the key to fast iteration. It sources all files in `R/`, makes exports available, and simulates a fresh install without actually installing, so the cycle becomes: edit a function, hit `Ctrl+Shift+L`, test immediately, repeat. Without it, you'd have to rebuild and reinstall the entire package after every change, which is the kind of friction that kills momentum.
+`load_all()` is the key to fast iteration. It sources all files in `R/`, makes exports available, and simulates a fresh install without actually installing. You edit a function, hit `Ctrl+Shift+L`, and test immediately. This tight feedback loop (edit, load, test) is what makes package development fast. Without it, you would have to rebuild and reinstall the package after every change.
 
 The `usethis::use_*()` functions handle setup tasks:
 
@@ -105,7 +107,7 @@ usethis::use_readme_rmd()          # add README.Rmd
 usethis::use_github_action()       # add CI/CD
 ```
 
-Each one does one task correctly. No boilerplate to remember. But the functions you write remain invisible to users until you document them, and documentation has its own conventions.
+Each one does one task correctly. No boilerplate to remember. The functions you write, however, are invisible to users until you document them.
 
 ::: callout-tip
 ## Opinion
@@ -148,9 +150,9 @@ Key tags:
 - `@seealso`, `@family`: cross-references to related functions.
 - `@inheritParams`: borrow parameter documentation from another function.
 
-Markdown in roxygen is enabled by adding `Roxygen: list(markdown = TRUE)` to `DESCRIPTION`, which lets you use `**bold**`, `*italic*`, `` `code` ``, and `[function()]` for cross-links.
+Markdown in roxygen is enabled by adding `Roxygen: list(markdown = TRUE)` to `DESCRIPTION`. Then you can use `**bold**`, `*italic*`, `` `code` ``, and `[function()]` for cross-links.
 
-`devtools::document()` converts roxygen comments to `.Rd` files in `man/` and updates `NAMESPACE`. You write roxygen; you never touch `man/` directly. Good documentation earns users, but even the best-documented function needs other packages to work with.
+`devtools::document()` converts roxygen comments to `.Rd` files in `man/` and updates `NAMESPACE`. You write roxygen; you never touch `man/` directly. Good documentation earns users; the next question is how to manage the packages those users will need.
 
 ::: callout-tip
 ## Opinion
@@ -177,8 +179,7 @@ square <- function(x) x^2
 cube <- function(x) x^3
 ```
 
-Both `?square` and `?cube` now point to the same help page, which is useful when functions are closely related and easier to understand side by side. But how do you manage the other packages your functions depend on?
-
+Both `?square` and `?cube` now point to the same help page. This is useful when functions are closely related and easier to understand together.
 
 ### Exercises {.unnumbered}
 
@@ -188,7 +189,7 @@ Both `?square` and `?cube` now point to the same help page, which is useful when
 
 ## Dependencies {#sec-dependencies}
 
-Your package will use functions from other packages. How you declare that relationship determines whether your package installs cleanly or collapses into a tangle of missing symbols.
+Your package will use functions from other packages. How you declare that matters.
 
 **Imports**: packages your code needs to work. Listed in `DESCRIPTION`. Use `package::function()` in your code:
 
@@ -202,9 +203,9 @@ clean_data <- function(df) {
 
 **Suggests**: packages needed only for tests, vignettes, or examples. Not installed automatically when a user installs your package.
 
-**Depends**: rarely appropriate. Attaches the package when yours is loaded, meaning `library(mypackage)` also runs `library(dependency)`, which pollutes the user's namespace. Almost always wrong; use `Imports` instead.
+**Depends**: rarely appropriate. Attaches the package when yours is loaded. This means `library(mypackage)` also runs `library(dependency)`, which pollutes the user's namespace. Almost always wrong; use `Imports` instead.
 
-The rule is simple: use `Imports` and call functions with `::`. This makes dependencies explicit and avoids namespace collisions. If typing `dplyr::filter()` everywhere feels verbose, you can import specific functions into your namespace with the roxygen tag `@importFrom dplyr filter`, which writes `importFrom(dplyr, filter)` into `NAMESPACE` and lets you call `filter()` without the prefix. Use this sparingly: one or two heavily-used functions per dependency, not every function you call.
+The rule: use `Imports` and call functions with `::`. This makes dependencies explicit and avoids namespace collisions. If typing `dplyr::filter()` everywhere feels verbose, you can import specific functions into your namespace with the roxygen tag `@importFrom dplyr filter`. This writes `importFrom(dplyr, filter)` into `NAMESPACE`, letting you call `filter()` without the prefix. Use this sparingly: one or two heavily-used functions per dependency, not every function you call.
 
 ```{r}
 #| eval: false
@@ -230,7 +231,9 @@ test_that("plotting works", {
 
 `skip_if_not_installed()` prevents the test from failing on machines where the Suggested package is not available.
 
-Minimize dependencies. Every dependency is a potential breakage point, and if you only need one function from a package, consider whether you can write it yourself. A useful diagnostic: `usethis::use_package()` will refuse to add a package that is not installed, catching typos early, and `devtools::check()` will warn if you import a package but never use it. Dependencies declare what your package needs; tests prove that what you built actually works.
+Minimize dependencies. Every dependency is a potential breakage point. If you only need one function from a package, consider whether you can write it yourself. Dependencies declare what your package needs; tests prove that what you built actually works.
+
+A useful diagnostic: `usethis::use_package()` will refuse to add a package that is not installed, which catches typos early. And `devtools::check()` will warn if you import a package but never use it.
 
 
 ## Testing with testthat {#sec-testing-testthat}
@@ -262,7 +265,7 @@ Key expectations:
 
 `devtools::test()` runs all tests. `devtools::test_active_file()` runs just the file you are editing.
 
-How many tests should you write? Enough to cover the normal case, the edge cases, and the error cases. For a function like `bmi()`, that means correct output for typical input, correct output for vectorized input, correct behavior for zero or negative values, and an error for non-numeric input. Four or five tests per function is a reasonable starting point, and writing them forces you to think about your function's contract more carefully than any amount of staring at the implementation would.
+How many tests should you write? Enough to cover the normal case, the edge cases, and the error cases. For a function like `bmi()`, that means: correct output for typical input, correct output for vectorized input, correct behavior for zero or negative values, and an error for non-numeric input. Four or five tests per function is a reasonable starting point.
 
 ::: callout-tip
 ## Opinion
@@ -277,7 +280,7 @@ Test the contract, not the implementation. Your test should pass even if you rew
 
 ## Vignettes {#sec-vignettes}
 
-Function documentation is reference: you look up a specific function when you already know what you're looking for. Vignettes are the opposite. They show a newcomer how the pieces fit together, walking through a workflow from start to finish, and the difference between the two is the difference between a dictionary and a story.
+Vignettes are long-form documentation: tutorials, workflows, explanations. They complement function docs (which are reference) by showing how functions work together.
 
 ```{r}
 #| eval: false
@@ -286,7 +289,7 @@ usethis::use_vignette("getting-started")
 
 This creates a template in `vignettes/`. R Markdown vignettes (`.Rmd`) are the standard: code chunks run during package build, and the output is HTML. Quarto vignettes (`.qmd`) are the newer option, with more features but requiring Quarto as a system dependency.
 
-A good package has at least one vignette: "Getting Started" or "Introduction to mypackage." Write it as if the reader has never seen your package before and has five minutes to decide whether to keep reading.
+A good package has at least one vignette: "Getting Started" or "Introduction to mypackage." It shows the reader how to use the package end-to-end, not just individual functions. The difference between a reference manual and a tutorial is the difference between a dictionary and a story: one lists definitions, the other shows them in context.
 
 A vignette template looks like this:
 
@@ -320,12 +323,12 @@ result
 ```
 ```
 
-The YAML header is boilerplate. The content is yours. Documentation and vignettes make a package usable, but what makes it *reliable* is the automated quality gate that catches mistakes you'd never notice yourself.
+The YAML header is boilerplate. The content is yours. Write it as if the reader has never seen your package before and has five minutes to decide whether to use it. Documentation and vignettes make a package usable; the automated quality gate that makes it *reliable* is `R CMD check`.
 
 
 ## R CMD check {#sec-r-cmd-check}
 
-`R CMD check` runs roughly 50 tests against your package: does the `NAMESPACE` match the exports? Do all examples run without error? Are all arguments documented? Do the tests pass? Is the package installable?
+`R CMD check` is the automated quality gate. It runs roughly 50 tests: does the `NAMESPACE` match the exports? Do all examples run without error? Are all arguments documented? Do the tests pass? Is the package installable?
 
 ```{r}
 #| eval: false
@@ -338,7 +341,7 @@ Three levels of feedback:
 - **WARNING**: something is wrong. Must fix for CRAN; should fix regardless.
 - **NOTE**: something is unusual. Fix if you can; explain if you can't.
 
-The goal: 0 errors, 0 warnings, 0 notes. Each of those roughly 50 tests exists because someone, somewhere, shipped a broken package, and the strictness reflects the cost of breakage on CRAN, where 20,000+ packages depend on each other. When the check says NOTE, it is not being pedantic; it is remembering a bug someone else already found.
+The goal: 0 errors, 0 warnings, 0 notes. Each of those roughly 50 tests exists because someone, somewhere, shipped a broken package. The strictness reflects the cost of breakage on CRAN, where 20,000+ packages depend on each other. When the check says NOTE, it is not being pedantic: it is remembering a bug someone else already found. A clean check means your package is well-formed. A check that passes on your machine but fails on another platform is still a problem, which is why CI (continuous integration) matters (see @sec-sharing-package).
 
 Common issues and how to fix them:
 
@@ -347,7 +350,7 @@ Common issues and how to fix them:
 - **"Non-standard file/directory found"**: add the file to `.Rbuildignore` with `usethis::use_build_ignore("filename")`.
 - **"No visible binding for global variable"**: common with tidyverse code that uses unquoted column names. Fix with `utils::globalVariables()` or use `.data$column` from rlang.
 
-Run `check()` often during development, not just at the end. Each run should find at most one or two issues; if you wait until the end, you face dozens of notes at once, which is demoralizing and nearly impossible to debug systematically. A clean check means your package is well-formed, but a check that passes on your machine and fails on Linux is still a problem, which is why the next question matters: how do you get your package into other people's hands, and how do you make sure it works on their machines too?
+Run `check()` often during development, not just at the end. Each run should find at most one or two issues. If you wait until the end, you face dozens of notes at once, which is demoralizing and hard to debug. A passing check means the package is well-formed; the remaining question is how to get it into other people's hands.
 
 ### Exercises {.unnumbered}
 
@@ -357,28 +360,26 @@ Run `check()` often during development, not just at the end. Each run should fin
 
 ## Sharing your package {#sec-sharing-package}
 
-**GitHub**: push your package to GitHub. Users install with `pak::pak("username/mypackage")` or `devtools::install_github("username/mypackage")`. Lowest barrier to sharing.
+**GitHub**: push your package to GitHub. Users install with `pak::pak("username/mypackage")` or `devtools::install_github("username/mypackage")`. This is the lowest barrier to sharing.
 
-**pkgdown**: `usethis::use_pkgdown_github_pages()` builds a website from your documentation, README, and vignettes, with automatic deployment through GitHub Actions. Professional documentation for free.
+**pkgdown**: `usethis::use_pkgdown_github_pages()` builds a website from your documentation, README, and vignettes. Automatic deployment with GitHub Actions. Professional documentation for free.
 
-**CRAN**: the official repository. `devtools::submit_cran()`. Strict review: 0 errors, 0 warnings, ideally 0 notes, plus human reviewers who check CRAN policies. Worth the effort for packages with a broad audience.
+**CRAN**: the official repository. `devtools::submit_cran()`. Strict review: 0 errors, 0 warnings, ideally 0 notes. Human reviewers check CRAN policies. Worth it for packages with a broad audience.
 
-**R-universe** (`r-universe.dev`): automated package hosting with a lower barrier than CRAN but still discoverable. Point it at your GitHub repo, and it builds binaries for all platforms automatically.
+**R-universe** (`r-universe.dev`): automated package hosting. Lower barrier than CRAN, still discoverable. You point it at your GitHub repo, and it builds binaries for all platforms automatically.
 
 Version numbers follow semantic versioning (semver.org): MAJOR.MINOR.PATCH. PATCH for bug fixes, MINOR for new backward-compatible features, MAJOR for breaking changes. The tidyverse follows this strictly: when dplyr goes from 1.0 to 1.1, your code will not break; when it goes to 2.0, check the changelog.
 
-The progression is natural. You build a package for yourself, put it on GitHub so colleagues can use it, add pkgdown so new users can find their way around, and eventually submit to CRAN if the package solves a general enough problem. Each step adds effort but also reach.
+The progression is natural: you build a package for yourself, put it on GitHub so colleagues can use it, add pkgdown so new users can find their way around, and eventually submit to CRAN if the package solves a general problem. Each step adds effort but also reach.
 
-For GitHub-hosted packages, continuous integration is nearly free:
+For GitHub-hosted packages, continuous integration is nearly free. `usethis::use_github_action("check-standard")` adds a GitHub Actions workflow that runs `R CMD check` on Linux, macOS, and Windows every time you push. If the check fails, GitHub shows a red X next to the commit. If it passes, you get a green checkmark and a badge for your README:
 
 ```{r}
 #| eval: false
 usethis::use_github_action("check-standard")
 ```
 
-This adds a GitHub Actions workflow that runs `R CMD check` on Linux, macOS, and Windows every time you push. If the check fails, GitHub shows a red X next to the commit; if it passes, you get a green checkmark and a badge for your README. The real value is catching platform-specific bugs you would never find on your own machine: path separators (Windows uses `\`, everything else uses `/`), case-sensitive file systems (Linux is case-sensitive, macOS and Windows are not), and system library availability.
-
-Remember the colleague who couldn't run your script? A package with CI, documentation, and a one-line install command turns that two-day email chain into a single `pak::pak()` call. The structure does the work.
+This catches platform-specific bugs you would never find on your own machine. Common cross-platform issues include path separators (Windows uses `\`, everything else uses `/`), case-sensitive file systems (Linux is case-sensitive, macOS and Windows are not), and system library availability.
 
 ### Exercises {.unnumbered}
 

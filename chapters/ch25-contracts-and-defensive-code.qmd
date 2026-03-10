@@ -5,18 +5,18 @@
 source(here::here("_common.R"))
 ```
 
-Your function returns a number. The number is wrong. Nobody notices for three weeks, because nothing crashed, no error was raised, and the pipeline kept running, quietly poisoning every downstream result with garbage. A function that crashes is annoying; a function that lies to you is dangerous.
+A function that silently returns the wrong answer is worse than one that crashes. At least a crash tells you something is wrong.
 
-In 1986, Bertrand Meyer was designing a programming language called Eiffel, and he wanted a way to make functions honest about what they expected and what they promised in return. He called the idea *Design by Contract*: every function has a precondition (what must be true before it runs), a postcondition (what it guarantees after it runs), and an invariant (what stays true throughout). If the precondition fails, the caller broke the contract; if the postcondition fails, the function broke it. Either way, execution stops immediately with a clear explanation of which obligation was violated and by whom.
+In 1986, Bertrand Meyer was designing a programming language called Eiffel. He wanted functions to be explicit about what they expected and what they promised in return. He called the idea *Design by Contract*: every function has a precondition (what must be true before it runs), a postcondition (what it guarantees after it runs), and an invariant (what stays true throughout). If the precondition fails, the caller broke the contract. If the postcondition fails, the function broke it. Either way, execution stops immediately with a clear explanation of which obligation was violated and by whom.
 
-R has no built-in contract system. But the principle translates directly: a `stop()` at the top of a function that checks its inputs is a precondition, a `stopifnot()` before the return value is a postcondition, and the validator in a constructor/validator/helper pattern (@sec-s3-classes-properly) is a class invariant. You write these by hand where Eiffel provides them as syntax, but the discipline is the same. State your assumptions explicitly, halt the moment one is violated, and let the resulting error message tell the caller exactly what went wrong and where.
+R has no built-in contract system, but the principle translates directly. A `stop()` at the top of a function that checks its inputs is a precondition. A `stopifnot()` before the return value is a postcondition. The validator in a constructor/validator/helper pattern (@sec-s3-classes-properly) is a class invariant. You write these by hand in R where Eiffel provides them as syntax, but the discipline is the same: state your assumptions explicitly, and halt the moment one is violated.
 
-What does that discipline look like in practice?
+The goal is functions that fail loudly, fail early, and fail helpfully, so that bugs surface where they originate, not fifty lines downstream.
 
 
 ## The case for validation {#sec-case-for-validation}
 
-R is dynamically typed, which means nothing stops you from passing a character vector to a function that expects a number. Without validation, the error surfaces deep inside the function body, far from the actual mistake:
+R is dynamically typed. Nothing stops you from passing a character vector to a function that expects a number. Without validation, the error surfaces deep inside the function body, far from the actual mistake:
 
 ```{r}
 #| error: true
@@ -27,7 +27,7 @@ add_tax <- function(price, rate) {
 add_tax("42", 0.2)
 ```
 
-The error message says `non-numeric argument to binary operator`. If you already know what went wrong, that is enough; if you don't, it is useless. The real problem is that someone passed `"42"` instead of `42`, but R doesn't tell you that. It tells you about a multiplication that failed three levels deep.
+The error message says `non-numeric argument to binary operator`. Helpful if you already know what went wrong, useless if you don't. The real problem is that someone passed `"42"` instead of `42`, but R doesn't tell you that. It tells you about the multiplication that failed three levels deep.
 
 With validation, the error surfaces immediately:
 
@@ -43,16 +43,16 @@ add_tax <- function(price, rate) {
 add_tax("42", 0.2)
 ```
 
-Check inputs at the boundary, where data enters your function, not in the guts where it is consumed. This is *fail fast, fail loud, fail clear*. There is a deep connection to type theory here: a `stop()` that fires when input has the wrong type is a proof by contradiction. "If this value inhabited the type Numeric, execution would continue; it doesn't, so we halt." The type check is a proposition, and the program's continued execution past the check is the proof that the proposition holds. This is the Curry-Howard correspondence in miniature: types are propositions, programs are proofs. A function with signature `A -> B` is a proof that "if A then B." Dependently typed languages like Idris and Agda push this further, encoding preconditions in the type system itself and making runtime `stop()` calls unnecessary.
+The principle: check inputs at the boundary, where data enters your function, not in the guts where it's consumed. This is *fail fast, fail loud, fail clear*. There is a deep connection to type theory here: a `stop()` that fires when input has the wrong type is a proof by contradiction. "If this value inhabited the type Numeric, execution would continue; it doesn't, so we halt." The type check is a proposition, and the program's continued execution past the check is the proof that the proposition holds. This is the Curry-Howard correspondence in miniature: types are propositions, programs are proofs. A function with signature `A -> B` is a proof that "if A then B." Dependently typed languages like Idris and Agda push this further, encoding preconditions in the type system itself and making runtime `stop()` calls unnecessary.
 
-A 2003 NASA study found that 40% of aerospace software failures came from *missing* code: situations the programmers simply didn't anticipate. The Ariane 5 rocket (1996) self-destructed 37 seconds after launch because a 64-bit float was silently converted to a 16-bit integer, overflowing without a check; a single `stop()` equivalent would have saved a $370 million rocket. When your function returns `NA` instead of erroring on bad input, you have created the same category of silent failure that brought down that rocket. `stop()` with a clear message is the safe choice, because it forces the caller to deal with the problem immediately, before the bad value propagates through fifty lines of downstream code.
+A 2003 NASA study found that 40% of aerospace software failures came from *missing* code: situations the programmers didn't anticipate. The Ariane 5 rocket (1996) self-destructed 37 seconds after launch because a 64-bit float was silently converted to a 16-bit integer, overflowing without a check; a single `stop()` equivalent would have saved a $370 million rocket. Silent failures are more dangerous than crashes. When your function returns `NA` instead of erroring on bad input, you've created a silent failure. `stop()` with a clear message is the safe choice: it forces the caller to deal with the problem immediately, before the bad value propagates through fifty lines of downstream code.
 
 (This is about functions you write for yourself and for others, not about validating user input in a Shiny app.)
 
 
 ## `stop()`, `warning()`, and `message()` {#sec-stop-warning-message}
 
-R gives you three signalling functions, each pitched at a different severity. The differences matter more than you might think.
+R has three signalling functions, each for a different severity:
 
 `stop("msg")` halts execution and signals an error. Use it when the function cannot produce a correct result.
 
@@ -66,7 +66,7 @@ divide <- function(x, y) {
 divide(10, 0)
 ```
 
-`warning("msg")` continues execution but signals a warning, which makes it appropriate when the function can proceed but the result might surprise the caller.
+`warning("msg")` continues execution but signals a warning. Use it when the function can proceed but the result might be surprising.
 
 ```{r}
 safe_log <- function(x) {
@@ -77,7 +77,7 @@ safe_log <- function(x) {
 safe_log(c(1, -2, 3))
 ```
 
-`message("msg")` prints informational output: progress updates, status reports, diagnostics. `suppressMessages()` silences these, which is why `message()` is better than `cat()` for status output. It respects the caller's wishes.
+`message("msg")` prints informational output. Use it for progress updates or status reports. `suppressMessages()` silences these, which is why message is better than `cat()` for status output: it respects the caller's wishes.
 
 ```{r}
 load_data <- function(path) {
@@ -86,17 +86,17 @@ load_data <- function(path) {
 }
 ```
 
-The decision rule: if the result would be wrong, `stop()`. If the result is correct but surprising, `warning()`. If you are just providing status, `message()`. But where exactly is the line between "surprising" and "wrong"?
+The decision rule is simple: if the result would be wrong, `stop()`. If the result is correct but surprising, `warning()`. If you're just providing status, `message()`.
 
 ::: callout-tip
 ## Opinion
-Never use `warning()` when you should use `stop()`. A warning that scrolls past unread is worse than no warning at all; it gives you the illusion of safety while the bad value keeps propagating. If you are not confident the function produced a correct result, don't return one.
+Never use `warning()` when you should use `stop()`. A warning that scrolls past unread is worse than no warning at all. If you're not confident the function produced a correct result, don't return one.
 :::
 
 
 ## Writing informative errors {#sec-informative-errors}
 
-The difference between a helpful error and a frustrating one is the difference between ten seconds of debugging and ten minutes. Most of the gap comes down to one thing: does the message tell you what was expected and what was received?
+The difference between a helpful error and a frustrating one is the difference between ten seconds of debugging and ten minutes.
 
 ```{r}
 #| eval: false
@@ -113,9 +113,9 @@ stop(sprintf(
 ))
 ```
 
-Say what was *expected*, say what was *received*. The caller should be able to fix the problem without reading your source code.
+The pattern: say what was *expected*, say what was *received*. The caller should be able to fix the problem without reading your source code.
 
-`stopifnot()` is base R's assertion function, terse and good for internal checks where you trust the caller to interpret the output:
+`stopifnot()` is base R's assertion function. It's terse and good for internal checks:
 
 ```{r}
 #| error: true
@@ -142,7 +142,7 @@ normalize <- function(x) {
 normalize("abc")
 ```
 
-Named `stopifnot()` gives you the conciseness of assertions with messages you control. For functions that other people will call, this is the minimum standard. But what happens when you have ten arguments to validate, each with its own type, range, and length constraint?
+Named `stopifnot()` gives you the conciseness of assertions with messages you control. For functions that other people will call, this is the minimum standard.
 
 
 ### Exercises {.unnumbered}
@@ -166,7 +166,7 @@ Named `stopifnot()` gives you the conciseness of assertions with messages you co
 
 ## Common validation patterns {#sec-validation-patterns}
 
-A function that expects a numeric scalar but receives a character vector of length three will fail somewhere. The question is where. These patterns catch the problem at the door.
+A function that expects a numeric scalar but receives a character vector of length three will fail somewhere, the question is where. These patterns catch it at the door.
 
 - **Type checks**: `is.numeric(x)`, `is.character(x)`, `is.logical(x)`, `is.data.frame(x)`, `is.list(x)`.
 - **Length checks**: `length(x) == 1` for scalars, `length(x) > 0` for non-empty inputs.
@@ -212,7 +212,7 @@ my_summary(1:10, "tri")
 my_summary(1:10, "xyz")
 ```
 
-The error message from `match.arg()` is clear and lists the valid options, which is why it is preferred over manual `%in%` checks for string arguments with fixed options. But all of these patterns share a problem: writing them out by hand, over and over, for every function in a package.
+The error message from `match.arg()` is clear and lists the valid options. This is why `match.arg()` is preferred over manual `%in%` checks for string arguments with fixed options.
 
 
 ### Exercises {.unnumbered}
@@ -231,7 +231,7 @@ The error message from `match.arg()` is clear and lists the valid options, which
 
 ## The checkmate package {#sec-checkmate}
 
-Writing the same `if (!is.numeric(x)) stop(...)` pattern for the fifteenth time in a package gets old fast, and each repetition is another chance to misspell a class name or forget a length check. The `checkmate` package provides concise, fast assertion functions that handle the boilerplate:
+Writing validation by hand is repetitive. The `checkmate` package provides concise, fast assertion functions that handle the boilerplate:
 
 ```{r}
 #| eval: false
@@ -247,7 +247,7 @@ process <- function(data, method = "fast", threshold = 0.5) {
 
 Each `assert_*` function throws an informative error if the check fails. No `if`/`stop` boilerplate, no `sprintf` formatting. The function names are self-documenting: `assert_numeric`, `assert_character`, `assert_file_exists`, `assert_flag` (for single TRUE/FALSE), and dozens more.
 
-`checkmate` also provides two softer variants. `test_*` functions return `TRUE` or `FALSE` for use in conditional logic; `check_*` functions return the error message as a string (or `TRUE` on success) for custom handling.
+`checkmate` also provides two softer variants. `test_*` functions return `TRUE` or `FALSE` for use in conditional logic. `check_*` functions return the error message as a string (or `TRUE` on success) for custom handling.
 
 ```{r}
 #| eval: false
@@ -271,7 +271,7 @@ For package code with many validated arguments, `checkmate` pays for itself in r
 
 ## `tryCatch()` and error handling {#sec-trycatch}
 
-Everything so far has been about signalling your own errors. But sometimes the error comes from somewhere else: a file that doesn't exist, a web API that times out, a parsing function that chokes on malformed input. You need to *catch* those errors and decide what to do about them.
+The previous sections were about signalling your own errors. Sometimes you need to *catch* errors from other functions and decide what to do about them.
 
 `tryCatch()` catches an error, warning, or message and runs a handler:
 
@@ -286,7 +286,7 @@ result
 
 Instead of crashing, `log("a")` returns `NA`. The error handler receives the condition object `e` and returns a fallback value. This is *recovery*: you know an error might happen, and you have a plan for it.
 
-`try()` is a simpler wrapper that returns the result on success, or an object of class `"try-error"` on failure:
+`try()` is a simpler wrapper. It returns the result on success, or an object of class `"try-error"` on failure:
 
 ```{r}
 result <- try(log("a"), silent = TRUE)
@@ -295,7 +295,7 @@ class(result)
 
 `try()` is convenient for quick scripts, but `tryCatch()` gives you more control.
 
-For functional programming, `purrr::safely()` and `purrr::possibly()` wrap a function to make it error-tolerant. `safely()` returns a list with `$result` and `$error`, while `possibly()` returns a default value on failure. Both are designed for use with `map()` when applying a function that might fail on some elements:
+For functional programming, `purrr::safely()` and `purrr::possibly()` wrap a function to make it error-tolerant. `safely()` returns a list with `$result` and `$error`, while `possibly()` returns a default value on failure. Both are designed for use with `map()` when applying a function that might fail on some elements.
 
 ```{r}
 safe_log <- purrr::safely(log)
@@ -303,9 +303,9 @@ safe_log(10)
 safe_log("a")
 ```
 
-Erlang (1986, Ericsson) takes this philosophy to its extreme: instead of preventing crashes with validation, Erlang designs *supervisors* that detect and restart failed processes. Ericsson's telecom switches achieved 99.9999999% uptime using this "let it crash" philosophy, and R's `tryCatch()` is a mild version of the same idea. Both philosophies agree on the essential point: silent failures are the real enemy. But what does a disciplined version of "catch and recover" look like as a data structure?
+Erlang (1986, Ericsson) takes this philosophy to its extreme: instead of preventing crashes with validation, Erlang designs *supervisors* that detect and restart failed processes. Ericsson's telecom switches achieved 99.9999999% uptime using this "let it crash" philosophy. R's `tryCatch()` is a mild version of the same idea. Both philosophies agree on the essential point: silent failures are the real enemy. But what does a disciplined version of "catch and recover" look like as a data structure?
 
-In functional programming, the answer is the *Either* type (or *Result* in Rust): a computation either succeeds with a value or fails with an error. `tryCatch` runs the expression; if it succeeds, you get the result; if it throws, you get the error handler's output. This is the same "value or absence" logic as `NA` propagation (@sec-missing-values), but for errors instead of missing data. `NA` implements Maybe (present or absent); `tryCatch` implements Either (success or failure). Both thread the possibility of failure through a computation without crashing. Haskell and Rust make these patterns explicit with monadic types; R keeps them implicit in `NA` semantics and `tryCatch` mechanics, but the underlying structure is identical.
+In functional programming, the answer is the *Either* type (or *Result* in Rust). A computation either succeeds with a value or fails with an error. `tryCatch` runs the expression; if it succeeds, you get the result; if it throws, you get the error handler's output. This is the same 'value or absence' logic as `NA` propagation (@sec-missing-values), but for errors instead of missing data. `NA` implements Maybe (present or absent); `tryCatch` implements Either (success or failure). Both are ways of threading the possibility of failure through a computation without crashing. Haskell and Rust make these patterns explicit with monadic types; R keeps them implicit in `NA` semantics and `tryCatch` mechanics, but the underlying structure is identical.
 
 ::: callout-tip
 ## Opinion
@@ -322,7 +322,7 @@ Use `tryCatch()` when you have a recovery plan. Don't use it to silently swallow
 
 ## `rlang::abort()` and cli {#sec-rlang-abort}
 
-`rlang::abort()` is a modern replacement for `stop()` that automatically saves a backtrace (the chain of function calls that led to the error) and supports *condition classes* for selective catching:
+`rlang::abort()` is a modern replacement for `stop()`. It automatically saves a backtrace (the chain of function calls that led to the error), and supports *condition classes* for selective catching:
 
 ```{r}
 #| eval: false
@@ -357,9 +357,9 @@ cli::cli_abort(c(
 
 The `"x"` prefix marks the main error; `"i"` marks informational context. `{.arg x}` and `{.cls ...}` are cli's inline formatting: they render the argument name and class with special styling in terminals that support it.
 
-If you have ever wondered why tidyverse error messages look so polished, with colored bullets and formatted argument names, `cli::cli_abort()` is the answer. You don't need cli-formatted errors in scripts, but knowing they exist helps you read the error messages that tidyverse packages produce.
+This is primarily for package developers. If you've ever wondered why tidyverse error messages look so polished, with colored bullets and formatted argument names, `cli::cli_abort()` is the answer. You don't need cli-formatted errors in scripts, but knowing they exist helps you read the error messages that tidyverse packages produce.
 
-`rlang` also provides `rlang::arg_match()`, a stricter alternative to `match.arg()` that produces tidyverse-styled error messages and does *not* support partial matching, which makes it safer for package APIs where partial matching can cause subtle bugs.
+`rlang` also provides `rlang::arg_match()`, a stricter alternative to `match.arg()`. It produces tidyverse-styled error messages and does *not* support partial matching, which makes it safer for package APIs where partial matching can cause subtle bugs.
 
 
 ### Exercises {.unnumbered}
@@ -370,11 +370,11 @@ If you have ever wondered why tidyverse error messages look so polished, with co
 
 ## Designing function interfaces {#sec-function-interface-design}
 
-Validation is downstream of design. A well-designed function is hard to misuse in the first place, which means much of your defensive code never needs to exist.
+Validation is downstream of good design. A well-designed function is hard to misuse in the first place.
 
 **Required arguments have no defaults. Optional arguments have sensible defaults.** If a function needs a file path to work, don't give `path` a default of `NULL` and then check for it inside the body. Make the caller provide it.
 
-**Use `match.arg()` for string options.** The valid choices are visible in the function signature and in the help page, so the caller doesn't need to read the source code to know what's allowed.
+**Use `match.arg()` for string options.** The valid choices are visible in the function signature and in the help page. The caller doesn't need to read the source code to know what's allowed.
 
 ```{r}
 #| eval: false
@@ -393,9 +393,9 @@ my_plot <- function(data, type = "scatter") {
 
 **Put the data first.** This makes the function pipe-friendly (`data |> my_func()`). Modifier arguments come after.
 
-**Use `...` sparingly.** If you use it, document what it accepts and where it gets forwarded. An undocumented `...` is a trap: the caller passes a misspelled argument, `...` absorbs it silently, and no error is raised. (This is one of R's most common sources of invisible bugs.)
+**Use `...` sparingly.** If you use it, document what it accepts and where it gets forwarded. An undocumented `...` is a trap: the caller passes a misspelled argument, `...` absorbs it silently, and no error is raised.
 
-**Don't overload argument types.** An argument `x` that can be a vector, a data frame, or a formula is hard to validate and hard to use, because each accepted type needs its own validation branch and its own documentation. If you find yourself writing `if (is.data.frame(x)) ... else if (is.numeric(x)) ...`, consider splitting the function or using S3 dispatch.
+**Don't overload argument types.** An argument `x` that can be a vector, a data frame, or a formula is hard to validate and hard to use. Each accepted type needs its own validation branch and its own documentation. If you find yourself writing `if (is.data.frame(x)) ... else if (is.numeric(x)) ...`, consider splitting the function or using S3 dispatch.
 
 This connects to @sec-s3-and-s7: S7 properties with type declarations are validation built into the class definition. When you declare that a property must be a positive numeric scalar, invalid objects cannot exist. Validation at construction time, enforced by the type system, is the strongest form of defensive programming.
 
@@ -407,6 +407,5 @@ The best validation is the kind you don't have to write. A function with a clear
 
 ## Summary
 
-We opened with a silent failure: a function that returns the wrong answer without telling anyone. Every tool in this chapter, from `stop()` to `tryCatch()` to `match.arg()` to S7 typed properties, exists to prevent that silence. Validate at the boundary. Write error messages that say what was expected and what was received. Catch errors only when you have a recovery plan. And design interfaces that make misuse difficult in the first place, so the validation you do write is a safety net, not the only thing holding the bridge up.
+Defensive code is about respect: for the people who call your functions (including future you), and for the hours they'll spend debugging when something goes wrong. The core patterns are simple. Validate at the boundary with `stop()`, `stopifnot()`, or `checkmate`. Use `match.arg()` for string options. Write error messages that say what was expected and what was received. Catch errors with `tryCatch()` only when you have a recovery plan. And design interfaces that are hard to misuse in the first place.
 
-The next question is what happens when your functions need to talk to the outside world, to files, APIs, databases, where errors are not bugs but facts of life.

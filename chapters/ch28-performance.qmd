@@ -5,14 +5,14 @@
 source(here::here("_common.R"))
 ```
 
-Your code is too slow. You know this because you ran it, waited, checked your phone, looked back at the screen, and it was still running. The question is: which part?
+The first rule of optimization is "don't", and the second is "measure first."
 
-Most R code finishes before you notice it started, and the instinct when something takes too long is to rewrite the whole thing, to reach for C++ or parallelism or some other heavy tool before understanding where the seconds actually go. That instinct is almost always wrong. There is a sequence that works: profile, vectorize, pre-allocate, switch engines, and only as a last resort drop into compiled code. Each step is cheaper than the next, and most problems yield to the first two.
+Most R code is fast enough. When it is not, there is a clear sequence of steps: profile, vectorize, pre-allocate, switch engines, and (as a last resort) drop into compiled code. This chapter walks through that sequence.
 
 
 ## Profile before you optimize {#sec-profile-first}
 
-The function you suspect is slow is, more often than not, innocent. Some other line, one you barely glanced at while writing, runs a million times while the suspect runs once. Optimization without measurement is guesswork dressed up as engineering. You have to measure.
+Optimization without measurement is guessing. The function you think is slow is often not the bottleneck. The line you think is expensive often runs once while another line runs a million times. You have to measure.
 
 **Quick timing** with `system.time()`:
 
@@ -23,7 +23,7 @@ system.time({
 })
 ```
 
-The first number (`user`) is CPU time. The third (`elapsed`) is wall-clock time. Good enough for ballpark estimates, but ballpark estimates deceive you when differences are small, when the thing you are comparing takes three milliseconds and the noise takes five.
+The first number (`user`) is CPU time. The third (`elapsed`) is wall-clock time. Good for rough estimates, but rough estimates lie when differences are small.
 
 **Precise benchmarking** with `bench::mark()`:
 
@@ -36,7 +36,9 @@ bench::mark(
 )
 ```
 
-`bench::mark()` runs each expression multiple times, reports median time and memory allocation, and checks that all expressions return the same result. Use it for head-to-head comparisons. `microbenchmark::microbenchmark()` is the older alternative: sub-millisecond accurate, runs expressions 100 times by default, reports summary statistics. Both work well; `bench::mark` is newer and checks for equal results automatically.
+`bench::mark()` runs each expression multiple times, reports median time and memory allocation, and checks that all expressions return the same result. Use it for "which approach is faster" comparisons.
+
+`microbenchmark::microbenchmark()` is the older alternative: sub-millisecond accurate, runs expressions 100 times by default, reports summary statistics. Both tools work well; `bench::mark` is newer and checks for equal results automatically.
 
 **Profiling** with `profvis::profvis()`:
 
@@ -50,7 +52,7 @@ profvis::profvis({
 })
 ```
 
-`profvis` produces an interactive flame graph showing which lines eat the most time and allocate the most memory. Use it when you do not know where the bottleneck is, which, if you are honest with yourself, is most of the time.
+`profvis` produces an interactive flame graph showing which lines take the most time and allocate the most memory. Use it when you do not know where the bottleneck is, which is most of the time.
 
 Here is a concrete example. The function `slow_analysis` generates data, fits a model, copies residuals in a loop (using `c()` to grow a vector), and computes a summary:
 
@@ -73,17 +75,17 @@ slow_analysis <- function(n = 5e4) {
 profvis::profvis(slow_analysis(5e4))
 ```
 
-The profile output shows where time actually goes:
+The profile output shows where time is actually spent:
 
 ![Flame graph of `slow_analysis()`: width is time. The `c()` tower on the left (the residual-copying loop) and the `lm` call stack on the right are the two hot spots. The `c()` loop takes roughly half the total time.](../images/flame_graph.png){#fig-flame-graph width=100%}
 
-Read from bottom to top. `slow_analysis` calls `lm` on the right and runs the residual-copying loop on the left; inside the loop, nearly all time goes to `c()`, the vector-growing bottleneck, while inside `lm` the cost distributes across its internals (`model.frame`, `eval`, `lm.fit`). Without this graph, you might guess model fitting is the problem. The graph says otherwise.
+Read from bottom to top: `slow_analysis` calls `lm` (right) and runs the residual-copying loop (left). Inside the loop, nearly all time goes to `c()`, the vector-growing bottleneck. Inside `lm`, the cost is in its internals (`model.frame`, `eval`, `lm.fit`). Without this graph, you might guess the model fitting is the bottleneck. The graph shows it's the `c()` loop.
 
-The workflow is simple: run `profvis` on realistic input, find the hot spot, fix that one thing, re-profile. What do you do once you have found the bottleneck?
+The workflow: run `profvis` on realistic input, find the hot spot, fix that one thing, re-profile. Do not guess.
 
 ::: callout-tip
 ## Opinion
-If you have not profiled, you do not have a performance problem. You have a feeling.
+If you have not profiled, you do not have a performance problem; you have a feeling.
 :::
 
 ### Exercises {.unnumbered}
@@ -94,11 +96,11 @@ If you have not profiled, you do not have a performance problem. You have a feel
 
 ## Vectorization {#sec-vectorization}
 
-Consider a vector of a million numbers. You want to double each one. You could write a loop that visits each element, multiplies it by two, stores the result. Or you could write `x * 2` and let R handle the iteration. The second version runs 10 to 100 times faster. Why?
+R is fast when you operate on whole vectors at once, and slow when you operate element by element. This is not an accident of implementation. It is a design philosophy with a specific origin.
 
-The answer traces back to 1962, when Kenneth Iverson at Harvard published *A Notation as a Tool of Thought*, describing APL (A Programming Language). APL's central insight was that mathematical operations should apply to entire arrays, not individual elements: you do not write a loop to add two vectors; you write `A + B` and the language handles the rest. Iverson won the Turing Award for this work in 1979, and the idea traveled through S (where Chambers adopted it for statisticians who think in columns, not cells) and into R, where `x * 2` multiplies every element of `x` without a loop, an index variable, or any mention of how many elements `x` contains.
+In 1962, Kenneth Iverson at Harvard published *A Notation as a Tool of Thought*, describing APL (A Programming Language). APL's central idea was that mathematical operations should apply to entire arrays, not individual elements. You don't write a loop to add two vectors; you write `A + B` and the language handles the iteration. Iverson won the Turing Award for this work in 1979. The idea traveled through S (where Chambers adopted it for statisticians who think in columns, not cells) and into R, where `x * 2` multiplies every element of `x` without a loop, an index variable, or any mention of how many elements `x` has.
 
-When you call a vectorized function, R dispatches to optimized C code underneath. The loop still happens, but it happens in compiled machine code rather than stepping through R's interpreter one element at a time. Think of it as the difference between reading a book aloud word by word and handing the entire manuscript to a speed-reader: the same work gets done, but the overhead per unit collapses.
+Vectorized operations call optimized C code internally. The loop still happens, but it happens in C, not in R's interpreter. This is the same idea as compilation in the lambda calculus sense: when you write `x * 2`, R does not perform beta reduction step by step in the interpreter. It calls a C function that performs all the multiplications in compiled machine code. The abstraction barrier between R and C is a translation from high-level terms into low-level operations, collapsing many reduction steps into a single native call.
 
 ```{r}
 x <- rnorm(1e5)
@@ -113,7 +115,7 @@ system.time({
 })
 ```
 
-The difference grows with input size, and part of the speedup has nothing to do with R at all. Vectorized operations work on contiguous memory with sequential access patterns that the CPU prefetcher predicts correctly; `sum(x)` on a contiguous vector can be 100x faster than summing the same values scattered in a list, because L1 cache is roughly 27x faster than main memory. Martin Thompson, a high-performance computing advocate who borrowed the term from racing driver Jackie Stewart, calls this *mechanical sympathy*: writing software that works with the hardware rather than against it.
+The vectorized version is typically 10 to 100 times faster. The difference grows with the size of the input. Part of this speedup is not R overhead but hardware: vectorized operations work on contiguous memory with sequential access patterns, which the CPU prefetcher predicts correctly. `sum(x)` on a contiguous vector can be 100x faster than summing the same values scattered in a list, because L1 cache is roughly 27x faster than main memory. Martin Thompson, a high-performance computing advocate who borrowed the term from racing driver Jackie Stewart, calls this *mechanical sympathy*: writing software that works with the hardware rather than against it.
 
 Common vectorization patterns:
 
@@ -156,9 +158,9 @@ for (i in 1:nrow(mat)) row_totals[i] <- sum(mat[i, ])
 row_totals <- rowSums(mat)
 ```
 
-Not everything yields to vectorization. Iterations where each step depends on the previous result (Markov chains, recursive algorithms, some simulations) genuinely need loops, and for those @sec-compiled-code offers an escape hatch. But before reaching for compiled code, make sure you are not confusing convenience wrappers with the real thing.
+Not everything can be vectorized. Iterations where each step depends on the previous result (Markov chains, recursive algorithms, some simulations) genuinely need loops. For those cases, @sec-compiled-code offers an escape hatch. But before reaching for compiled code, make sure you are not confusing convenience wrappers with true vectorization.
 
-`sapply()` and `lapply()` look like vectorization. They are not. They are convenient wrappers around loops that still call your R function once per element, no faster than a well-written `for` loop. True vectorization means the loop runs in C: `sum()`, `cumsum()`, `ifelse()`, `pmin()`, `rowSums()`. If the loop is still in R, the speed is still in R. So what happens when you have a loop that genuinely cannot be vectorized, but it still needs to be fast?
+`sapply()` and `lapply()` are not vectorization. They are convenient wrappers around loops, but they still call your R function once per element. They are not faster than a well-written `for` loop. True vectorization means the loop runs in C, not in R. `sum()`, `cumsum()`, `ifelse()`, `pmin()`, and `rowSums()` are truly vectorized. `sapply(x, my_function)` is not.
 
 ### Exercises {.unnumbered}
 
@@ -168,7 +170,7 @@ Not everything yields to vectorization. Iterations where each step depends on th
 
 ## Memory: pre-allocate and avoid copies {#sec-memory}
 
-Before you reach for a different language, there is a simpler trap to check: your loop might be slow not because loops are inherently slow in R, but because you are accidentally making R copy your entire result vector on every single iteration.
+The classic mistake is growing a vector in a loop:
 
 ```{r}
 # Slow: O(n^2) because each c() copies the entire vector
@@ -198,9 +200,9 @@ bench::mark(
 )
 ```
 
-Each call to `c(result, value)` allocates a new vector of size `length(result) + 1` and copies every existing element into it. For `n` iterations, that totals $1 + 2 + 3 + \cdots + n = O(n^2)$ copies, which means doubling your input size quadruples your runtime. Pre-allocation sidesteps the entire problem: you tell R the final size upfront with `numeric(n)`, `character(n)`, `logical(n)`, or `vector("list", n)`, and each assignment writes directly into the slot without copying anything.
+Each call to `c(result, value)` allocates a new vector of size `length(result) + 1` and copies all existing elements. For `n` iterations, that is $1 + 2 + 3 + \cdots + n = O(n^2)$ total copies. Pre-allocation avoids this entirely.
 
-But pre-allocation only solves the allocation problem. There is a second performance trap hiding in how R shares memory.
+Pre-allocate with `numeric(n)`, `character(n)`, `logical(n)`, or `vector("list", n)`. Tell R the final size upfront. But pre-allocation only solves the allocation problem; there is a second performance trap hiding in how R shares memory.
 
 **Copy-on-modify**: R copies an object when you modify it *and* another name points to it:
 
@@ -220,7 +222,9 @@ y[1] <- 0L    # triggers a copy
 untracemem(x)
 ```
 
-When only one name references an object, R modifies it in place, which is why pre-allocated loops are fast: the result vector has a single reference, so `result[i] <- value` writes directly without triggering a copy. The subtlety is that functions create references too. When you pass `x` to a function, the function parameter and the caller's variable both point to the same object; if the function modifies its copy, R silently allocates a new one. This means helper functions called inside tight loops can trigger copies you never intended. `tracemem()` is your diagnostic tool here.
+If only one name references an object, R modifies it in place. This is why pre-allocated loops are fast: the result vector has a single reference, so assignments like `result[i] <- value` modify in place without copying.
+
+A subtlety: functions create references. When you pass `x` to a function, the function parameter points to the same object. If the function modifies `x`, R copies it. This means that helper functions called inside tight loops can trigger unexpected copies. `tracemem()` is your diagnostic tool here.
 
 ### Exercises {.unnumbered}
 
@@ -230,9 +234,7 @@ When only one name references an object, R modifies it in place, which is why pr
 
 ## data.table {#sec-data-table}
 
-You have vectorized your operations, pre-allocated your loops, and the code is still too slow. The bottleneck is no longer your logic; it is the data frame engine itself. `dplyr` is readable and expressive, but on millions of rows its abstractions carry a cost: intermediate copies, grouped operations that could be fused, filters that scan more data than necessary.
-
-`data.table` strips away those abstractions:
+`data.table` is a high-performance alternative to data frames and dplyr. Its syntax is terse and it routinely runs 5-50x faster than dplyr on large data:
 
 ```{r}
 #| eval: false
@@ -244,11 +246,18 @@ dt <- fread("large_file.csv")  # much faster than read.csv()
 dt[age > 30, .(mean_income = mean(income)), by = region]
 ```
 
-The `dt[i, j, by]` syntax puts row filtering (`i`), column operations (`j`), and grouping (`by`) in a single expression, which lets data.table optimize the entire operation as one unit rather than executing three separate steps. It modifies columns in place (no copy-on-modify overhead), automatically parallelizes grouped operations, uses less memory than equivalent dplyr pipelines, and its `fread()` reads CSV files much faster than `read.csv()` and often faster than `readr::read_csv()`.
+The `dt[i, j, by]` syntax puts row filtering (`i`), column operations (`j`), and grouping (`by`) in a single expression. Key advantages:
 
-The trade-off is a steeper learning curve and a different philosophy from the tidyverse. If you do not want to learn the syntax, `dtplyr` bridges the gap: write dplyr verbs, get data.table speed. It translates your pipeline behind the scenes.
+- Modifies columns in place (no copy-on-modify overhead).
+- Automatic parallelization of grouped operations.
+- Lower memory usage than equivalent dplyr pipelines.
+- `fread()` reads CSV files much faster than `read.csv()` and often faster than `readr::read_csv()`.
 
-A quick comparison:
+The trade-off is a steeper learning curve and a different philosophy from the tidyverse. `dtplyr` bridges the gap: write dplyr syntax, get data.table speed. It translates dplyr verbs to data.table operations behind the scenes.
+
+Consider data.table when you have millions of rows, performance-critical pipelines, or memory constraints.
+
+A quick comparison of the same operation in dplyr and data.table:
 
 ```{r}
 #| eval: false
@@ -265,7 +274,7 @@ dt <- as.data.table(sales)
 dt[year == 2024, .(total = sum(revenue)), by = region]
 ```
 
-Both produce the same result. The data.table version is more compact and typically faster on large data; the dplyr version is more readable if you think in pipes. Neither is wrong. But both share a limitation that matters once your ambitions outgrow your RAM: they operate entirely in memory.
+Both produce the same result. The data.table version is more compact and typically faster on large data. The dplyr version is more readable if you are used to the pipe style. Neither is "right"; they serve different priorities. Both, however, share a limitation: they operate in memory, on data that fits in RAM.
 
 ### Exercises {.unnumbered}
 
@@ -275,9 +284,9 @@ Both produce the same result. The data.table version is more compact and typical
 
 ## Columnar engines: Arrow and DuckDB {#sec-columnar-engines}
 
-What happens when your data no longer fits in memory, or when it does fit but you want analytics that finish before your coffee cools?
+When data does not fit in memory, or when you want faster analytics on data that does, columnar engines help.
 
-**Arrow** (`arrow` package) reads Parquet and Feather files and processes them with dplyr syntax. Operations are lazy: they build a query plan, then execute it in a single pass, loading only the columns and rows you actually need:
+**Arrow** (`arrow` package) reads Parquet and Feather files and processes them with dplyr syntax. Operations are lazy: they are planned, then executed in a single pass, loading only the columns and rows you need:
 
 ```{r}
 #| eval: false
@@ -290,7 +299,7 @@ open_dataset("data/large_parquet/") |>
   dplyr::collect()  # only now does data enter R
 ```
 
-**DuckDB** (`duckdb` package) is an embedded analytical database that reads Parquet, CSV, and data frames, handles data larger than RAM, and supports both SQL and dplyr syntax (via `dbplyr`):
+**DuckDB** (`duckdb` package) is an embedded analytical database. It reads Parquet, CSV, and data frames, handles data larger than RAM, and supports SQL or dplyr syntax (via `dbplyr`):
 
 ```{r}
 #| eval: false
@@ -302,13 +311,13 @@ dbGetQuery(con, "SELECT region, SUM(revenue) FROM sales GROUP BY region")
 dbDisconnect(con)
 ```
 
-**duckplyr** goes one step further: a drop-in replacement for dplyr that routes computation through DuckDB's engine. Same syntax, faster execution, near-zero transition cost.
+**duckplyr** is a drop-in replacement for dplyr that uses DuckDB's engine. Same syntax, faster execution. The transition cost is near zero.
 
-The stack looks like this: Parquet files on disk, Arrow or DuckDB as the engine, dplyr verbs as the interface, results collected into R. You write the same code you already know; the machinery underneath is faster. Much of that speed comes from *query fusion*, combining multiple operations into a single pass over the data and eliminating intermediate allocations. In functional programming, this technique is called *deforestation* (Wadler, 1988): `map f . map g` creates an intermediate list, but fusion rewrites it as `map (f . g)`, traversing the data once. data.table and Arrow apply the same principle at scale.
+The stack: Parquet files on disk, Arrow or DuckDB as the engine, dplyr verbs as the interface, results collected into R. You write the same dplyr code; the engine underneath is faster. These engines gain much of their speed from *query fusion*: combining multiple operations into a single pass over the data and eliminating intermediate allocations. In functional programming, this technique is called *deforestation* (Wadler, 1988): `map f . map g` creates an intermediate list, but fusion rewrites it as `map (f . g)`, traversing the data once. data.table and Arrow apply the same principle at scale.
 
 ::: callout-tip
 ## Opinion
-If your data fits in memory and dplyr is fast enough, stop. If it does not fit, or if grouped aggregations drag, try DuckDB. With duckplyr the transition cost is nearly zero.
+If your data fits in memory and dplyr is fast enough, stop there. If it does not fit, or you need faster grouped aggregations, try DuckDB. The transition cost is near zero with duckplyr.
 :::
 
 ### Exercises {.unnumbered}
@@ -319,9 +328,9 @@ If your data fits in memory and dplyr is fast enough, stop. If it does not fit, 
 
 ## When and how to call compiled code {#sec-compiled-code}
 
-Sometimes R is simply the wrong language for the inner loop. You have profiled, vectorized, pre-allocated, tried data.table, and the bottleneck is a tight loop where each iteration depends on the last, where no vectorized function exists, where the work is purely computational and measured in millions of iterations. At that point, the right move is to write the hot loop in a compiled language and call it from R. Three options: C, C++ (via Rcpp), and Rust (via extendr).
+When R is fundamentally too slow (tight loops that cannot be vectorized, recursive algorithms, element-wise operations on millions of elements), you can drop into compiled code. Three options: C, C++ (via Rcpp), and Rust (via extendr).
 
-**C via `.Call()`**: R's native foreign function interface. You write C functions that take and return `SEXP` objects (R's internal type), managing memory yourself with `PROTECT`/`UNPROTECT`:
+**C via `.Call()`**: R's native foreign function interface. You write C functions that take and return `SEXP` objects (R's internal type). Memory management is manual (`PROTECT`/`UNPROTECT`):
 
 ```{r}
 #| eval: false
@@ -340,7 +349,7 @@ SEXP sum_c(SEXP x) {
 
 Low-level, no dependencies, maximum control. Used extensively in base R and older packages.
 
-**C++ via Rcpp**: the most popular choice, and for good reason. It handles type conversion and memory management automatically, so you write code that looks almost like normal C++:
+**C++ via Rcpp**: the most popular choice. Handles type conversion and memory management automatically:
 
 ```{r}
 #| eval: false
@@ -360,7 +369,7 @@ double sum_cpp(NumericVector x) {
 
 `Rcpp::sourceCpp("sum_cpp.cpp")` compiles and loads the function in one step. Immediate gratification.
 
-**Rust via extendr**: the newest option. Rust provides memory safety without garbage collection; segfaults are, by design, impossible in safe Rust:
+**Rust via extendr**: the newest option. Rust provides memory safety without garbage collection, no segfaults by design:
 
 ```{r}
 #| eval: false
@@ -373,20 +382,20 @@ fn sum_rust(x: &[f64]) -> f64 {
 }
 ```
 
-`rextendr::rust_function()` for interactive use, `rextendr::use_extendr()` to set up a Rust-powered package. The ecosystem is young but growing fast.
+`rextendr::rust_function()` for interactive use, `rextendr::use_extendr()` to set up a Rust-powered package. The ecosystem is growing.
 
-**When to reach for compiled code**:
+**When to use compiled code**:
 
 - Loops where each iteration depends on the previous one.
 - Recursive algorithms (tree traversal, dynamic programming).
 - Operations that process each element individually (no vectorization possible).
 - Hot loops identified by profiling.
 
-**When not to**: when vectorization solves the problem, when the bottleneck is I/O (more C++ will not make your disk spin faster), when correctness matters more than speed and the compiled code would be complex enough to harbor bugs.
+**When not to**: when vectorization solves the problem, when the bottleneck is I/O, when correctness matters more than speed and the code is complex. If none of these apply and you still need more speed, the question becomes which compiled language.
 
 ::: callout-tip
 ## Opinion
-Start with Rcpp. It has the largest community, the most examples, and the gentlest on-ramp. Consider Rust if you want compile-time safety guarantees. Consider raw C only if you need zero dependencies.
+Start with Rcpp. It has the largest community, the most examples, and the easiest on-ramp. Consider Rust if you want compile-time safety guarantees. Consider raw C only if you need zero dependencies.
 :::
 
 
@@ -402,11 +411,13 @@ When code is too slow, work through this list in order:
 6. **Compiled code** (Rcpp, extendr, `.Call()`): for tight loops that cannot be vectorized.
 7. **Parallelize**: `future.apply`, `furrr`, `parallel`. Last resort; adds complexity.
 
-The order matters. Each step is cheaper and lower-risk than the next: profiling costs nothing, vectorization is usually a one-line change, rewriting in C++ is a project, and parallelization introduces concurrency bugs that are notoriously hard to reproduce. Start at the top and stop the moment the code is fast enough, because Amdahl's law (1967) puts a hard ceiling on what you can gain. If 5% of your code takes 95% of the time, making the other 95% of code infinitely fast yields only a 5% speedup. The same limit applies to parallelization: if 10% of the work is sequential, you can never exceed a 10x speedup no matter how many cores you throw at it.
+The order matters. Each step is cheaper and lower-risk than the next. Profiling is free. Vectorization is usually a one-line change. Rewriting in C++ is a project. Parallelization introduces concurrency bugs. Start at the top and stop as soon as the code is fast enough. Amdahl's law (1967) formalizes this: if 5% of your code takes 95% of the time, making the other 95% of code infinitely fast gives you only a 5% speedup. The same limit applies to parallelization: if 10% of your work is sequential, you can never get more than a 10x speedup no matter how many cores you add. This is why profiling comes first.
 
-This is why profiling comes first. You need to know which 5% to fix.
+The order matters because each step carries increasing cost. Parallelization is last because it introduces the most complexity for the least predictable gain.
 
-R offers several frameworks for parallel execution. `parallel::mclapply()` works on Unix but not Windows. `future.apply::future_lapply()` works everywhere and swaps in for `lapply()` with minimal changes. `furrr::future_map()` is the parallel version of `purrr::map()`. All split work across cores, and all carry the same caveat: parallelization only helps when the work is CPU-bound and divisible. If the bottleneck is reading from disk, more cores will not help. If iterations depend on each other, you cannot split them. And the overhead of spawning workers and collecting results means parallelization only pays off when each unit of work is substantial (milliseconds, not microseconds).
+R has several frameworks for parallel execution. `parallel::mclapply()` works on Unix but not Windows. `future.apply::future_lapply()` works everywhere and swaps in for `lapply()` with minimal code changes. `furrr::future_map()` is the parallel version of `purrr::map()`. All of them split work across cores.
+
+But parallelization only helps if the work is CPU-bound and divisible. If your bottleneck is reading a file from disk, more cores will not help. If your iterations depend on each other, you cannot parallelize them. And the overhead of spawning workers and collecting results means parallelization only pays off when each unit of work is substantial (milliseconds, not microseconds).
 
 ```{r}
 #| eval: false
@@ -420,5 +431,3 @@ results <- future_sapply(1:100, function(i) {
   i^2
 })
 ```
-
-So here is where you stand: you can find bottlenecks, eliminate unnecessary copies, hand tight loops to compiled code, and split independent work across cores. But the single most effective optimization, the one that pays dividends in every program you will ever write, remains the one at the top of the list. Measure first. The profile never lies, even when your intuition does.

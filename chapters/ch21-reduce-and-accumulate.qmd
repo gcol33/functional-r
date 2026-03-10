@@ -7,69 +7,69 @@ library(purrr)
 library(dplyr)
 ```
 
-You have a list of data frames from an API, and you need to merge them all into one. You have a list of sets and you need their intersection. You have a sequence of transactions and you need a running balance. In each case the pattern is the same: take two things, combine them, take the result and combine it with the next thing, repeat until only one thing remains. `map()` cannot help you here, because `map()` treats every element in isolation; it never looks at what came before. The functional you need is `Reduce()`, which takes a binary operation and collapses an entire list into a single value by threading an accumulator from one step to the next.
+`map()` transforms each element independently. `Reduce()` combines elements into one result. If `map()` is "do this to each," then `Reduce()` is "collapse everything with this."
 
-In @sec-iteration-without-loops you saw how `map()` replaces loops that apply a function element by element. But some loops carry state: a running total that grows with each pass, a chain of merges that folds data frames together one by one, a series of intersections that winnows a collection down to what survives every round. These are the loops that `Reduce()` was built for.
+In @sec-iteration-without-loops you saw how `map()` replaces loops that apply a function to each element. But some loops do not just apply: they accumulate. A running total, a chain of merges, a series of intersections. These loops carry state from one iteration to the next. `Reduce()` is the functional that replaces them — given only a binary operation, it collapses an entire list into a single value.
 
 
 ## Left fold {#sec-left-fold}
 
-`Reduce()` takes a binary function and a list, then combines the elements pairwise from left to right:
+`Reduce()` takes a binary function and a list, and combines the elements pairwise from left to right:
 
 ```{r}
 Reduce(`+`, 1:5)
 ```
 
-That computes `((((1 + 2) + 3) + 4) + 5)`. The first call is `f(1, 2)`, which gives 3; then `f(3, 3)`, giving 6; then `f(6, 4)`, giving 10; then `f(10, 5)`, giving 15. Each intermediate result becomes the left argument of the next call, which is why this is called a *left fold*: the parentheses nest to the left.
+That computes `((((1 + 2) + 3) + 4) + 5)`. The first call is `f(1, 2)`, then `f(3, 3)`, then `f(6, 4)`, then `f(10, 5)`. Each intermediate result becomes the first argument to the next call. This is a *left fold*.
 
-The name comes from Haskell's `foldl`, but the idea predates it by decades. APL had the `/` operator in 1962: `+/1 2 3 4 5` gives 15. Kenneth Iverson recognized something that took most programming languages another forty years to rediscover: reducing a list with a binary operator is not a loop pattern, it is a fundamental operation.
+The name comes from functional programming (Haskell's `foldl`), but the idea is older. APL had the `/` operator in 1962: `+/1 2 3 4 5` gives 15. Kenneth Iverson recognized that reducing a list with a binary operator was a fundamental operation, not a loop pattern.
 
-With a named function the folding structure becomes visible:
+With a named function, the structure is clearer:
 
 ```{r}
 Reduce(paste, c("the", "cat", "sat", "on", "the", "mat"))
 ```
 
-Each step takes the accumulated string and pastes the next word onto it. The accumulator grows; the list shrinks. When nothing remains, the accumulator is the answer.
+Each step takes the accumulated string and pastes the next word onto it.
 
 
 ## The init argument {#sec-reduce-init}
 
-What does `Reduce(f, x)` do when `x` has one element? It returns that element without ever calling `f`. Reasonable enough. What about zero elements?
+What does `Reduce(f, x)` do when `x` has one element? It returns that element without ever calling `f`. What about zero elements?
 
 ```{r}
 #| error: true
 Reduce(`+`, list())
 ```
 
-An error, because there is nothing to return and no identity to fall back on. The `init` argument fixes this:
+An error. There is no identity to return. The `init` argument fixes this:
 
 ```{r}
 Reduce(`+`, list(), init = 0)
 ```
 
-With `init`, the fold starts by calling `f(init, x[[1]])` instead of `f(x[[1]], x[[2]])`, which means the fold always has something to work with, even when the list is empty. The value you pass as `init` should be the identity element for the operation: 0 for addition, 1 for multiplication, `""` for `paste0`, `NULL` for `c()`. For `intersect` you would want the universal set, though R has no such thing, so you typically peel off the first element yourself.
+With `init`, the fold starts by calling `f(init, x[[1]])` instead of `f(x[[1]], x[[2]])`. The initial value acts as an identity element for the operation. For addition that is 0; for multiplication, 1; for `paste0`, the empty string `""`. For `c()`, it is `NULL`. For `intersect`, it would be the universal set (though R has no such thing, so you typically use the first element).
 
-This connection between an operation, its identity element, and associativity has a name in algebra: a *monoid*. Integers under addition with identity 0 form a monoid. Strings under concatenation with identity `""` form a monoid. Lists under `c()` with identity `NULL` form a monoid. The pattern shows up everywhere, and recognizing it tells you something immediately practical: if your operation is associative, the fold can be split across chunks, parallelized, and recombined without changing the result. Google's MapReduce (Dean and Ghemawat, 2004) is literally `map()` followed by a monoid fold, scaled to warehouses full of machines.
+This connection between an operation, its identity element, and associativity has a name in algebra: a *monoid*. Integers with addition and 0 form a monoid. Strings with concatenation and `""` form a monoid. Lists with `c()` and `NULL` form a monoid. The pattern is everywhere, and recognizing it tells you something practical: if your operation is associative, the fold can be split, parallelized, and recombined. Google's MapReduce (Dean and Ghemawat, 2004) is literally `map()` followed by a monoid fold at warehouse scale.
 
 ::: callout-tip
 ## Opinion
-Always pass `init` to `Reduce()`. Without it, your code breaks on empty input and behaves subtly differently on length-1 input. The identity element makes the fold total: it works for every list, including the empty one. Defensive code is not paranoid code; it is code that still works six months from now when some upstream function returns zero results.
+Always pass `init` to `Reduce()`. Without it, your code breaks on empty input and behaves differently on length-1 input. The identity element makes the fold total: it works for every list, including the empty one.
 :::
 
 
 ## Right fold {#sec-right-fold}
 
-`Reduce()` folds from the left by default. Setting `right = TRUE` reverses the nesting:
+`Reduce()` folds from the left by default. Setting `right = TRUE` folds from the right:
 
 ```{r}
 Reduce(`-`, 1:4)
 Reduce(`-`, 1:4, right = TRUE)
 ```
 
-The left fold computes `(((1 - 2) - 3) - 4) = -8`. The right fold computes `(1 - (2 - (3 - 4))) = -2`. For associative operations (addition, multiplication, `paste0`, `c()`, `intersect`, `union`) the direction does not matter; you get the same answer either way, and left fold is the natural default. The difference only surfaces for non-associative operations: subtraction, division, exponentiation. These give different results depending on which way you nest.
+The left fold computes `(((1 - 2) - 3) - 4) = -8`. The right fold computes `(1 - (2 - (3 - 4))) = -2`. The difference only matters when the operation is not associative. Subtraction, division, exponentiation: these give different results depending on fold direction. Addition, multiplication, `paste0`, `c()`, `intersect`, `union`: these are associative, so direction does not matter (and left fold is the natural choice).
 
-In Haskell, `foldl` and `foldr` are separate functions, and choosing between them is a design decision with performance implications (lazy evaluation makes right folds cheaper in some cases). In R, `right = TRUE` is rarely needed. If you find yourself reaching for a right fold, ask first whether your binary function simply has its arguments in the wrong order.
+In Haskell, `foldl` and `foldr` are separate functions, and choosing between them is a design decision with performance implications. In R, `right = TRUE` is rarely needed. If you find yourself reaching for a right fold, consider whether your binary function simply has its arguments in the wrong order.
 
 ### Exercises {.unnumbered}
 
@@ -81,39 +81,39 @@ In Haskell, `foldl` and `foldr` are separate functions, and choosing between the
 
 ## accumulate: keeping the intermediates {#sec-accumulate}
 
-Sometimes the final result is not enough. You want every intermediate step: the running total after each deposit, the growing sentence after each word, the high-water mark after each measurement. Base R handles this by adding a single argument:
+Sometimes you want not just the final result, but every intermediate step. Base R handles this with the `accumulate` argument:
 
 ```{r}
 Reduce(`+`, 1:5, accumulate = TRUE)
 ```
 
-Running totals: `1, 3, 6, 10, 15`. This is the *scan* operation (Haskell's `scanl`, APL's `\`). Where fold collapses a list to a single value, scan collapses it to a list of all the values the fold passed through on its way to the answer. Running maxima, cumulative sums, progressive string construction: they all fall out of the same pattern.
+Running totals: `1, 3, 6, 10, 15`. This is the *scan* operation (Haskell's `scanl`, APL's `\`). Where fold collapses a list to a single value, scan collapses it to a list of running values. Running maxima, cumulative sums, progressive string construction — all fall out of the same pattern:
 
 ```{r}
 Reduce(max, c(3, 1, 4, 1, 5, 9, 2, 6), accumulate = TRUE)
 ```
 
-A running maximum, where each value is the largest seen so far. The 1s and the 2 cannot drag the maximum back down; it can only rise or hold steady.
+A running maximum. Each value is the largest seen so far.
 
 ```{r}
 Reduce(paste, c("one", "two", "three", "four"), accumulate = TRUE)
 ```
 
-A sentence assembling itself one word at a time.
+Progressive sentence construction, step by step.
 
 
 ## purrr::reduce() and purrr::accumulate() {#sec-purrr-reduce}
 
-The purrr package provides `reduce()` and `accumulate()` as tidyverse-flavored alternatives:
+The purrr package provides `reduce()` and `accumulate()` as cleaner alternatives:
 
 ```{r}
 reduce(1:5, `+`)
 accumulate(1:5, `+`)
 ```
 
-Same results. The differences from base `Reduce()` are syntactic: `.x` and `.f` instead of positional arguments, `.init` instead of `init`, and `.dir = "backward"` instead of `right = TRUE`. The purrr versions also accept lambda-style formulas, though anonymous functions with `\()` are clearer.
+Same results. The differences from base `Reduce()` are syntactic: `.x` and `.f` instead of positional arguments, `.init` instead of `init`, no `right` argument (use `reduce(.x, .f, .dir = "backward")` instead). The purrr versions also accept lambda-style formulas, though anonymous functions with `\()` are clearer.
 
-Where purrr adds genuine power is `reduce2()`, which folds over two lists in parallel, handing an extra argument from the second list at each step:
+Sometimes the operation at each step needs more than just the accumulator and the next element. `purrr::reduce2()` folds over two lists in parallel, passing an extra argument from the second list at each step:
 
 ```{r}
 reduce2(
@@ -123,12 +123,12 @@ reduce2(
 )
 ```
 
-The binary function receives three arguments: the accumulator, the current element from the first list, and the corresponding element from the second list. The second list must be one element shorter than the first (or the same length if `.init` is provided), because the first element of the first list seeds the accumulator.
+The binary function receives three arguments: the accumulator, the current element from the first list, and the current element from the second list. The second list must be one element shorter than the first (or the same length if `.init` is provided).
 
 
 ## Practical patterns {#sec-reduce-patterns}
 
-**Combining data frames.** When `split()` or repeated API calls hand you a list of data frames, `Reduce(rbind, dfs)` stacks them. For large lists, `do.call(rbind, dfs)` is faster because it avoids the O(n^2^) copying that comes from binding two at a time, growing the result frame with every step.
+**Combining data frames.** When `split()` or repeated API calls give you a list of data frames, `Reduce(rbind, dfs)` stacks them. For large lists, `do.call(rbind, dfs)` is faster because it avoids the O(n²) copying of repeated two-at-a-time binding.
 
 ```{r}
 dfs <- list(
@@ -139,7 +139,7 @@ dfs <- list(
 Reduce(rbind, dfs)
 ```
 
-**Nested list extraction.** Walking into a deeply nested structure one key at a time:
+**Nested list extraction.** Walking into a deeply nested structure:
 
 ```{r}
 nested <- list(a = list(b = list(c = 42)))
@@ -164,7 +164,7 @@ transactions <- c(100, -20, -30, 50, -10)
 accumulate(transactions, `+`)
 ```
 
-The running balance after each transaction. For more complex state, where the accumulator needs to carry multiple fields rather than a single number, use a list as the accumulator and a function that unpacks, updates, and repacks it.
+The running balance after each transaction. For more complex state (where the state is not a single number), use a list as the accumulator and a function that updates it.
 
 ### Exercises {.unnumbered}
 
@@ -175,7 +175,7 @@ The running balance after each transaction. For more complex state, where the ac
 
 ## Row-wise folds with c_across() {#sec-column-wise}
 
-`Reduce()` folds across the elements of a list. In @sec-across-revisited, you saw `across()` apply a function across the columns of a data frame. But what about folding across columns *within a single row*? That is a row-wise reduction, and `dplyr::c_across()` handles it.
+`Reduce()` folds across the *elements* of a list. In @sec-across-revisited, you saw `across()` fold a function across the *columns* of a data frame. But what about folding across columns *within a single row*? That is a row-wise reduction, and `dplyr::c_across()` handles it.
 
 The setup is `rowwise()`, which tells dplyr to treat each row as a group of one:
 
@@ -199,9 +199,9 @@ df |>
   ungroup()
 ```
 
-Each row's `a`, `b`, and `c` values are collected into a vector, summed, and stored in `total`. This is a fold in the same sense as `Reduce()`: a binary operation (`+`) applied repeatedly to collapse multiple values into one, with the same monoid structure (associativity, identity element) that makes folds well-behaved (@sec-reduce-init). The only difference is the axis. `Reduce()` folds down the list; `c_across()` folds across the columns of a single row.
+Each row's `a`, `b`, and `c` values are collected into a vector, summed, and stored in `total`. This is a fold in the same sense as `Reduce()`: a binary operation (`+`) applied repeatedly to collapse multiple values into one, with the same monoid structure (associativity, identity element) that makes folds well-behaved (@sec-reduce-init). The difference is the axis: `Reduce()` folds across list elements (or rows), while `c_across()` folds across columns within a row.
 
-A performance warning, and it is not a small one: `rowwise()` + `c_across()` processes one row at a time in R, which means it scales poorly. For simple cases like summing or taking a maximum, `rowSums()` and `pmax()` are orders of magnitude faster because they are vectorized in C. On a data frame with 100,000 rows, `rowSums()` might finish in milliseconds where `rowwise()` + `c_across()` + `sum()` takes seconds. Use `c_across()` when the row-wise operation is genuinely complex, or when the set of columns must be selected dynamically with tidyselect helpers, but switch to vectorized alternatives the moment you care about speed.
+A performance warning: `rowwise()` + `c_across()` processes one row at a time in R, which means it scales poorly on large data frames. For simple cases like summing or taking a maximum, `rowSums()` and `pmax()` are orders of magnitude faster because they are vectorized in C. On a data frame with 100,000 rows, `rowSums()` might finish in milliseconds where `rowwise()` + `c_across()` + `sum()` takes seconds. Use `c_across()` when the row-wise operation is more complex than a single built-in function can handle, or when the set of columns is selected dynamically with tidyselect helpers, but switch to vectorized alternatives for anything that runs at scale.
 
 ### Exercises {.unnumbered}
 
@@ -214,13 +214,13 @@ A performance warning, and it is not a small one: `rowwise()` + `c_across()` pro
 
 `Reduce()` is the right tool when you have a binary operation and a list of things to combine: merging data frames, chaining set operations, collapsing nested structures. It is the wrong tool when a vectorized function already exists. `sum(x)` is faster and clearer than `Reduce(`+`, x)`. `paste(x, collapse = " ")` beats `Reduce(paste, x)`. The base R cumulative functions (`cumsum`, `cumprod`, `cummax`, `cummin`) are compiled C and will always outperform `accumulate(`+`, x)`.
 
-The rule is simple: if a specialized function exists, use it. Reach for `Reduce()` when your binary operation has no built-in vectorized cousin.
+The rule: if a specialized function exists, use it. Reach for `Reduce()` when you have a binary operation that R does not already provide a vectorized version of.
 
-`Reduce()` also becomes awkward when the accumulator needs complex state. If your fold carries a list with multiple fields and each step updates several of them conditionally, you are no longer folding; you are writing a state machine with the fold syntax as a straitjacket. That is better expressed as an explicit loop or a recursive function (@sec-recursion), where the state updates are visible and the control flow is honest.
+`Reduce()` also becomes awkward when the accumulator needs complex state. If your fold carries a list with multiple fields and each step updates several of them, you are writing a state machine. That is better expressed as a loop or a recursive function (@sec-recursion), where the state updates are explicit and readable.
 
-Graham Hutton proved in 1999 that fold can express *any* function on finite lists. This is a theoretical universality result, not practical advice. Just because you *can* write something as a fold does not mean it will be readable, or maintainable, or that the person who inherits your code (including future you) will thank you for it.
+Graham Hutton proved in 1999 that fold can express *any* function on finite lists. This is a theoretical universality result, not practical advice. Just because you *can* write something as a fold does not mean you should.
 
 ::: callout-tip
 ## Opinion
-Fold is the most underused functional in R. Most programmers who discover `map()` never learn `Reduce()`, and they end up writing loops for exactly the problems fold solves in a single line. If you take one thing from this chapter: next time you write a loop that carries an accumulator variable, growing it with each pass, stop and try `Reduce()` first. You might not need that loop at all.
+Fold is the most underused functional in R. Most R programmers who discover `map()` never learn `Reduce()`, and end up writing loops for exactly the problems fold solves cleanly. If you take one thing from this chapter: next time you write a loop that carries an accumulator variable, try `Reduce()` first.
 :::
