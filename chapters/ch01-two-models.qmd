@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-Pick up a calculator. Type `3 + 5 + 2 + 8` and press equals. You get 18. But try to explain to someone *how* the calculator got there, and you'll find there are two entirely different ways to interpret what happened.
+Pick up a calculator. Type `3 + 5 + 2 + 8` and press equals. You get 18. Now try to explain to someone *how* the calculator got there.
 
 Maybe the calculator kept a running total. It started at 0, added 3 to get 3, added 5 to get 8, added 2 to get 10, added 8 to get 18. The answer accumulated through a sequence of changes to a single number.
 
@@ -13,7 +13,7 @@ Or maybe `3 + 5 + 2 + 8` already *is* 18, the way you'd look up a word in a dict
 
 The first perspective has *time* in it: first this happened, then that happened, then this. There is a running total, and it changes. The second has no time at all; there is an expression, and it has a value. No variable was modified because there was no variable to modify. Which perspective is right?
 
-Both, as it turns out. In 1936, there were no computers. No transistors, no screens, no keyboards. But two mathematicians, working independently, each found a way to describe what "computation" means in precise mathematical terms, and their two answers, though they look nothing alike, turned out to be exactly equivalent: anything one model can compute, so can the other. Most programming languages grew out of the first model. R grew out of the second, and that is what this book is about.
+Both, as it turns out. In 1936, computation meant a person sitting at a desk with a pencil, following rules and writing down intermediate results on paper. Machines that could do this automatically were still a decade away. But that year, two mathematicians working independently each found a way to describe what "computation" means in precise mathematical terms, and their two answers, though they look nothing alike, turned out to be exactly equivalent: anything one model can compute, so can the other. Most programming languages grew out of the first model. R grew out of the second, and the difference shows up the moment you start writing code.
 
 
 ## Instructions and state {#sec-turing}
@@ -35,9 +35,7 @@ return total
 
 Turing's tape machine was an abstraction, but the first real computers were not far off. The Manchester Mark 1, which Turing himself helped program in 1949, read instructions from a five-hole paper tape and stored data on a rotating magnetic drum. ENIAC, built a few years earlier at the University of Pennsylvania, weighed 30 tons, stretched 100 feet long, and filled an entire room. These machines were programmed by hand: wiring plugboards, flipping switches, feeding punched cards. Each instruction was a number that meant something to one specific machine and nothing to any other. If you wanted to run the same program on a different computer, you rewrote it from scratch. What was needed was a way to write instructions once, in something closer to human notation, and have them work anywhere.
 
-That solution came out of Bell Labs in the early 1970s. Dennis Ritchie and Ken Thompson were building Unix, and they needed a language that stayed close to the hardware. Ritchie designed C so that the programmer allocates memory, reads from it, writes to it, and frees it when done. The language does not manage any of this for you. This directness made C enormously influential: Unix spread, C spread with it, and most operating systems, databases, and compilers written since have been written in C. R itself is written in C. The picture of computation that C embodies, a program as a sequence of instructions modifying stored values, became the default mental model for a generation of programmers.
-
-The popular languages that followed inherited that model, even when they made it friendlier. Guido van Rossum created Python in the late 1980s as a language that reads almost like pseudocode, one that handles memory management automatically and lets you experiment one line at a time, yet underneath, variables are still containers and a program is still a sequence of instructions changing what's inside them. The `for` loop above could be Python with one character changed. Java, released by Sun Microsystems in 1995, added strict type-checking and automatic memory management for large engineering teams; JavaScript was created at Netscape that same year, originally for adding interactivity to web pages (Brendan Eich wrote the first version in ten days), and it has since become the most widely used programming language in the world. All four languages share the same underlying picture of what computation is, differing in how much they protect you from mistakes but never questioning the instruction-and-state model itself. It dominates so thoroughly that you might assume it's the only model there is.
+That solution came out of Bell Labs in the early 1970s. Dennis Ritchie and Ken Thompson were building Unix, and they needed a language that stayed close to the hardware. Ritchie designed C so that the programmer allocates memory, reads from it, writes to it, and frees it when done. The language does not manage any of this for you. This directness made C enormously influential: Unix spread, C spread with it, and most operating systems, databases, and compilers written since have been written in C. R itself is written in C. The picture of computation that C embodies, a program as a sequence of instructions modifying stored values, became the default mental model for a generation of programmers. And every popular language that followed inherited it, even when they made it friendlier. Guido van Rossum created Python in the late 1980s as a language that reads almost like pseudocode, one that handles memory management automatically and lets you experiment one line at a time, yet underneath, variables are still containers and a program is still a sequence of instructions changing what's inside them. The `for` loop above could be Python with one character changed. Java, released by Sun Microsystems in 1995, added strict type-checking and automatic memory management for large engineering teams; JavaScript was created at Netscape that same year, originally for adding interactivity to web pages (Brendan Eich wrote the first version in ten days), and it has since become the most widely used programming language in the world. All four languages share the same underlying picture of what computation is, differing in how much they protect you from mistakes but never questioning the instruction-and-state model itself. It dominates so thoroughly that you might assume it's the only model there is.
 
 So is it?
 
@@ -64,7 +62,7 @@ sum([3, 5, 2, 8])
 = 18
 ```
 
-What's *not* there is just as interesting: no variable called `total`, nothing getting overwritten. The expression unfolds, each `add` consuming its arguments, until only 18 remains. The answer was implicit in the original expression; evaluation just made it explicit.
+There is no variable called `total`, nothing getting overwritten. The expression unfolds, each `add` consuming its arguments, until only 18 remains. The answer was implicit in the original expression; evaluation just made it explicit.
 
 Where Turing's model asks "what sequence of operations transforms my initial state into the answer?", Church's asks "what expression, when fully evaluated, gives the answer?" Same result, but a genuinely different picture of what happened along the way. And these two pictures don't stay theoretical. They show up in real code, in a language you can open right now.
 
@@ -88,9 +86,7 @@ for (s in scores) {
 count
 ```
 
-This works, and R can do it. But there is a variable (`count`) that gets modified in a loop, one step at a time. `count` starts at 0, becomes 1, becomes 2, becomes 3, becomes 4. This is Turing's model, transplanted into R. It looks exactly like the first calculator perspective: a running total, changing with each step.
-
-The expression-and-function style:
+This works, and R can do it. But there is a variable (`count`) that gets modified in a loop, one step at a time. `count` starts at 0, becomes 1, becomes 2, becomes 3, becomes 4. This is Turing's model, transplanted into R. It looks exactly like the first calculator perspective: a running total, changing with each step. Here is the same problem in the expression-and-function style:
 
 ```{r}
 #| eval: false
