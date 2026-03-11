@@ -5,22 +5,22 @@
 source(here::here("_common.R"))
 ```
 
-Pick up a calculator. Type `3 + 5 + 2 + 8` and press equals. You get 18. Simple enough. But try to explain to someone *how* the calculator got there, and something interesting happens: there are two different ways to interpret the story.
+Pick up a calculator. Type `3 + 5 + 2 + 8` and press equals. You get 18, and nobody would call that surprising, but try to explain *how* the calculator arrived there and you'll find that two completely different stories fit the same keystrokes, the same answer, the same machine.
 
-Maybe the calculator kept a running total. It started at 0, added 3 to get 3, added 5 to get 8, added 2 to get 10, added 8 to get 18. The answer accumulated through a sequence of changes to a single number.
+In one story the calculator keeps a running total: it starts at 0, adds 3 to get 3, adds 5 to get 8, adds 2 to get 10, adds 8 to get 18. The answer accumulated through a sequence of small changes to a single number, each one overwriting the last.
 
-Or maybe `3 + 5 + 2 + 8` already *is* 18. The two are different ways of writing the same number. From this point of view, the calculator didn't produce a result. It simplified an expression, the way you'd look up a word in a dictionary: swapping one representation for an equivalent one.
+In the other story, `3 + 5 + 2 + 8` already *is* 18, the way "twelve" and "12" are two ways of writing the same thing. The calculator didn't produce a result so much as simplify an expression, swapping one representation for an equivalent one the way you'd look up a word in a thesaurus: different spelling, same meaning.
 
-The first story has *time* in it: first this happened, then that happened, then this. There is a running total, and it changes. The second story has no time. There is an expression, and it has a value; no variable was modified because there was no variable to modify.
+The first story has *time* in it: first this happened, then that happened, then this. A running total exists, and it changes with every keystroke. The second story has no time at all; there is an expression, it has a value, and no variable was modified because there was no variable to modify. Which story is right?
 
-This difference turns out to be surprisingly deep. In 1936, there were no computers. No transistors, no screens, no keyboards. But two mathematicians, working independently, each found a way to describe what "computation" means in precise mathematical terms. Both models turned out to be equally powerful (anything one can compute, the other can too), but the programming languages that grew out of them decades later look and feel completely different. Most programming languages grew out of the first model. R grew out of the second, and that is what this book is about.
+Both, as it turns out, and the fact that both are right became one of the deep results of twentieth-century mathematics. In 1936, before transistors, before screens, before keyboards, two mathematicians working independently each found a way to describe what "computation" means in precise terms, and their two answers, though they look nothing alike, turned out to be exactly equivalent: anything one model can compute, so can the other. Most programming languages grew out of the first model. R grew out of the second, and that is what this book is about.
 
 
 ## Instructions and state {#sec-turing}
 
-Alan Turing, a graduate student at Cambridge who would go on to break the Enigma code (the German military cipher) in World War II and become the father of modern computing, imagined computation as a machine operating on a tape. The machine reads a symbol from a cell, writes a new one, shifts left or right, and moves to a new internal state. Then it does it again. Turing proved that this simple device, given the right set of rules, can carry out any computation that can be precisely described. This is what we now call a computer.
+Alan Turing, a graduate student at Cambridge who would go on to break the Enigma code (the German military cipher) in World War II and become the father of modern computing, imagined computation as a machine operating on a tape. The machine reads a symbol from a cell, writes a new one, shifts left or right, and moves to a new internal state. Then it does it again. Turing proved that this device, given the right set of rules, can carry out any computation that can be precisely described. We now call this a computer.
 
-What makes the Turing machine interesting for us is not the tape or the rules; it's the picture of computation they imply. A Turing machine *does* things: it reads, writes, moves, changes. It has memory (the tape), and that memory changes over time. A program, in this view, is a sequence of instructions that progressively modify stored values until the answer emerges.
+What matters for us is not the tape or the rules but the picture of computation they imply. A Turing machine *does* things: it reads, writes, moves, changes. It has memory (the tape), and that memory changes over time. A program, in this view, is a sequence of instructions that progressively modify stored values until the answer emerges.
 
 Here is what that looks like as pseudocode, for our summing problem:
 
@@ -31,26 +31,28 @@ for each number in [3, 5, 2, 8]:
 return total
 ```
 
-Watch `total`. It starts at 0, becomes 3, becomes 8, becomes 10, becomes 18. The variable *varies*; the answer lives in its final state. This pattern, mutating a variable step by step until the answer appears, became the dominant way to think about computation itself.
+Watch `total`. It starts at 0, becomes 3, becomes 8, becomes 10, becomes 18. The variable *varies*; the answer lives in its final state. This pattern, mutating a value step by step until the result appears, became the dominant way to think about computation itself.
 
-Turing's tape machine was an abstraction, but the first real computers were not far off. The Manchester Mark 1, which Turing himself helped program in 1949, read instructions from a five-hole paper tape and stored data on a rotating magnetic drum. ENIAC, built a few years earlier at the University of Pennsylvania, weighed 30 tons, stretched 100 feet long, and filled an entire room. These machines were programmed by hand: wiring plugboards, flipping switches, feeding punched cards. Each instruction was a number that meant something to one specific machine and nothing to any other. If you wanted to run the same program on a different computer, you rewrote it from scratch. What was needed was a way to write instructions once, in something closer to human notation, and have them work anywhere.
+Turing's tape machine was an abstraction, but the first real computers were not far off. The Manchester Mark 1, which Turing himself helped program in 1949, read instructions from a five-hole paper tape and stored data on a rotating magnetic drum. ENIAC, built a few years earlier at the University of Pennsylvania, weighed 30 tons, stretched 100 feet long, and filled an entire room. These machines were programmed by hand: wiring plugboards, flipping switches, feeding punched cards. Each instruction was a number that meant something to one specific machine and nothing to any other. If you wanted to run the same program on a different computer, you rewrote it from scratch. What was missing was a way to write instructions once, in something closer to human notation, and have them work anywhere.
 
-That solution came out of Bell Labs in the early 1970s. Dennis Ritchie and Ken Thompson were building Unix, a new operating system, and they needed a language that stayed close to the hardware. Ritchie designed C so that the programmer allocates memory, reads from it, writes to it, and frees it when done. The language does not manage any of this for you. This directness made C enormously influential: Unix spread, C spread with it, and most operating systems, databases, and compilers written since have been written in C. R itself is written in C. The picture of computation that C embodies, a program as a sequence of instructions modifying stored values, became the default mental model for a generation of programmers.
+That solution came out of Bell Labs in the early 1970s. Dennis Ritchie and Ken Thompson were building Unix, and they needed a language that stayed close to the hardware. Ritchie designed C so that the programmer allocates memory, reads from it, writes to it, and frees it when done. The language does not manage any of this for you. This directness made C enormously influential: Unix spread, C spread with it, and most operating systems, databases, and compilers written since have been written in C. R itself is written in C. The picture of computation that C embodies, a program as a sequence of instructions modifying stored values, became the default mental model for a generation of programmers.
 
-Most of the popular languages that followed inherited that model, even when they made it friendlier. Guido van Rossum created Python in the late 1980s as a language that reads almost like pseudocode; it handles memory management automatically and lets you experiment one line at a time, but underneath, variables are still containers, and a program is still a sequence of instructions that changes what's inside them. The `for` loop above could be Python with one character changed. Java, released by Sun Microsystems in 1995, added strict type-checking and automatic memory management for large engineering teams writing large systems. JavaScript was created at Netscape that same year, originally for adding interactivity to web pages; Brendan Eich wrote the first version in ten days, and it has since become the most widely used programming language in the world. All four languages share the same underlying picture of what computation is. They differ in how much they protect you from mistakes, but the instruction-and-state model is the same. It dominates so thoroughly that you might assume it's the only model there is.
+The popular languages that followed inherited that model, even when they made it friendlier. Guido van Rossum created Python in the late 1980s as a language that reads almost like pseudocode, one that handles memory management automatically and lets you experiment one line at a time, yet underneath, variables are still containers and a program is still a sequence of instructions changing what's inside them. The `for` loop above could be Python with one character changed. Java, released by Sun Microsystems in 1995, added strict type-checking and automatic memory management for large engineering teams; JavaScript was created at Netscape that same year, originally for adding interactivity to web pages (Brendan Eich wrote the first version in ten days), and it has since become the most widely used programming language in the world. All four languages share the same underlying picture of what computation is, differing in how much they protect you from mistakes but never questioning the instruction-and-state model itself. It dominates so thoroughly that you might assume it's the only model there is.
+
+So is it?
 
 So is it?
 
 
 ## Expressions and functions {#sec-church}
 
-Alonzo Church, who happened to be Turing's doctoral advisor at Princeton, was working on the same problem at the same time but from a completely different angle. Church built a notation called the *lambda calculus*. It has three things:
+Alonzo Church, who happened to be Turing's doctoral advisor at Princeton, was working on the same problem at the same time but from a completely different direction. Where Turing imagined a machine with a tape, Church built a notation called the *lambda calculus*. It has three things:
 
 1. Variables: `x`
 2. Functions: `λx. x + 1` (take `x`, return `x + 1`)
 3. Application: `(λx. x + 1)(5)` gives `6`
 
-No tape, no memory, no state that changes over time. You write an expression and simplify it by applying functions to arguments until you reach a value that can't be simplified further. Church proved that this system, despite having no concept of memory or instructions, can compute exactly the same class of functions as Turing's machine. The equivalence (known as the Church-Turing thesis) was one of the foundational results of 20th-century mathematics.
+No tape, no memory, no state that changes over time. You write an expression and simplify it by applying functions to arguments until you reach a value that can't be simplified further. Church proved that this system, despite having no concept of memory or instructions, can compute exactly the same class of functions as Turing's machine. The equivalence (known as the Church-Turing thesis) was one of the foundational results of twentieth-century mathematics.
 
 What does our summing problem look like in this world?
 
@@ -64,16 +66,16 @@ sum([3, 5, 2, 8])
 = 18
 ```
 
-Look at what's *not* there: no variable called `total`, nothing getting overwritten. The expression unfolds, each `add` consuming its arguments, until only 18 remains. The answer was implicit in the original expression; evaluation just made it explicit.
+Look at what's *not* there: no variable called `total`, nothing getting overwritten. The expression unfolds, each `add` consuming its arguments, until only 18 remains. The answer was always implicit in the original expression; evaluation just made it visible.
 
-Where Turing's model asks "what sequence of operations transforms my initial state into the answer?", Church's asks "what expression, when fully evaluated, gives the answer?" Same result, but a genuinely different picture of what happened along the way. And these two pictures don't stay theoretical. They show up in real code, in a language you can open right now.
+Where Turing's model asks "what sequence of operations transforms my initial state into the answer?", Church's asks "what expression, when fully evaluated, gives the answer?" Same result, genuinely different picture. And these two pictures don't stay theoretical; they show up in real code, in a language you can open right now.
 
 
 ## What this has to do with R {#sec-where-r-fits}
 
 R descends from Church's model. The chain runs through four decades and several languages (@sec-family-tree tells the full story), but the result is visible right now, without knowing any of that history. You don't need to understand R syntax yet; just compare the *shape* of the code with the two models from earlier.
 
-Suppose you have a list of exam scores and you want to know how many students scored above 70. In the instruction-and-state style, you would create a counter, loop through the scores, and increment the counter each time you find a score above 70:
+Suppose you have a list of exam scores and you want to know how many students scored above 70. In the instruction-and-state style, you would create a counter, loop through the scores, and increment each time you find one above the threshold:
 
 ```{r}
 #| eval: false
@@ -88,7 +90,7 @@ for (s in scores) {
 count
 ```
 
-This works. R can do it. But notice the shape: there is a variable (`count`) that gets modified in a loop, one step at a time. `count` starts at 0, becomes 1, becomes 2, becomes 3, becomes 4. This is Turing's model, transplanted into R. And it looks exactly like the first calculator story: a running total, changing with each step.
+This works. R can do it. But notice the shape: a variable (`count`) gets modified in a loop, one step at a time, starting at 0 and climbing through 1, 2, 3, 4. This is Turing's model transplanted into R, and it looks exactly like the first calculator story: a running total, changing with each step.
 
 Now the expression-and-function style:
 
@@ -99,9 +101,9 @@ scores <- c(65, 82, 71, 90, 55, 78)
 sum(scores > 70)
 ```
 
-One line, no loop, no counter, no variable that changes. `scores > 70` produces a vector of `TRUE` and `FALSE` values; `sum()` counts the `TRUE`s. There is an expression, and it has a value. This is the second calculator story: `sum(scores > 70)` and `3 + 5 + 2 + 8` work the same way. The calculator was doing Church's model all along; R just lets you do it with data.
+One line. No loop, no counter, no variable that changes. `scores > 70` produces a vector of `TRUE` and `FALSE` values; `sum()` counts the `TRUE`s. There is an expression, and it has a value, just like `3 + 5 + 2 + 8` has a value. The calculator was doing Church's model all along; R just lets you do it with data.
 
-Both give the answer 4. But the second version is shorter, easier to read, and (as you'll learn in @sec-vectors) faster, because R was *designed* for it. The loop version works against the grain; the expression version works with it.
+Both give the answer 4, but the second version is shorter, easier to read, and (as you'll learn in @sec-vectors) faster, because R was *designed* for it. The loop version works against the grain. The expression version works with it.
 
 This pattern shows up everywhere in R:
 
@@ -118,4 +120,4 @@ This pattern shows up everywhere in R:
     data |> filter(x > 5) |> summarize(mean(y))
     ```
 
-But how did Church's 1936 notation, written decades before computers existed, end up inside a language used by statisticians? @sec-family-tree follows the chain: Church to Lisp to Scheme to S to R, and what each step added along the way.
+But how did Church's 1936 notation, written decades before computers existed, end up inside a language used by statisticians? That path runs through Lisp, Scheme, and a Bell Labs project called S, each one carrying forward a piece of the lambda calculus and adding something new. @sec-family-tree follows the chain.

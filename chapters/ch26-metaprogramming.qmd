@@ -5,9 +5,9 @@
 source(here::here("_common.R"))
 ```
 
-In most languages, code runs and disappears. In R, code is a data structure you can hold in your hands, examine, rearrange, and run whenever you're ready. This is metaprogramming: code that operates on code. It is what makes `lm(y ~ x)`, `aes(color = species)`, and `filter(penguins, species == "Adelie")` possible. None of those expressions evaluate their arguments the normal way. They capture the code you write, inspect it, and decide what to do with it.
+Try explaining `lm(y ~ x)` to a Python programmer. Not the statistics, the syntax. Why doesn't R evaluate `y ~ x` before passing it to `lm()`? Why can you write `filter(penguins, species == "Adelie")` and have R look up `species` inside a data frame instead of the global environment? The Python programmer will stare at you, because in most languages code runs and vanishes; once an expression is evaluated, the expression itself is gone, leaving only its result. R is different. In R, code is a data structure you can hold, examine, rearrange, and run whenever you choose.
 
-You have already been using metaprogramming without knowing it. Every formula, every dplyr verb, every ggplot2 aesthetic mapping is built on the machinery this chapter describes. The goal here is not mastery. It is to understand the mechanism well enough that the tools you already use stop feeling like magic.
+That difference has a name: metaprogramming. Code that operates on code. You have been using it from your first formula, your first call to `aes()`, your first dplyr pipeline, all of it built on the machinery this chapter describes. The goal here is not mastery; it is to see the mechanism clearly enough that the tools you already rely on stop feeling like magic, and start feeling like a design choice you could make yourself.
 
 
 ## Code is data {#sec-code-is-data}
@@ -18,7 +18,7 @@ You have already been using metaprogramming without knowing it. Every formula, e
 quote(x + 1)
 ```
 
-You did not get a result. You got the expression itself, frozen. `x + 1` was not computed; it was returned as a data structure, a *call object* that you can store, inspect, and eventually evaluate. This is the distinction between a term and its evaluation. In lambda calculus, `(λx. x + 1)(3)` reduces to 4, but if you "quote" it, you get the term `(λx. x + 1)(3)` as a syntactic object you can inspect and manipulate. `quote(1 + 1)` in R gives you the expression tree, not the value 2. Same distinction.
+No result. What you got back is the expression itself, frozen mid-flight: `x + 1` was not computed but returned as a data structure (a *call object*) that you can store, inspect, and eventually evaluate. If that sounds strange, think of it through lambda calculus: `(λx. x + 1)(3)` reduces to 4, but if you "quote" the term you get the syntactic object `(λx. x + 1)(3)`, something you can pull apart and study without triggering the reduction. `quote(1 + 1)` in R gives you the expression tree, not the value 2. Same distinction, different notation.
 
 ```{r}
 e <- quote(x + 1)
@@ -39,11 +39,11 @@ x <- 10
 eval(e)
 ```
 
-`eval()` takes the frozen expression and evaluates it in the current environment, where `x` is 10. The result is 11. This is the fundamental cycle: capture code, possibly modify it, then evaluate it somewhere.
+`eval()` takes the frozen expression and evaluates it in the current environment, where `x` is 10, so the result is 11. This is the fundamental cycle: capture code, possibly modify it, then evaluate it somewhere. But why would you want to?
 
-In @sec-church, Church's lambda calculus treated functions as data that could be passed around and applied. R takes that further: not just functions, but *all code* is data. An expression is a value, just like a number or a string. You can assign it, put it in a list, pass it to a function. In @sec-operators-are-functions, you saw that `+` is a function and `2 + 3` is a function call. Here you see the next step: that function call is also a data structure you can capture and manipulate.
+In @sec-church, Church's lambda calculus treated functions as data that could be passed around and applied. R takes that principle one step further: not just functions but *all code* is data. An expression is a value, exactly like a number or a string; you can assign it, put it in a list, pass it to a function, transform it, then run the transformed version. In @sec-operators-are-functions, you saw that `+` is a function and `2 + 3` is a function call. Here is the next step: that function call is also a data structure you can capture and manipulate before it ever executes.
 
-R inherited this idea from Lisp, where `(quote (+ 1 2))` returns the list `(+ 1 2)` instead of computing 3. A language where code has the same structure as its data is called *homoiconic*: Lisp code is lists, Lisp data is lists; R code is call objects (trees), and R data includes call objects. Most languages (Python, Java, C++) are not homoiconic; their code is text, not data, and metaprogramming requires parsing strings, which is fragile. R gets it for free. The deeper connection is to Godel numbering: encoding programs as data so that a system can reason about its own code. `quote()` in R is exactly this: turning a program into a data structure that can be inspected, transformed, and evaluated.
+R inherited this idea from Lisp, where `(quote (+ 1 2))` returns the list `(+ 1 2)` instead of computing 3. A language whose code has the same structure as its data is called *homoiconic*: Lisp code is lists, Lisp data is lists; R code is call objects (trees), and R data includes call objects. Most languages (Python, Java, C++) are not homoiconic; their code is text, not data, and metaprogramming requires parsing strings, which is fragile. R gets it for free. The deeper connection runs all the way to Godel numbering: encoding programs as data so that a system can reason about its own code. `quote()` in R is exactly that, turning a program into a structure that can be inspected, transformed, and run again.
 
 
 ## Abstract syntax trees {#sec-asts}
@@ -54,7 +54,7 @@ Every R expression has a tree structure called an *abstract syntax tree* (AST). 
 lobstr::ast(x + y * 2)
 ```
 
-`x + y * 2` is not a flat sequence of tokens. It is a tree where `+` is the root, `x` is one branch, and `* (y, 2)` is the other. The tree encodes precedence: `*` binds tighter than `+`, so `y * 2` is a subtree inside the `+` node.
+What looks like a flat sequence of tokens on the page is actually a tree where `+` sits at the root, `x` hangs off one branch, and `* (y, 2)` hangs off the other. The tree encodes precedence: `*` binds tighter than `+`, so `y * 2` forms a subtree nested inside the `+` node, and R knows to evaluate it first without needing parentheses from you.
 
 Three kinds of nodes make up every AST:
 
@@ -62,13 +62,13 @@ Three kinds of nodes make up every AST:
 - **Symbols** (names): `x`, `y`, `mean`. Also leaves. They represent name lookups: when evaluated, R searches for the value bound to that name.
 - **Calls**: function applications. These are branches. The first child is the function, the rest are arguments.
 
-Everything in R is one of these three. `x + 1` is a call to `` `+` `` with arguments `x` and `1`. `if (x > 0) "yes" else "no"` is a call to `` `if` `` with three arguments. There is no special syntax that escapes the tree.
+That is the entire vocabulary. `x + 1` is a call to `` `+` `` with arguments `x` and `1`. `if (x > 0) "yes" else "no"` is a call to `` `if` `` with three arguments. There is no special syntax that escapes the tree; even control flow is just function calls wearing different clothes.
 
 ```{r}
 lobstr::ast(if (x > 0) "yes" else "no")
 ```
 
-You can take a call object apart with standard list operations. The first element is the function, and the rest are the arguments:
+You can take a call object apart with standard list operations, where the first element is the function and the rest are the arguments:
 
 ```{r}
 e <- quote(mean(x, na.rm = TRUE))
@@ -77,7 +77,7 @@ e[[2]]
 e[[3]]
 ```
 
-`as.list()` converts the whole call into a list, which makes it easy to see the structure:
+`as.list()` converts the whole call into a list, which makes the structure easy to see at a glance:
 
 ```{r}
 as.list(e)
@@ -90,7 +90,7 @@ deparse(quote(x + y * 2))
 parse(text = "x + y * 2")[[1]]
 ```
 
-The conversion is not perfectly symmetric. Comments and whitespace are lost in the round trip. But the tree structure is preserved, and that is what matters.
+The conversion is not perfectly symmetric; comments and whitespace vanish in the round trip. But the tree structure survives, and the tree is what matters. So what happens when you need to capture not your own expression but someone else's?
 
 
 ### Exercises {.unnumbered}
@@ -102,7 +102,7 @@ The conversion is not perfectly symmetric. Comments and whitespace are lost in t
 
 ## Capturing and evaluating expressions {#sec-capture-evaluate}
 
-Capturing *your own* expression and capturing *the caller's* expression require different tools.
+Capturing *your own* expression and capturing *the caller's* expression require different tools, and confusing the two is a reliable source of bugs.
 
 `quote()` and `expr()` capture what you type directly:
 
@@ -118,16 +118,16 @@ f <- function(x) substitute(x)
 f(a + b)
 ```
 
-You called `f(a + b)`, and `substitute(x)` reached back to the call site and captured `a + b`, the expression the caller wrote. This is how `dplyr::filter()` sees `species == "Adelie"` instead of immediately evaluating it.
+You called `f(a + b)`, and `substitute(x)` reached back across the function boundary to the call site, grabbing `a + b`, the expression the caller actually wrote. This is exactly how `dplyr::filter()` sees `species == "Adelie"` instead of immediately evaluating it and getting an error about a missing variable.
 
-The rlang equivalents are `enexpr()` (captures an expression) and `enquo()` (captures an expression plus its environment, forming a *quosure*). The decision rule is simple: use `substitute()` in base R code, use `enexpr()`/`enquo()` in tidyverse/rlang code. If your function will be called by dplyr or other tidy-evaluation-aware code, use the rlang tools; they integrate with `!!`, `{{ }}`, and `eval_tidy()`. If you are writing standalone base R, `substitute()` and `eval()` are sufficient and dependency-free.
+The rlang equivalents are `enexpr()` (captures an expression) and `enquo()` (captures an expression plus its environment, forming a *quosure*). The decision rule is simple: use `substitute()` in base R code, use `enexpr()`/`enquo()` in tidyverse/rlang code. If your function will be called by dplyr or other tidy-evaluation-aware code, reach for the rlang tools because they integrate with `!!`, `{{ }}`, and `eval_tidy()`. If you are writing standalone base R, `substitute()` and `eval()` are sufficient and carry zero dependencies.
 
 ```{r}
 g <- function(x) rlang::enexpr(x)
 g(a + b)
 ```
 
-Once you have an expression, you evaluate it with `eval()`. The second argument controls where:
+Once you have an expression, you evaluate it with `eval()`. The second argument controls *where*:
 
 ```{r}
 e <- quote(x + 1)
@@ -135,7 +135,7 @@ eval(e, list(x = 10))
 eval(e, list(x = 100))
 ```
 
-The same expression, evaluated in different environments, gives different results. This is the core of data masking: `eval_tidy()` from rlang evaluates an expression against a data frame, which is how `filter(penguins, species == "Adelie")` looks up `species` in the data rather than in the global environment.
+The same frozen expression, evaluated in different environments, gives different results. This is the core of data masking: `eval_tidy()` from rlang evaluates an expression against a data frame, which is precisely how `filter(penguins, species == "Adelie")` looks up `species` in the data rather than in the global environment.
 
 ```{r}
 library(rlang)
@@ -143,7 +143,7 @@ df <- data.frame(x = c(1, 2, 3), y = c(10, 20, 30))
 eval_tidy(expr(x + y), data = df)
 ```
 
-This three-step sequence — **capture**, optionally **modify**, then **evaluate** in the right context — is what tidy evaluation calls defuse-and-inject. The next question is what happens when the expression you need does not exist yet.
+This three-step sequence, **capture**, optionally **modify**, then **evaluate** in the right context, is what tidy evaluation calls defuse-and-inject. But what happens when the expression you need does not exist yet, when you have to assemble it from parts at runtime?
 
 One more base R tool worth knowing: `match.call()`. Inside a function, it returns the entire call as the user typed it, with arguments matched by name:
 
@@ -154,7 +154,7 @@ my_lm <- function(formula, data, subset = NULL) {
 my_lm(y ~ x, data = mtcars)
 ```
 
-Many modeling functions use `match.call()` to record the call for reproducibility. When you print a fitted model and see `Call: lm(formula = y ~ x, data = mtcars)`, that came from `match.call()`.
+Many modeling functions use `match.call()` to record the call for reproducibility. When you print a fitted model and see `Call: lm(formula = y ~ x, data = mtcars)`, that string came from `match.call()` stashing the original invocation.
 
 
 ### Exercises {.unnumbered}
@@ -166,7 +166,7 @@ Many modeling functions use `match.call()` to record the call for reproducibilit
 
 ## Building expressions programmatically {#sec-building-expressions}
 
-What if the function name or variable is not known until runtime? You need to build the expression from parts.
+What if the function name or the variable is not known until runtime, when your code has to decide at the last moment what expression to build? You need to construct the expression from parts.
 
 `rlang::call2()` constructs a call object:
 
@@ -175,14 +175,14 @@ rlang::call2("+", 1, 2)
 eval(rlang::call2("+", 1, 2))
 ```
 
-The next step is *quasiquotation*: building an expression template with holes that get filled in. The `!!` (bang-bang) operator injects a value into an expression:
+The next step is *quasiquotation*: building an expression template with holes that get filled in at construction time. The `!!` (bang-bang) operator injects a value into an expression:
 
 ```{r}
 my_var <- rlang::expr(body_mass_g)
 rlang::expr(mean(!!my_var))
 ```
 
-`!!` replaced `my_var` with its value (`body_mass_g`), producing the expression `mean(body_mass_g)`. Without `!!`, you would get `mean(my_var)`, which is not what you want.
+`!!` replaced `my_var` with its value (`body_mass_g`), producing the expression `mean(body_mass_g)`. Without `!!`, you would get `mean(my_var)`, which is an entirely different expression and not the one you wanted.
 
 `!!!` (triple bang, or splice) injects a list of expressions as separate arguments:
 
@@ -202,7 +202,7 @@ my_summary(palmerpenguins::penguins, body_mass_g)
 my_summary(palmerpenguins::penguins, flipper_length_mm)
 ```
 
-the embrace operator defuses `var` with `enquo()` and injects it with `!!`. It is syntactic sugar for the defuse-and-inject pattern. The caller writes bare column names, exactly as they would with dplyr directly, and the function forwards them transparently.
+the embrace operator defuses `var` with `enquo()` and injects it with `!!`, which means it is syntactic sugar for the defuse-and-inject pattern. The caller writes bare column names, exactly as they would with dplyr directly, and your function forwards them transparently, no quoted strings, no special syntax at the call site.
 
 Base R has `bquote()` for quasiquotation, using `.()` instead of `!!`:
 
@@ -211,7 +211,7 @@ my_var <- quote(body_mass_g)
 bquote(mean(.(my_var)))
 ```
 
-It works, but `bquote()` is less common in practice and does not support splicing. All of this, `!!`, `bquote()`, and `expr()`, solves the same problem that Lisp macros have solved since the 1960s: how to write code that writes code, safely. When Wickham designed tidy evaluation, he was adapting that lineage for R.
+It works, but `bquote()` is less common in practice and does not support splicing. All of these tools, `!!`, `bquote()`, `expr()`, solve the same problem that Lisp macros have addressed since the 1960s: how to write code that writes code, safely, without collapsing into string manipulation. When Wickham designed tidy evaluation, he was adapting that lineage for R, and the result is that you can generate expressions with the same structural guarantees that `quote()` gives you by hand.
 
 
 ### Exercises {.unnumbered}
@@ -223,13 +223,13 @@ It works, but `bquote()` is less common in practice and does not support splicin
 
 ## Formulas as expressions {#sec-formulas-as-expressions}
 
-R's formula interface is metaprogramming that predates the term. When you write:
+Before anyone used the word "metaprogramming" in an R context, there were formulas. When you write:
 
 ```{r}
 lm(body_mass_g ~ bill_length_mm, data = palmerpenguins::penguins)
 ```
 
-the expression `body_mass_g ~ bill_length_mm` is not evaluated. It is captured as a *formula object*: two expressions (the left-hand side and the right-hand side) plus the environment where the formula was created.
+the expression `body_mass_g ~ bill_length_mm` is not evaluated in the ordinary sense. R captures it as a *formula object*: two expressions (the left-hand side and the right-hand side) bundled together with the environment where the formula was created.
 
 ```{r}
 f <- y ~ x + z
@@ -245,15 +245,15 @@ A formula stores its terms as call objects. `f[[2]]` is the left-hand side (`y`)
 environment(f)
 ```
 
-This is why formulas work across function boundaries. The formula remembers where its variables should be looked up, which is the same problem that quosures solve in tidy evaluation. In fact, rlang's quosures are a generalization of formulas: an expression bundled with its environment. Wickham borrowed the concept directly.
+This is why formulas work across function boundaries: the formula remembers where its variables should be looked up. If that sounds familiar, it should; it is the same problem quosures solve in tidy evaluation. In fact, rlang's quosures are a generalization of formulas: an expression bundled with its environment. Wickham borrowed the concept directly, and the formula's 30-year track record is what made the design credible.
 
-The formula language (`+`, `*`, `:`, `-`, `I()`) is a domain-specific language for specifying models. `y ~ x1 * x2` does not mean "multiply x1 by x2." It means "include x1, x2, and their interaction." This is code that means something different from its usual meaning, made possible because the formula is captured as data and interpreted by `model.matrix()`, not by R's arithmetic evaluator.
+The formula language (`+`, `*`, `:`, `-`, `I()`) is a domain-specific language for specifying models. `y ~ x1 * x2` does not mean "multiply x1 by x2." It means "include x1, x2, and their interaction." This is code that means something completely different from its usual meaning, made possible because the formula is captured as data and interpreted by `model.matrix()`, not by R's arithmetic evaluator.
 
 ```{r}
 model.matrix(~ species + island, data = palmerpenguins::penguins) |> head()
 ```
 
-You can also build formulas dynamically, which is useful when the set of predictors is not known in advance:
+You can also build formulas dynamically, which becomes useful when the set of predictors is not known in advance:
 
 ```{r}
 predictors <- c("bill_length_mm", "flipper_length_mm")
@@ -261,9 +261,9 @@ f <- as.formula(paste("body_mass_g ~", paste(predictors, collapse = " + ")))
 f
 ```
 
-This is metaprogramming at its most practical: constructing code from data, then running it. The formula is a piece of code that was assembled from strings and will be interpreted by `lm()` as a model specification.
+Constructing code from data, then running it: that is metaprogramming at its most practical. The formula is a piece of code assembled from strings, about to be interpreted by `lm()` as a model specification, and neither the user nor the modeling function needs to know it was built programmatically.
 
-The connection to @sec-lazy-evaluation is direct. Formulas are non-standard evaluation. The variable names are unquoted. `body_mass_g` is looked up in `penguins`, not in the calling environment. This is the same trick dplyr uses, just older.
+The connection to @sec-lazy-evaluation is direct. Formulas are non-standard evaluation: the variable names are unquoted, `body_mass_g` is looked up in `penguins` rather than in the calling environment. Dplyr uses the same trick, just with newer machinery.
 
 
 ### Exercises {.unnumbered}
@@ -274,7 +274,7 @@ The connection to @sec-lazy-evaluation is direct. Formulas are non-standard eval
 
 ## When to use metaprogramming {#sec-when-metaprogramming}
 
-Metaprogramming lets you generate code, build DSLs, and eliminate boilerplate. That does not mean you should use it often.
+Metaprogramming lets you generate code, build DSLs, and eliminate boilerplate. That power comes with a cost, and knowing when *not* to use it matters more than knowing how.
 
 **Good uses:**
 
@@ -284,26 +284,26 @@ Metaprogramming lets you generate code, build DSLs, and eliminate boilerplate. T
 
 **Bad uses:**
 
-- **Things that work with regular functions.** If `f(x)` solves the problem, do not make it harder with `eval(substitute(...))`.
-- **Performance.** Metaprogramming is not faster. It is more flexible.
-- **Showing off.** Code that manipulates code is hard to read and hard to debug. Use it when the benefit (a concise user interface) outweighs the cost (a complex implementation).
+- **Things that work with regular functions.** If `f(x)` solves the problem, do not complicate it with `eval(substitute(...))`.
+- **Performance.** Metaprogramming is not faster. It is more flexible, which is a different axis entirely.
+- **Showing off.** Code that manipulates code is hard to read and hard to debug. Use it when the benefit (a concise user interface) outweighs the cost (a complex implementation), not before.
 
 ::: callout-tip
 ## Opinion
-Most R users consume metaprogramming (by using dplyr, ggplot2, formulas). Very few need to produce it. If you are writing a package with an interactive interface, you may need it. If you are writing a data analysis script, you almost certainly do not. The test is simple: does your user-facing API become meaningfully better? If yes, the complexity is worth it. If you are just avoiding a quoted string, it is not.
+Most R users consume metaprogramming (by using dplyr, ggplot2, formulas) and very few need to produce it. If you are writing a package with an interactive interface, you may need these tools. If you are writing a data analysis script, you almost certainly do not. The test is simple: does your user-facing API become meaningfully better with non-standard evaluation? If yes, the complexity is worth absorbing. If you are just trying to avoid a quoted string, it is not.
 :::
 
 
 ## The metaprogramming toolkit {#sec-metaprogramming-landscape}
 
-This chapter gave you the map. Here is a brief guide to what lies beyond it:
+This chapter gave you the map. Here is a brief guide to the territory it points toward:
 
 - **Tidy evaluation** (rlang): `expr()`, `enquo()`, `eval_tidy()`, `!!`, `!!!`, `{{ }}`. The system behind dplyr, tidyr, and ggplot2. Covered in depth in Advanced R, chapters 17 through 20.
 - **Base R tools**: `quote()`, `substitute()`, `eval()`, `match.call()`, `sys.call()`, `bquote()`. These predate rlang and still power much of R's infrastructure. Every R programmer should know `substitute()` and `eval()`.
 - **Inspection packages**: `lobstr` for AST visualization, `pryr` for probing environments and function internals.
 - **Further reading**: Wickham's *Advanced R* (2nd edition) devotes four chapters to metaprogramming. Mailund's *Metaprogramming in R* (Springer, 2017) is a book-length treatment covering domain-specific languages and code generation.
 
-When you build a package that requires an expressive user interface, when a formula DSL would save your users from writing boilerplate, when you need to generate code from data, you will return to these tools and go deeper. For now, you know what metaprogramming is, how it works, and where the boundaries are. That is enough to read the source code of any tidyverse package and understand what it is doing.
+Remember the Python programmer from the opening, the one staring at `lm(y ~ x)` in confusion? You can now explain what they are seeing: R captured the expression `y ~ x` as a data structure, bundled it with the environment where it was written, and handed that bundle to `lm()`, which pulled it apart, interpreted the `~` as "model this against that," and built a design matrix from the column names. Every piece of that pipeline, the capture, the bundling, the interpretation, uses the tools you just learned. When you eventually build a package that needs an expressive user interface, when a formula DSL would save your users from writing boilerplate, when you need to generate code from data, you will return to these tools and go deeper. For now, you know what metaprogramming is, how it works, and where the edges are. That is enough to read the source code of any tidyverse package and follow the thread.
 
 
 ### Exercises {.unnumbered}

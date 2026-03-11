@@ -5,12 +5,12 @@
 source(here::here("_common.R"))
 ```
 
-In @sec-coercion, you saw that `TRUE` becomes 1 and `FALSE` becomes 0 when R needs a number. That was a hint. Logical values are not second-class citizens in R; they are a full type with their own operators, and they drive every decision your code makes. This chapter covers logical vectors, comparisons, boolean operators, and `if/else`. In R, `if/else` is an expression that returns a value, not a statement that directs traffic.
+You have already seen a clue hiding in plain sight. In @sec-coercion, `TRUE` became 1 and `FALSE` became 0 whenever R needed a number, a quiet conversion that most people ignore and never think about again. But that conversion is the tip of something larger: logical values are not convenient shorthands bolted onto the language as an afterthought; they are a full type with their own operators, and every decision your code will ever make passes through them. This chapter takes you from logical vectors through comparisons, boolean operators, and `if/else`, where you will discover that R treats `if/else` not as a traffic cop directing execution but as an expression that returns a value, just like `+` or `sqrt()`.
 
 
 ## Logical vectors {#sec-logical-vectors}
 
-`TRUE` and `FALSE` are R's logical values. You already met them in @sec-atomic-vectors as one of the four main types (double, integer, character, logical).
+`TRUE` and `FALSE` are R's logical values, and you already met them in @sec-atomic-vectors as one of the four main types (double, integer, character, logical).
 
 ```{r}
 x <- c(TRUE, FALSE, TRUE, TRUE, FALSE)
@@ -18,11 +18,11 @@ typeof(x)
 length(x)
 ```
 
-Logical vectors are the result of every comparison, every filter, every conditional check. `sum(x > 5)` works because `x > 5` produces a logical vector and `sum()` coerces `TRUE` to 1, `FALSE` to 0 (@sec-coercion).
+Every comparison you write, every filter you apply, every conditional check you run produces one of these vectors. The trick from @sec-coercion is what makes expressions like `sum(x > 5)` work: `x > 5` produces a logical vector, `sum()` coerces `TRUE` to 1 and `FALSE` to 0, and suddenly you are counting how many elements pass the test without writing a single loop.
 
-A logical value is one of exactly two things: `TRUE` or `FALSE`. There is no third option. In type theory, this is a *sum type* (also called a tagged union or variant): a type defined by listing its variants. `Bool = TRUE | FALSE`. A data frame row combines fields with AND (a penguin has a species AND a mass AND a flipper length); a sum type chooses one variant with OR. Sum types appear again when factors define a fixed set of levels (@sec-why-factors) and when S3 dispatch selects a method based on class (@sec-s3-basics). Where product types (like data frames) say 'all of these together,' sum types say 'exactly one of these.'
+A logical value is one of exactly two things: `TRUE` or `FALSE`. No third option, no grey area, no maybe. In type theory this is a *sum type* (also called a tagged union or variant): a type defined by listing its variants, so that `Bool = TRUE | FALSE`. Contrast this with a data frame row, which combines fields with AND (a penguin has a species AND a mass AND a flipper length); a sum type chooses one variant with OR. You will see sum types surface again when factors define a fixed set of levels (@sec-why-factors) and when S3 dispatch selects a method based on class (@sec-s3-basics). Where product types say "all of these together," sum types say "exactly one of these." What happens, then, when someone overrides one of the two options?
 
-R also has `T` and `F` as shortcuts for `TRUE` and `FALSE`. Do not use them.
+R has `T` and `F` as shortcuts for `TRUE` and `FALSE`. Do not use them.
 
 ```{r}
 T <- 42
@@ -33,11 +33,11 @@ T
 rm(T)
 ```
 
-`T` is a regular variable name; you can overwrite it. `TRUE` is a reserved word; you cannot. Code that relies on `T` meaning `TRUE` will break silently the moment someone (or some package) assigns to `T`. The same applies to `F`.
+`T` is a regular variable name, so you can overwrite it with anything, and R will not complain. `TRUE` is a reserved word, locked and immutable. Code that relies on `T` meaning `TRUE` will break silently the moment someone (or some package) assigns to `T`, and the same applies to `F`.
 
 ::: callout-tip
 ## Opinion
-Never use `T` and `F`. Always write `TRUE` and `FALSE` in full. It costs a few keystrokes and prevents a class of bugs that are painful to track down.
+Never use `T` and `F`. Always write `TRUE` and `FALSE` in full. A few extra keystrokes buy you immunity from a class of bugs that are genuinely painful to track down, the kind where your filter silently returns the wrong rows and nothing throws an error.
 :::
 
 
@@ -68,7 +68,7 @@ x <- c(1, 5, 3, 8, 2)
 x > 3
 ```
 
-Five values in, five logical values out. This is the same vectorization from @sec-vectorized-ops, applied to comparisons.
+Five values in, five logical values out, following the same vectorization from @sec-vectorized-ops but applied to comparisons instead of arithmetic.
 
 `%in%` tests membership in a set:
 
@@ -77,21 +77,21 @@ x <- c("cat", "dog", "bird", "cat")
 x %in% c("cat", "bird")
 ```
 
-`%in%` is cleaner than chaining `==` with `|`. Compare `x == "cat" | x == "bird"` to `x %in% c("cat", "bird")`. They produce the same result, but `%in%` scales to larger sets without the repetition.
+Compare `x == "cat" | x == "bird"` to `x %in% c("cat", "bird")`: both produce the same result, but `%in%` scales gracefully to larger sets without forcing you to chain `==` and `|` over and over.
 
-One trap deserves early mention: floating-point comparison.
+One trap deserves early mention. Try this:
 
 ```{r}
 0.1 + 0.2 == 0.3
 ```
 
-This returns `FALSE` because computers store numbers in binary, and most decimal fractions have no exact binary representation (the same way 1/3 has no exact decimal representation). The stored values of `0.1 + 0.2` and `0.3` differ by about `5.6e-17`. Use `all.equal()` for approximate comparison:
+`FALSE`. Computers store numbers in binary, and most decimal fractions have no exact binary representation (the same way 1/3 has no exact decimal representation). The stored values of `0.1 + 0.2` and `0.3` differ by about `5.6e-17`, an invisible speck of rounding error that `==` faithfully detects. Use `all.equal()` for approximate comparison:
 
 ```{r}
 all.equal(0.1 + 0.2, 0.3)
 ```
 
-@sec-numerical-computing covers floating-point arithmetic in depth, including catastrophic cancellation, condition numbers, and log-space arithmetic. For now, the rule is: never use `==` to compare computed decimal numbers.
+@sec-numerical-computing covers floating-point arithmetic in depth, including catastrophic cancellation, condition numbers, and log-space arithmetic. For now, the rule is simple: never use `==` to compare computed decimal numbers. But if you cannot trust `==` for decimals, how do you combine multiple conditions safely?
 
 
 ### Exercises {.unnumbered}
@@ -120,13 +120,13 @@ x > 2 & x < 6
 
 Each element is tested independently: is it greater than 2 *and* less than 6?
 
-R also has `&&` and `||`, which look similar but behave differently. They examine only the first element and use *short-circuit evaluation*: if the first operand of `&&` is `FALSE`, the second is never evaluated (because the result must be `FALSE` regardless). Similarly, if the first operand of `||` is `TRUE`, the second is skipped.
+R also has `&&` and `||`, which look similar but behave very differently. They examine only the first element of each operand and use *short-circuit evaluation*: if the left side of `&&` is `FALSE`, the right side is never touched, because the result must be `FALSE` regardless of what the right side contains. The same logic applies to `||` when the left side is `TRUE`.
 
 ```{r}
 FALSE && stop("this is never reached")
 ```
 
-No error. `stop()` was never called because `&&` saw `FALSE` on the left and short-circuited.
+No error. `stop()` was never called because `&&` saw `FALSE` on the left and skipped everything to the right. Compare that to the single-ampersand version:
 
 ```{r}
 #| error: true
@@ -147,7 +147,7 @@ xor(TRUE, FALSE)
 xor(TRUE, TRUE)
 ```
 
-You won't need `xor()` often, but it exists.
+You won't need `xor()` often, but it exists. And it turns out that these four operations, `&`, `|`, `!`, and `xor()`, are not just software conventions.
 
 
 ### Exercises {.unnumbered}
@@ -159,11 +159,11 @@ You won't need `xor()` often, but it exists.
 
 ## Logic gates: where code meets hardware {#sec-logic-gates}
 
-You now know R's logical operators well enough to filter data and write conditionals. But these operators did not originate in programming languages; they describe physical reality. The `&` you use to combine filter conditions is the same AND operation that electrical engineers wire into silicon, described by the same truth tables George Boole formalized in 1854 and that Claude Shannon, in his 1937 master's thesis, showed could be implemented with electrical switches. Understanding this connection, from the code you write to the circuits that execute it, reveals why Boolean algebra is not just a convenience but the foundation on which all digital computation is built.
+The `&` you typed a moment ago to combine filter conditions is the same AND operation that electrical engineers wire into silicon, described by the same truth tables George Boole formalized in 1854. In his 1937 master's thesis, Claude Shannon showed that these truth tables could be implemented with electrical switches, and that insight bridged the gap between abstract algebra and physical circuitry. The connection runs straight from the R code you write to the transistors that execute it: Boolean algebra is not a convenience but the foundation on which all digital computation rests.
 
-The `&`, `|`, `!`, and `xor()` you use in R are physical operations, implemented as tiny circuits called *logic gates* inside every processor.
+The `&`, `|`, `!`, and `xor()` you use in R correspond to physical circuits called *logic gates* inside every processor.
 
-An AND gate has two input wires and one output wire. The output is 1 (high voltage) only when both inputs are 1. An OR gate outputs 1 when at least one input is 1. A NOT gate (also called an inverter) has one input and flips it: 1 becomes 0, 0 becomes 1. An XOR gate outputs 1 when the inputs differ.
+An AND gate has two input wires and one output wire; the output is 1 (high voltage) only when both inputs are 1. An OR gate outputs 1 when at least one input is 1. A NOT gate (also called an inverter) has one input and flips it: 1 becomes 0, 0 becomes 1. An XOR gate outputs 1 when the inputs differ.
 
 ```
 AND gate         OR gate          XOR gate         NOT gate
@@ -174,14 +174,14 @@ A  B  out        A  B  out        A  B  out        A  out
 1  1   1         1  1   1         1  1   0
 ```
 
-These are the same truth tables as R's `&`, `|`, `xor()`, and `!`. When you write `TRUE & FALSE` in R, the CPU evaluates it using an AND gate (or a chain of them, for vectors). The logic you write in R and the logic etched into silicon are the same logic, described by the same truth tables, separated only by layers of translation.
+These are the same truth tables as R's `&`, `|`, `xor()`, and `!`. When you write `TRUE & FALSE` in R, the CPU evaluates it using an AND gate (or a chain of them, for vectors). The logic you write and the logic etched into silicon are the same logic, described by the same truth tables, separated only by layers of translation.
 
-Everything a computer does, from adding numbers to rendering video, is built from combinations of these four gates. To see how, let's design a circuit the way electrical engineers do: start with inputs and outputs, build a truth table, find the minimal Boolean expression, then wire the gates.
+Everything a computer does, from adding numbers to rendering video, is built from combinations of these four gates. To see how, we can design a circuit the way electrical engineers do: start with inputs and outputs, build a truth table, find the minimal Boolean expression, then wire the gates.
 
 
 ### Designing a half adder {#sec-half-adder}
 
-The simplest addition: two single bits, A and B. Two outputs: a sum bit and a carry bit (because 1 + 1 = 10 in binary, which is 0 with a carry of 1).
+The simplest possible addition: two single bits, A and B. Two outputs: a sum bit and a carry bit (because 1 + 1 = 10 in binary, which is 0 with a carry of 1).
 
 **Step 1: truth table.** List every possible input combination and the desired output.
 
@@ -202,7 +202,7 @@ Carry = A AND B
 
 `Sum` is 1 in two rows: when A=0, B=1 (that's NOT A AND B) and when A=1, B=0 (that's A AND NOT B).
 
-**Step 3: minimize.** The canonical form is correct but not always efficient. Can we simplify? Look at `Sum`: it is 1 when A and B differ. That is the definition of XOR. So:
+**Step 3: minimize.** The canonical form is correct but not always efficient. Look at `Sum`: it is 1 when A and B differ, which is the definition of XOR. So:
 
 ```
 Sum   = A XOR B
@@ -215,7 +215,7 @@ Two gates. This is a *half adder*. Before looking at the circuit, here are the s
 
 ![A half adder: one XOR gate for the sum, one AND gate for the carry.](../images/half_adder.png){#fig-half-adder width=100% fig-align="left" fig-alt="Circuit diagram of a half adder showing one XOR gate producing Sum and one AND gate producing Carry, with inputs A and B."}
 
-We can verify this in R. R's `&`, `|`, `!`, and `xor()` are the same Boolean operations:
+We can verify this in R, since R's `&`, `|`, `!`, and `xor()` are the same Boolean operations:
 
 ```{r}
 half_adder <- function(A, B) {
@@ -227,12 +227,12 @@ half_adder(TRUE, FALSE)
 half_adder(TRUE, TRUE)
 ```
 
-`TRUE + TRUE` gives Sum = FALSE (0), Carry = TRUE (1). That's binary 10: the number 2. Correct.
+`TRUE + TRUE` gives Sum = FALSE (0), Carry = TRUE (1). That's binary 10: the number 2. But real addition involves three inputs, not two.
 
 
 ### From half adder to full adder {#sec-full-adder}
 
-Real addition has three inputs, not two. When you add column by column in decimal, you carry from the previous column. Binary works the same way. Each column receives A, B, and a carry-in (Cin) from the column to the right.
+When you add column by column in decimal, you carry from the previous column. Binary works the same way: each column receives A, B, and a carry-in (Cin) from the column to the right.
 
 **Step 1: truth table.** Three inputs, eight rows.
 
@@ -258,9 +258,9 @@ Cout = (NOT A AND B AND Cin) OR (A AND NOT B AND Cin)
        OR (A AND B AND NOT Cin) OR (A AND B AND Cin)
 ```
 
-That's a mess. Four terms per output, each with three variables. Can we simplify?
+Four terms per output, each with three variables. A mess.
 
-**Step 3: minimize with a Karnaugh map.** A *Karnaugh map* (K-map) is a visual tool for simplifying Boolean expressions. You arrange the truth table rows in a grid so that adjacent cells differ by exactly one input. Then you look for rectangular groups of 1s: each group of 2, 4, or 8 adjacent 1s can be collapsed into a simpler term.
+**Step 3: minimize with a Karnaugh map.** A *Karnaugh map* (K-map) is a visual tool for simplifying Boolean expressions. You arrange the truth table rows in a grid so that adjacent cells differ by exactly one input, then look for rectangular groups of 1s: each group of 2, 4, or 8 adjacent 1s can be collapsed into a simpler term.
 
 K-map for Cout, with AB on one axis and Cin on the other:
 
@@ -271,13 +271,13 @@ Cin    00   01   11   10
   1  |  0    1    1    1
 ```
 
-Three groups of two 1s: the column AB=11 (group: A AND B, regardless of Cin), the row Cin=1 with B=1 (group: B AND Cin), and the row Cin=1 with A=1 (group: A AND Cin). The minimal expression:
+Three groups of two 1s emerge: the column AB=11 (group: A AND B, regardless of Cin), the row Cin=1 with B=1 (group: B AND Cin), and the row Cin=1 with A=1 (group: A AND Cin). The minimal expression:
 
 ```
 Cout = (A AND B) OR (B AND Cin) OR (A AND Cin)
 ```
 
-That's simpler than the four-term canonical form. For Sum, the K-map shows no adjacent groups (the 1s form a checkerboard), so there's no simplification beyond XOR:
+Much simpler than the four-term canonical form. For Sum, the K-map shows no adjacent groups (the 1s form a checkerboard), so there's no simplification beyond XOR:
 
 ```
 Sum = A XOR B XOR Cin
@@ -299,16 +299,16 @@ full_adder(TRUE, TRUE, FALSE)  # 1+1+0 = 10 binary
 full_adder(TRUE, TRUE, TRUE)   # 1+1+1 = 11 binary
 ```
 
-1 + 1 + 0 = 2 (binary 10: Sum=0, Carry=1). 1 + 1 + 1 = 3 (binary 11: Sum=1, Carry=1). Correct.
+1 + 1 + 0 = 2 (binary 10: Sum=0, Carry=1). 1 + 1 + 1 = 3 (binary 11: Sum=1, Carry=1).
 
-Chain four full adders together (each one's Cout feeding the next one's Cin) and you have a 4-bit adder. Chain 64 of them and you can add two 64-bit numbers. A CPU is billions of these gates arranged to perform arithmetic, comparisons, and memory access. The boolean algebra you use in R to filter data (`penguins$body_mass_g > 4000 & penguins$species == "Gentoo"`) is the same boolean algebra running in the silicon beneath it.
+Chain four full adders together, each one's Cout feeding the next one's Cin, and you have a 4-bit adder. Chain 64 of them and you can add two 64-bit numbers. A CPU is billions of these gates arranged to perform arithmetic, comparisons, and memory access. The boolean algebra you use in R to filter data (`penguins$body_mass_g > 4000 & penguins$species == "Gentoo"`) is the same boolean algebra running in the silicon beneath it.
 
-The workflow we just followed (truth table → canonical form → minimize → circuit) is called *Boolean function minimization*. Electrical engineers use it to design every circuit in a processor. K-maps work for up to four or five inputs; for larger circuits, algorithms like Quine-McCluskey or Espresso take over. But the principle is always the same: specify what you want (truth table), then find the smallest set of gates that produces it.
+The workflow we followed (truth table, canonical form, minimize, circuit) is called *Boolean function minimization*. K-maps work for up to four or five inputs; for larger circuits, algorithms like Quine-McCluskey or Espresso take over. The principle, though, is always the same: specify what you want as a truth table, then find the smallest set of gates that produces it.
 
 
 ::: callout-note
 ## From gates to computation
-A logic gate on its own computes one result and stops. Add a clock (an electrical signal that alternates between 0 and 1 at a fixed rate, say 3 billion times per second) and flip-flops (gates that remember their output until the next clock tick), and the circuit can feed its result back into itself as the next input. That is the step from logic to computation: a clock plus a circuit is a calculator. The calculator from @sec-turing that added `3 + 5 + 2 + 8` by keeping a running total? It is an adder circuit driven by a clock, reading one number per tick, feeding the output back into the input. Every processor is this idea, scaled up.
+A logic gate on its own computes one result and stops, frozen in time. Add a clock (an electrical signal that alternates between 0 and 1 at a fixed rate, say three billion times per second) and flip-flops (gates that remember their output until the next clock tick), and the circuit can feed its result back into itself as the next input. That single step, from static logic to feedback, is the step from logic to computation. The calculator from @sec-turing that added `3 + 5 + 2 + 8` by keeping a running total? It is an adder circuit driven by a clock, reading one number per tick, feeding the output back into the input. Every processor is this idea, scaled up.
 :::
 
 
@@ -316,9 +316,9 @@ A logic gate on its own computes one result and stops. Add a clock (an electrica
 
 ## How numbers are stored {#sec-numbers-stored}
 
-R has `double` and `integer` types (@sec-atomic-vectors). The difference matters because of how computers store numbers.
+R has `double` and `integer` types (@sec-atomic-vectors), and for most day-to-day work you never think about the difference. But the computer thinks about it constantly, because the two types are stored in fundamentally different ways.
 
-A computer stores everything as bits: 0s and 1s. An integer is stored as a binary number. The integer 42 in binary is `101010`:
+Everything is bits: 0s and 1s. An integer is stored as a binary number, so the integer 42 in binary is `101010`:
 
 ```
   1   0   1   0   1   0
@@ -328,13 +328,13 @@ A computer stores everything as bits: 0s and 1s. An integer is stored as a binar
  32 + 0 + 8 + 0 + 2 + 0 = 42
 ```
 
-Each position represents a power of 2. A `1` means "include this power," a `0` means "skip it." R uses 32 bits for an integer, so the largest integer is 2^31^ - 1 = 2,147,483,647 (one bit is reserved for the sign: positive or negative).
+Each position represents a power of 2: a `1` means "include this power," a `0` means "skip it." R uses 32 bits for an integer, so the largest integer is 2^31^ - 1 = 2,147,483,647 (one bit is reserved for the sign, positive or negative).
 
 ```{r}
 .Machine$integer.max
 ```
 
-A double (also called a floating-point number) is stored differently. It uses 64 bits split into three parts: 1 bit for the sign, 11 bits for the exponent, and 52 bits for the fraction (called the significand):
+A double (also called a floating-point number) is stored differently, using 64 bits split into three parts: 1 bit for the sign, 11 bits for the exponent, and 52 bits for the fraction (called the significand):
 
 ```
  [sign]  [exponent: 11 bits]  [significand: 52 bits]
@@ -342,14 +342,14 @@ A double (also called a floating-point number) is stored differently. It uses 64
    +/-       the scale            the precision
 ```
 
-The number is reconstructed as: ± fraction × 2^exponent^. This format (IEEE 754) can represent very large numbers (up to about 1.8 × 10^308^) and very small ones (down to about 2.2 × 10^-308^), but not all numbers exactly.
+The number is reconstructed as: ± fraction × 2^exponent^. This format (IEEE 754) can represent very large numbers (up to about 1.8 × 10^308^) and very small ones (down to about 2.2 × 10^-308^), but not all numbers exactly, which is exactly the trap that bit us with `0.1 + 0.2`.
 
 ```{r}
 .Machine$double.xmax
 .Machine$double.xmin
 ```
 
-This is why `0.1 + 0.2 != 0.3` (@sec-comparison-operators). The 52-bit significand stores the closest binary approximation of each decimal number, and when you add two approximations, rounding errors accumulate. @sec-numerical-computing covers these traps in detail, including how to detect them with `sprintf("%.20f", ...)` and how to avoid them with `all.equal()` and `dplyr::near()`.
+The 52-bit significand stores the closest binary approximation of each decimal number; when you add two approximations, rounding errors accumulate. @sec-numerical-computing covers these traps in detail, including how to detect them with `sprintf("%.20f", ...)` and how to avoid them with `all.equal()` and `dplyr::near()`.
 
 R defaults to double for all numbers unless you add the `L` suffix:
 
@@ -358,12 +358,12 @@ typeof(42)
 typeof(42L)
 ```
 
-`42` is a 64-bit floating-point number. `42L` is a 32-bit integer. For most data analysis, the distinction is invisible --- until you compare computed values with `==` or work with very large counts. @sec-numerical-computing covers the traps in depth.
+`42` is a 64-bit floating-point number; `42L` is a 32-bit integer. For most data analysis, the distinction is invisible, until you compare computed values with `==` or work with very large counts. But now that you understand how R stores and compares values, the question shifts: how does R act on the results of those comparisons?
 
 
 ## `if/else` as an expression {#sec-if-else-expression}
 
-In most languages, `if/else` is a *statement*: it controls which code runs but doesn't produce a value. In R, `if/else` is an *expression*: it evaluates to the value of whichever branch is taken.
+In most languages, `if/else` is a *statement*: it controls which code runs but does not produce a value. In R, `if/else` is an *expression*: it evaluates to the value of whichever branch is taken, and you can assign that value directly.
 
 ```{r}
 x <- -3
@@ -373,7 +373,7 @@ y
 
 `if (x > 0) "positive" else "non-positive"` evaluated to `"non-positive"`, and that value was assigned to `y`. This follows from @sec-calling-functions: everything in R is an expression, and expressions return values. `if/else` is no exception.
 
-Multi-line branches use curly braces. The value of each branch is the last expression evaluated inside it:
+Multi-line branches use curly braces, and the value of each branch is the last expression evaluated inside it:
 
 ```{r}
 classify <- function(x) {
@@ -392,16 +392,16 @@ classify(0)
 classify(-2)
 ```
 
-R has no `elif` keyword. You chain conditions with `else if`, which is just an `else` followed by another `if`. Long chains get hard to read; when you have more than two or three branches, consider `switch()` (@sec-switch) or `dplyr::case_when()` (@sec-vectorized-conditionals).
+R has no `elif` keyword; you chain conditions with `else if`, which is just an `else` followed by another `if`. Long chains get hard to read, and when you have more than two or three branches, consider `switch()` (@sec-switch) or `dplyr::case_when()` (@sec-vectorized-conditionals).
 
-The connection to lambda calculus: in @sec-recursion, we saw Church's encoding of booleans, where `TRUE = λx. λy. x` (pick the first) and `FALSE = λx. λy. y` (pick the second). R's `if/else` does the same thing: it takes a condition and two branches, and returns whichever branch the condition picks. The condition *selects* a value, just as Church's booleans select an argument. The Curry-Howard correspondence takes this further: logical propositions correspond to types, and proofs correspond to programs. Under this lens, `TRUE` and `FALSE` are proof and refutation, and an `if/else` expression is a case analysis on evidence. Typed functional languages like Haskell make this connection explicit; R keeps it implicit, but the structure is the same.
+The connection to lambda calculus runs deeper than it might seem. In @sec-recursion, we saw Church's encoding of booleans, where `TRUE = λx. λy. x` (pick the first) and `FALSE = λx. λy. y` (pick the second). R's `if/else` does the same thing: it takes a condition and two branches, and returns whichever branch the condition selects, just as Church's booleans select an argument. The Curry-Howard correspondence takes this further, mapping logical propositions to types and proofs to programs; under this lens, `TRUE` and `FALSE` are proof and refutation, and an `if/else` expression is a case analysis on evidence. Typed functional languages like Haskell make this connection explicit; R keeps it implicit, but the structure is the same.
 
 ```{r}
 #| error: true
 if (c(TRUE, FALSE)) "yes"
 ```
 
-`if` expects a single logical value. If you give it a vector, R uses only the first element and warns you. But data analysis rarely involves a single value --- you usually need to test every element of a column at once.
+`if` expects a single logical value. If you give it a vector, R uses only the first element and warns you. But data analysis rarely involves a single value; you usually need to test every element of a column at once. So what do you reach for when `if/else` won't scale?
 
 
 ### Exercises {.unnumbered}
@@ -420,23 +420,23 @@ x <- c(-2, 0, 3, -1, 5)
 ifelse(x > 0, "pos", "neg")
 ```
 
-For each element, `ifelse()` checks the condition and returns the corresponding value from the second or third argument. It is vectorized in the same way `+` and `>` are (@sec-vectorized-ops).
+For each element, `ifelse()` checks the condition and returns the corresponding value from the second or third argument, vectorized in the same way `+` and `>` are (@sec-vectorized-ops).
 
-`ifelse()` has a weakness: it doesn't check types.
+But `ifelse()` has a weakness: it doesn't check types.
 
 ```{r}
 ifelse(TRUE, 1, "no")
 ifelse(FALSE, 1, "no")
 ```
 
-One returns a number, the other a string. The return type depends on which branch is taken, and that can change silently when your data changes. `dplyr::if_else()` is stricter:
+One call returns a number, the other a string. The return type depends on which branch is taken, and that can change silently when your data changes. `dplyr::if_else()` is stricter:
 
 ```{r}
 #| error: true
 dplyr::if_else(TRUE, 1, "no")
 ```
 
-It refuses to mix types. This catches bugs early.
+It refuses to mix types, catching bugs early rather than letting them propagate downstream.
 
 For multiple conditions, `dplyr::case_when()` replaces nested `ifelse()` chains:
 
@@ -449,17 +449,17 @@ dplyr::case_when(
 )
 ```
 
-Each line is a condition-value pair. `case_when()` evaluates them in order and returns the value for the first condition that matches. Compare this to the nested version:
+Each line is a condition-value pair, evaluated in order; `case_when()` returns the value for the first condition that matches. Compare this to the nested version:
 
 ```r
 ifelse(x > 0, "positive", ifelse(x == 0, "zero", "negative"))
 ```
 
-Both produce the same result. `case_when()` is easier to read, easier to extend, and harder to get wrong.
+Both produce the same result, but `case_when()` is easier to read, easier to extend, and harder to get wrong.
 
 ::: callout-tip
 ## Opinion
-Prefer `dplyr::case_when()` over nested `ifelse()`. Nested `ifelse()` calls are hard to read and easy to break when you add a condition. `case_when()` scales cleanly to any number of branches.
+Prefer `dplyr::case_when()` over nested `ifelse()`. Nesting `ifelse()` calls creates code that is hard to read and easy to break when you add a condition; `case_when()` scales cleanly to any number of branches.
 :::
 
 
@@ -492,5 +492,4 @@ describe("Wednesday")
 
 Each name is matched against the input. `Saturday =` with no value falls through to the next case (`Sunday`), so both return `"weekend"`. The unnamed last entry is the default.
 
-`switch()` only works with a single string (or number, but string dispatch is the common use). For vector operations, use `case_when()`. For complex branching logic, use `if/else if`. `switch()` fills the narrow gap where you have one value and several named options.
-
+`switch()` only works with a single string (or number, but string dispatch is the common use). For vector operations, use `case_when()`. For complex branching logic, use `if/else if`. `switch()` fills the narrow gap where you have one value and several named options, and it fills it well. But the real lesson of this chapter is not about any single function. From logical vectors through comparison operators, boolean algebra, and conditional expressions, you have traced a single thread: the idea that every computation reduces to choosing between two values, `TRUE` or `FALSE`, 1 or 0, high voltage or low. The `if/else` in your R script and the AND gate in your CPU are expressions of the same underlying logic, separated by layers of abstraction but never by kind. The next chapter picks up where that thread leads: what happens when you need to make the same choice not once but thousands of times, across every row of a data frame, without writing a single loop.

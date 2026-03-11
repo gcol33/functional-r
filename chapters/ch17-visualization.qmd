@@ -5,16 +5,16 @@
 source(here::here("_common.R"))
 ```
 
-ggplot2 doesn't give you a scatterplot function and a bar chart function. It gives you a language for describing any plot. Once you see the grammar, you stop memorizing plot types and start constructing them.
+Try building a bar chart in base R, then a scatterplot, then a histogram. Each one calls a different function with different arguments, different parameter names, different assumptions about what your data looks like. You learn three APIs instead of one idea. ggplot2 takes the opposite approach: it gives you a grammar, a small vocabulary of composable pieces that describe *any* plot, and you assemble the pieces yourself. Once the grammar clicks, you stop asking "which function draws a heatmap?" and start asking "what mapping, what geometry, what coordinate system?"
 
-This chapter assumes you have tidy data (@sec-tidy-data), can reshape it with dplyr (@sec-data-transformation), and can pipe it through transformations (@sec-pipes-and-composition). You have cleaned the data; now you see it.
+This chapter assumes you have tidy data (@sec-tidy-data), can reshape it with dplyr (@sec-data-transformation), and can pipe it through transformations (@sec-pipes-and-composition). The data is clean. Now you see it.
 
 
 ## The grammar of graphics {#sec-grammar-of-graphics}
 
-In 1999, Leland Wilkinson published *The Grammar of Graphics*, arguing that a plot is not a type (bar chart, scatterplot, heatmap). A plot is a mapping from data to visual properties, rendered by geometric objects, in a coordinate system. Types are consequences of choices, not starting points. The intellectual roots go further back: Jacques Bertin's *Semiologie Graphique* (1967) classified visual variables (position, size, shape, value, color, orientation, texture) and ranked their effectiveness for different data types. Wilkinson built the Grammar of Graphics on Bertin's foundation, and when ggplot2 maps a variable to `color` vs `size` vs `shape`, it is implementing Bertin's taxonomy: position is most effective for quantitative data, color for categorical.
+In 1999, Leland Wilkinson published *The Grammar of Graphics*, and the central argument was deceptively simple: a plot is not a type. Not a bar chart, not a scatterplot, not a heatmap. A plot is a mapping from data to visual properties, rendered by geometric objects, in a coordinate system; types are consequences of choices, not starting points. The intellectual roots stretch further back to Jacques Bertin's *Semiologie Graphique* (1967), which classified visual variables (position, size, shape, value, color, orientation, texture) and ranked their effectiveness for different data types. Wilkinson built on Bertin's foundation, and when ggplot2 maps a variable to `color` vs `size` vs `shape`, it is implementing Bertin's taxonomy: position is most effective for quantitative data, color for categorical.
 
-Hadley Wickham implemented this idea in 2005 as ggplot2: a layered grammar where you build plots by composing independent components. The components are:
+Hadley Wickham turned this theory into software in 2005, building ggplot2 as a layered grammar where plots emerge from composing independent components:
 
 1. **Data**: a tidy data frame (@sec-tidy-data).
 2. **Aesthetics** (`aes()`): which variables map to which visual properties.
@@ -24,7 +24,7 @@ Hadley Wickham implemented this idea in 2005 as ggplot2: a layered grammar where
 6. **Facets**: small multiples, splitting by a variable.
 7. **Themes**: non-data visual styling.
 
-Most plots need only three: data + aesthetics + geom. The rest are refinements.
+Most plots need only three: data + aesthetics + geom. The rest are refinements you reach for when the defaults aren't enough.
 
 ```{r}
 library(palmerpenguins)
@@ -39,7 +39,7 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g)) +
   geom_point()
 ```
 
-`ggplot()` sets up the coordinate system. `aes()` maps bill length to the x-axis and body mass to the y-axis. `geom_point()` draws one point per row. The `+` adds the geom as a layer. Those three lines contain the entire grammar.
+`ggplot()` sets up the coordinate system, `aes()` maps bill length to the x-axis and body mass to the y-axis, and `geom_point()` draws one point per row. The `+` adds the geom as a layer. Three lines, the entire grammar. But what happens when you want to encode a third variable?
 
 
 ## Aesthetics: data to visuals {#sec-aesthetics}
@@ -52,9 +52,9 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g, color = species)) +
   geom_point()
 ```
 
-Here `color = species` maps each species to a different color. ggplot2 picks the colors automatically and adds a legend. Common aesthetics include `x`, `y`, `color` (or `colour`), `fill`, `shape`, `size`, `alpha`, `linetype`, and `group`.
+Writing `color = species` maps each species to a different color; ggplot2 picks the palette automatically and adds a legend. Common aesthetics include `x`, `y`, `color` (or `colour`), `fill`, `shape`, `size`, `alpha`, `linetype`, and `group`.
 
-The critical distinction: inside `aes()` means mapped to a variable. Outside `aes()` means fixed for all observations.
+There is one distinction that trips up everyone, usually within the first hour. Inside `aes()` means *mapped to a variable*. Outside `aes()` means *fixed for all observations*.
 
 ```{r}
 #| warning: false
@@ -72,10 +72,10 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g)) +
 
 ::: callout-tip
 ## Opinion
-If someone's plot has a legend they don't want, they put a variable outside `aes()`. If their points are all the same color when they shouldn't be, they put a constant inside `aes()`. Getting this distinction right fixes half of all ggplot2 questions.
+If someone's plot has a legend they didn't ask for, they probably put a variable outside `aes()`. If all their points turned the same color when they shouldn't have, they put a constant inside `aes()`. Getting this one distinction right fixes roughly half of all ggplot2 questions on Stack Overflow.
 :::
 
-Aesthetics placed in `ggplot()` are inherited by all layers. Aesthetics placed in a specific `geom_*()` apply only to that layer. When multiple geoms share the same mapping, put it in `ggplot()`. When a mapping is specific to one layer, put it in the geom.
+Aesthetics placed in `ggplot()` are inherited by every layer; aesthetics placed in a specific `geom_*()` apply only to that layer. When multiple geoms share the same mapping, put it in `ggplot()`. When a mapping belongs to one layer only, put it in the geom. This inheritance rule keeps your code DRY, but it also means that a misplaced aesthetic can quietly propagate to layers you didn't intend. So what shapes can those layers draw?
 
 
 ### Exercises {.unnumbered}
@@ -87,9 +87,9 @@ Aesthetics placed in `ggplot()` are inherited by all layers. Aesthetics placed i
 
 ## Geoms: shapes for data {#sec-geoms}
 
-Each geom renders data differently. The same aesthetics, different geoms, different plots. Here are the essential ones.
+Each geom renders data differently. Same aesthetics, different geom, different plot. Here are the ones you will reach for most often.
 
-`geom_point()` draws a scatterplot. Two continuous variables:
+`geom_point()` draws a scatterplot, the natural choice for two continuous variables:
 
 ```{r}
 #| warning: false
@@ -97,7 +97,7 @@ ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
   geom_point()
 ```
 
-`geom_histogram()` shows the distribution of one continuous variable. Control the resolution with `bins` or `binwidth`:
+`geom_histogram()` shows the distribution of one continuous variable, and you control the resolution with `bins` or `binwidth`:
 
 ```{r}
 #| warning: false
@@ -114,7 +114,7 @@ ggplot(penguins, aes(x = species, y = body_mass_g)) +
   geom_boxplot()
 ```
 
-`geom_density()` is a smooth alternative to the histogram. It estimates the probability density, which makes it easier to compare distributions:
+`geom_density()` is a smooth alternative to the histogram that estimates probability density, making it easier to overlay and compare distributions:
 
 ```{r}
 #| warning: false
@@ -122,16 +122,16 @@ ggplot(penguins, aes(x = body_mass_g, fill = species)) +
   geom_density(alpha = 0.4)
 ```
 
-`geom_line()` connects points from left to right. It is the standard geom for time series and trends. Order matters: if the data is not sorted by x, the lines will zigzag.
+`geom_line()` connects points from left to right, the standard geom for time series and trends. Order matters: if the data isn't sorted by x, the lines will zigzag into nonsense.
 
-`geom_col()` draws bars with heights taken directly from the data. `geom_bar()` counts rows for you. The difference: `geom_bar()` applies `stat = "count"` internally, so you only map `x`. `geom_col()` uses `stat = "identity"`, so you map both `x` and `y`.
+`geom_col()` draws bars with heights taken directly from the data, while `geom_bar()` counts rows for you. The difference is the stat: `geom_bar()` applies `stat = "count"` internally, so you only map `x`; `geom_col()` uses `stat = "identity"`, so you map both `x` and `y`.
 
 ```{r}
 ggplot(penguins, aes(x = species)) +
   geom_bar()
 ```
 
-`geom_smooth()` adds a fitted line or curve. Use `method = "lm"` for linear, `method = "loess"` for smooth:
+`geom_smooth()` adds a fitted line or curve, with `method = "lm"` for linear and `method = "loess"` for smooth:
 
 ```{r}
 #| warning: false
@@ -141,7 +141,7 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g)) +
   geom_smooth(method = "lm")
 ```
 
-Layers compose with `+`. The plot above has two layers: points and a linear fit. Each `+` adds a component to the same plot object. But adding layers only changes the geometry — what about controlling *how* data values map to visual properties?
+Layers compose with `+`. The plot above has two layers, points and a linear fit, and each `+` adds a component to the same plot object. But adding layers only changes the geometry. What about controlling *how* data values map to visual properties?
 
 
 ### Exercises {.unnumbered}
@@ -153,9 +153,9 @@ Layers compose with `+`. The plot above has two layers: points and a linear fit.
 
 ## Scales: controlling the mapping {#sec-scales}
 
-Every aesthetic has a scale, even if you don't set one explicitly. Scales control how data values become visual values: which colors, which axis limits, which labels.
+Every aesthetic has a scale, whether you set one or not. Scales control how data values become visual values: which colors, which axis limits, which labels.
 
-When you write `aes(x = bill_length_mm)`, ggplot2 creates a default `scale_x_continuous()` behind the scenes. You only need to set a scale explicitly when you want to override the default behavior: change axis limits, transform the axis, or pick specific colors.
+When you write `aes(x = bill_length_mm)`, ggplot2 quietly creates a default `scale_x_continuous()` behind the scenes, and you only need to override it when the default behavior falls short: when you want to change axis limits, transform the axis, or pick specific colors.
 
 Position scales control axes:
 
@@ -175,7 +175,7 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g, color = species)) +
   scale_color_viridis_d()
 ```
 
-`labs()` controls titles and labels. Always label your axes with units. `bill_length_mm` is a column name, not a label:
+`labs()` controls titles and labels. Always label your axes with units, because `bill_length_mm` is a column name, not a label:
 
 ```{r}
 #| warning: false
@@ -191,7 +191,7 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g, color = species)) +
 
 ::: callout-tip
 ## Opinion
-Always label your axes with units. A plot with `bill_length_mm` on the axis is a draft. A plot with "Bill length (mm)" is communication.
+Always label your axes with units. A plot with `bill_length_mm` on the axis is a working draft; a plot with "Bill length (mm)" is communication. The difference is thirty seconds of typing and the entirety of your audience's comprehension.
 :::
 
 
@@ -223,11 +223,11 @@ ggplot(penguins |> dplyr::filter(!is.na(sex)),
   facet_grid(sex ~ island)
 ```
 
-By default, all panels share the same axis scales. You can free them with `scales = "free_y"` or `scales = "free"`, but use this cautiously: free scales make comparison across panels harder.
+By default, all panels share the same axis scales. You can free them with `scales = "free_y"` or `scales = "free"`, but use this cautiously: free scales make comparison across panels harder, which is the whole point of small multiples in the first place.
 
-When to facet vs when to color: facet when the groups would overlap too much, or when you want each group's pattern to stand alone. Color works when groups are few and visually separable.
+When should you facet instead of coloring? Facet when the groups would overlap too much for color to separate them, or when you want each group's pattern to stand on its own without visual interference. Color works when groups are few, visually separable, and you want to see them in the same coordinate space.
 
-Either way, faceting replaces the temptation to build the same plot three times with a loop or copy-paste. One `facet_wrap()` call produces all the panels, with shared axes for honest comparison. The grammar handles the layout; you focus on the question.
+Either way, faceting replaces the temptation to build the same plot three times with a loop or copy-paste. One `facet_wrap()` call produces all the panels, with shared axes for honest comparison, and the grammar handles the layout while you focus on the question. But what about the visual details that have nothing to do with data?
 
 
 ### Exercises {.unnumbered}
@@ -239,7 +239,7 @@ Either way, faceting replaces the temptation to build the same plot three times 
 
 ## Themes: non-data styling {#sec-themes}
 
-Themes control the non-data elements of a plot: background, grid lines, fonts, legend position. ggplot2 ships several built-in themes:
+Themes control everything on a plot that isn't data: background, grid lines, fonts, legend position. ggplot2 ships several built-in options:
 
 ```{r}
 #| warning: false
@@ -268,9 +268,9 @@ To set a default theme for your entire session, use `theme_set()`:
 theme_set(theme_minimal())
 ```
 
-Themes are purely cosmetic. Spend your time on clear mappings and good labels before worrying about fonts.
+Themes are cosmetic. Spend your time on clear mappings and good labels before worrying about fonts.
 
-That said, a consistent theme across all your plots signals professionalism. Pick one default early (most people end up with `theme_minimal()` or `theme_bw()`) and use it everywhere; consistency matters more than which theme you choose.
+That said, a consistent theme across all your plots signals professionalism, the way consistent formatting signals care in writing. Pick one default early (most people end up with `theme_minimal()` or `theme_bw()`), use it everywhere, and stop fiddling; consistency matters more than which theme you choose. Now that the individual pieces are in place, how do they compose into a full specification?
 
 
 ### Exercises {.unnumbered}
@@ -281,7 +281,7 @@ That said, a consistent theme across all your plots signals professionalism. Pic
 
 ## Putting it together {#sec-putting-it-together}
 
-Here is a complete example, built step by step. Read it like a sentence: take penguins, remove missing sex, map bill length to x, mass to y, species to color, draw points, add linear fits, split by sex, use viridis colors, label everything, apply a minimal theme.
+Read this example like a sentence: take penguins, remove missing sex, map bill length to x and mass to y and species to color, draw points, add linear fits, split by sex, use viridis colors, label everything, apply a minimal theme.
 
 ```{r}
 #| warning: false
@@ -302,9 +302,9 @@ penguins |>
   theme_minimal()
 ```
 
-The pipe feeds data into `ggplot()`, and after that, `+` composes the layers. The grammar makes it readable: each line adds one component, so you can read from top to bottom to understand the full specification.
+The pipe feeds data into `ggplot()`, and after that, `+` composes the layers. Each line adds one component, so you can read the full specification top to bottom, like a recipe where every ingredient appears in order.
 
-This is the pattern you will use for most visualizations:
+The pattern for most visualizations follows the same shape:
 
 1. Start with the data.
 2. Pipe it through any needed transformations (filtering, summarizing).
@@ -312,20 +312,20 @@ This is the pattern you will use for most visualizations:
 4. Add geoms.
 5. Refine with scales, facets, labels, and a theme.
 
-Each step is independent and composable: you can swap out any component without touching the others. Change `geom_point()` to `geom_jitter()` and nothing else breaks; switch `facet_wrap(~ sex)` to `facet_grid(sex ~ island)` and the rest of the specification stays the same. The pieces are orthogonal, which is why the grammar scales to complex plots without becoming unwieldy.
+Each step is independent and composable: swap `geom_point()` for `geom_jitter()` and nothing else breaks; switch `facet_wrap(~ sex)` to `facet_grid(sex ~ island)` and the rest of the specification stays the same. The pieces are orthogonal, which is why the grammar scales to complex plots without collapsing under its own weight. But if you have been paying attention to the themes of this book, you might notice something familiar about this composability.
 
 
 ## ggplot2 as lambda calculus {#sec-ggplot-lambda}
 
-A ggplot specification is a program. Not metaphorically: it is a tree of expressions that gets evaluated to produce output, just like any other R expression. The connection to the ideas from @sec-functions-are-values-chapter runs deep.
+A ggplot specification is a program. Not metaphorically: it is a tree of expressions that gets evaluated to produce output, just like any other R expression, and the connection to the ideas from @sec-functions-are-values-chapter runs deep.
 
-`aes()` is a function that returns unevaluated expressions. When you write `aes(x = bill_length_mm, y = body_mass_g)`, R does not look up `bill_length_mm` in your environment. It captures the expression and stores it for later evaluation inside the data frame. This is the same quoting mechanism you will see in @sec-metaprogramming: `aes()` is non-standard evaluation applied to visualization. The mapping is a *description* of a computation, not the computation itself, exactly like a lambda expression describes a function without executing it.
+`aes()` is a function that returns unevaluated expressions. When you write `aes(x = bill_length_mm, y = body_mass_g)`, R does not look up `bill_length_mm` in your environment; it captures the expression and stores it for later evaluation inside the data frame. This is the same quoting mechanism you will encounter in @sec-metaprogramming: `aes()` is non-standard evaluation applied to visualization. The mapping is a *description* of a computation, not the computation itself, exactly like a lambda expression describes a function without executing it.
 
-The `+` operator on ggplot layers is monoidal composition. Each layer is an independent unit, and combining two with `+` produces a new plot object. The empty plot `ggplot()` acts as an identity element (adding it changes nothing). An associative binary operation with an identity element is a monoid, one of the simplest structures in algebra. String concatenation with `""` as identity is a monoid; list concatenation with `list()` is a monoid; function composition with the identity function is a monoid. ggplot layers are another instance. We will see in @sec-reduce-and-accumulate that `Reduce()` works precisely because it folds over a monoid, and in @sec-category-connections how the pattern generalizes.
+The `+` operator on ggplot layers is monoidal composition. Each layer is an independent unit, combining two with `+` produces a new plot object, and the empty plot `ggplot()` acts as an identity element (adding it changes nothing). An associative binary operation with an identity element is a monoid, one of the simplest structures in algebra. String concatenation with `""` as identity is a monoid; list concatenation with `list()` is a monoid; function composition with the identity function is a monoid. ggplot layers are another instance of the same pattern. We will see in @sec-reduce-and-accumulate that `Reduce()` works precisely because it folds over a monoid, and in @sec-category-connections how the pattern generalizes further.
 
-The rendering pipeline itself is function composition. When ggplot2 draws a plot, it runs a sequence of transformations: data → stat (statistical transformation) → scale (map values to aesthetic space) → coord (project into pixel coordinates) → render (draw shapes). Each step takes a data structure and returns a data structure. The pipeline is `render ∘ coord ∘ scale ∘ stat`, pure composition. A graphics engine, at its core, is a chain of morphisms between categories: data space → statistical space → aesthetic space → physical space (pixels). Each `geom_*()` specifies what the final rendering step should draw; everything before it is a data transformation pipeline.
+The rendering pipeline itself is function composition. When ggplot2 draws a plot, it runs a sequence of transformations: data, then stat (statistical transformation), then scale (map values to aesthetic space), then coord (project into pixel coordinates), then render (draw shapes). Each step takes a data structure and returns a data structure, making the pipeline `render ∘ coord ∘ scale ∘ stat`, pure composition. A graphics engine, at its core, is a chain of morphisms between categories: data space to statistical space to aesthetic space to physical space (pixels). Each `geom_*()` specifies what the final rendering step should draw; everything before it is a data transformation pipeline.
 
-This is why the grammar works so well. It is not a grab bag of plot types; it is a small set of composable functions. You have already seen this principle: small functions that compose are more powerful than large functions that don't (@sec-pipes-and-composition). ggplot2 applies that principle to visualization.
+This is why the grammar works so well. It is not a grab bag of plot types; it is a small set of composable functions. You have already seen this principle at work: small functions that compose are more powerful than large functions that don't (@sec-pipes-and-composition). ggplot2 applies that principle to visualization. What happens when you apply it to your own domain?
 
 
 ### Exercises {.unnumbered}
@@ -337,9 +337,11 @@ This is why the grammar works so well. It is not a grab bag of plot types; it is
 
 ## Common mistakes {#sec-common-mistakes}
 
-**Putting `aes()` in the wrong place.** A variable inside `aes()` creates a mapping; a value outside `aes()` sets a constant. If your legend is unexpected, check which side of `aes()` your arguments are on (@sec-aesthetics).
+**Putting `aes()` in the wrong place.** A variable inside `aes()` creates a mapping; a value outside `aes()` sets a constant. If your legend looks unexpected, check which side of `aes()` your arguments are on (@sec-aesthetics).
 
-**Using `|>` instead of `+` after `ggplot()`.** The pipe feeds data into `ggplot()`. After that first call, every addition uses `+`. This trips up every beginner exactly once. If you get an error like "could not find function `geom_point`", you probably wrote `|>` where you needed `+`. The reason ggplot2 uses `+` rather than `|>` is partly historical (ggplot2 predates both magrittr and the native pipe by a decade) and partly conceptual: the pipe transforms data sequentially, while `+` accumulates structure. These are different composition models: pipeline (linear) vs builder (additive).
+**Using `|>` instead of `+` after `ggplot()`.** The pipe feeds data into `ggplot()`, but after that first call, every addition uses `+`. This trips up every beginner exactly once. If you get an error like "could not find function `geom_point`", you probably wrote `|>` where you needed `+`. The reason ggplot2 uses `+` rather than `|>` is partly historical (ggplot2 predates both magrittr and the native pipe by a decade) and partly conceptual: the pipe transforms data sequentially, while `+` accumulates structure, and these are different composition models (pipeline vs builder).
+
+
 ```{r}
 #| eval: false
 # Wrong
@@ -353,11 +355,11 @@ ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g)) +
 
 **Making multiple layers when the data needs reshaping.** If you find yourself writing `geom_line(aes(y = col_a))` and then `geom_line(aes(y = col_b))` for different columns, that is a signal to use `pivot_longer()` first (@sec-tidy-data) and map the new column to an aesthetic.
 
-**Complex calculations inside `aes()`.** Move them to `mutate()` first (@sec-data-transformation). `aes(x = log(value + 1) / max(value))` is hard to read and hard to debug. Create the column, then map it.
+**Complex calculations inside `aes()`.** Move them to `mutate()` first (@sec-data-transformation). Something like `aes(x = log(value + 1) / max(value))` is hard to read and harder to debug; create the column, then map it.
 
-**Overloading a single plot.** Too many colors, too many geoms, too much data. If a plot is hard to read, split it into facets or separate plots. A simpler plot almost always communicates better.
+**Overloading a single plot.** Too many colors, too many geoms, too much data crammed into one frame. If a plot is hard to read, split it into facets or separate plots. A simpler plot almost always communicates better.
 
-Most ggplot2 errors are not about syntax. They are about structure: the data is in the wrong shape, the mapping is in the wrong place, or the wrong composition operator is connecting the layers. When a plot doesn't look right, check the data and the mappings before adjusting visual parameters. The grammar tells you where the problem is, if you listen to it.
+Most ggplot2 errors aren't really about syntax. They are about structure: the data is in the wrong shape, the mapping is in the wrong place, or the wrong composition operator connects the layers. When a plot doesn't look right, check the data and the mappings before adjusting visual parameters, because the grammar tells you where the problem is if you listen to it.
 
 Once the plot is right, you need to get it out of R.
 
@@ -371,7 +373,7 @@ A ggplot object is a deferred computation: it describes a plot but does not prod
 ggsave("penguins_scatter.png", width = 8, height = 5, dpi = 300)
 ```
 
-The file format is inferred from the extension: `.png`, `.pdf`, `.svg`, `.jpg`. For publication, PDF or SVG gives vector graphics that scale cleanly at any size. For slides and web, PNG at 300 DPI is standard.
+The file format is inferred from the extension: `.png`, `.pdf`, `.svg`, `.jpg`. For publication, PDF or SVG gives you vector graphics that scale cleanly at any size. For slides and web, PNG at 300 DPI is standard.
 
 You can also pass a stored plot object explicitly:
 
@@ -384,9 +386,9 @@ p <- ggplot(penguins, aes(x = bill_length_mm, y = body_mass_g, color = species))
 ggsave("penguins_scatter.pdf", plot = p, width = 8, height = 5)
 ```
 
-The `width` and `height` arguments control the output dimensions in inches (the default unit). Getting these right matters more than any theme adjustment: a plot squeezed into half its natural width produces unreadable axis labels, and a plot stretched too wide produces sparse, floating data. Experiment with dimensions before finalizing.
+The `width` and `height` arguments control the output dimensions in inches (the default unit), and getting these right matters more than any theme adjustment: a plot squeezed into half its natural width produces unreadable axis labels, while a plot stretched too wide scatters the data into a sparse, floating emptiness. Experiment with dimensions before finalizing. It's the last step, but it determines whether anyone can actually read what you built.
 
 ::: callout-tip
 ## Opinion
-Always save with `ggsave()`, never with right-click or the RStudio export button. `ggsave()` is reproducible: the same code produces the same file tomorrow. The export button is a one-off action with no record of the dimensions or resolution you chose.
+Always save with `ggsave()`, never with right-click or the RStudio export button. `ggsave()` is reproducible: the same code produces the same file tomorrow. The export button is a one-off action with no record of the dimensions or resolution you chose, and six months from now, when a reviewer asks you to regenerate Figure 3 at higher resolution, you will understand why that matters.
 :::

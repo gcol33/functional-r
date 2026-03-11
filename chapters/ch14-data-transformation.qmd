@@ -1,3 +1,6 @@
+So now you can keep rows and pick columns. What you cannot yet do is create something that was not there before.
+`mutate()` adds new columns while the originals stay untouched. It is the functor pattern applied to data frames: it maps a function over a column (the container), producing a new column of the same length. The container's shape (344 rows) is preserved; only the contents change. You saw the same pattern with vectorized `sqrt()` on vectors (@sec-vectorized-ops), with `sapply()` on lists (@sec-passing-functions), and with `map()` on split data frames (@sec-purrr-map). Each time, the structure is "apply a function inside a container, keep the container intact." The word for this, across all of these instances, is functor.
+You can now keep rows, pick columns, and compute new values from old ones. One operation remains: collapsing many rows into few.
 # Data transformation {#sec-data-transformation}
 
 ```{r}
@@ -5,12 +8,12 @@
 source(here::here("_common.R"))
 ```
 
-Every data analysis is the same four moves: keep the rows you want, pick the columns you need, compute new values, summarize. dplyr gives each move a name.
+Suppose you have a table with 344 rows and 8 columns, a census of penguins on three Antarctic islands recording species, bill dimensions, flipper length, body mass, sex, and year of observation. You want to know whether Gentoo penguins are heavier than Adelie penguins. To answer that, you need to keep only certain rows, pick only certain columns, compute a mean, and break the result down by group. Four moves. Every data analysis you will ever write is some arrangement of those same four moves, and the question that shapes this chapter is deceptively simple: what is the smallest set of operations that covers all of them?
 
 
 ## The idea: verbs for data {#sec-verbs-for-data}
 
-A dplyr verb takes a data frame and returns a data frame. The data frame goes in first, the result comes out the same shape (a data frame), and nothing else changes. Every verb does one thing:
+A dplyr verb takes a data frame and returns a data frame. The data frame goes in first, the result comes out the same shape, and nothing else changes. Five verbs cover most of what you need:
 
 - `filter()` keeps rows that match a condition.
 - `select()` picks columns by name.
@@ -18,11 +21,11 @@ A dplyr verb takes a data frame and returns a data frame. The data frame goes in
 - `summarise()` collapses rows into a summary.
 - `arrange()` reorders rows.
 
-These five verbs cover most of what you need. You compose them for complex transformations (via pipes, @sec-pipes-and-composition), but each one does exactly one thing. A dplyr pipeline is function composition: each verb transforms a data frame and passes it to the next, the same composition from lambda calculus, (g ∘ f)(x) = g(f(x)), applied to tables instead of numbers.
+You compose them for complex transformations (via pipes, @sec-pipes-and-composition), but each one does exactly one thing. A dplyr pipeline is function composition: each verb transforms a data frame and passes it to the next, the same composition from lambda calculus, (g ∘ f)(x) = g(f(x)), applied to tables instead of numbers.
 
 These verbs did not come from nowhere. In 1970, Edgar Codd, a mathematician at IBM's San Jose Research Laboratory, published "A Relational Model of Data for Large Shared Data Banks." At the time, databases were navigational: to find a record, you followed pointers from one record to the next, like walking a linked list. Codd proposed something radical. Forget the pointers. Think of data as tables (he called them *relations*), and define a small set of operations on those tables: restriction (keep rows where a predicate holds), projection (keep certain columns), extension (add computed columns), and aggregation (collapse groups to summaries). The key insight was that every operation takes a table as input and returns a table as output, so you can chain them: filter a table, then select columns from the result, then summarize that. Codd called this set of composable operations a *relational algebra*, "algebra" in the mathematical sense of a closed system where combining any two things always gives you back the same kind of thing. IBM initially resisted the idea. Codd's own employer spent years trying to protect their existing database product (IMS) from the relational model. But the composability was too useful to ignore, and by the 1980s relational databases had won.
 
-dplyr is Codd's relational algebra with different names. `filter()` is restriction. `select()` is projection. `mutate()` is extension. `summarise()` is aggregation. `arrange()` handles ordering, which has no relational equivalent but is essential for display. The reason these five verbs compose so cleanly, and the reason the same ideas appear in SQL, pandas, data.table, and every other language that works with tabular data, is that they are all implementations of the same fifty-year-old algebra.
+dplyr is Codd's relational algebra with different names. `filter()` is restriction, `select()` is projection, `mutate()` is extension, `summarise()` is aggregation. `arrange()` handles ordering, which has no relational equivalent but is essential for display. The reason these five verbs compose so cleanly, and the reason the same ideas appear in SQL, pandas, data.table, and every other language that works with tabular data, is that they are all implementations of the same fifty-year-old algebra. But knowing where they come from is one thing; seeing them work on real data is another.
 
 ```{r}
 library(palmerpenguins)
@@ -38,13 +41,13 @@ penguins
 
 ## `filter()`: keep rows {#sec-filter}
 
-`filter()` takes a data frame and one or more conditions. It returns only the rows where every condition is `TRUE`.
+You have 344 penguins. You only care about the Adelie ones. How do you throw the rest away?
 
 ```{r}
 filter(penguins, species == "Adelie")
 ```
 
-The first argument is the data frame. The second is a logical expression, the same kind you wrote in @sec-comparison-operators. Inside `filter()`, column names work like variables: `species` refers to the `species` column, not an object in your global environment.
+The first argument is the data frame, the second a logical expression of the same kind you wrote in @sec-comparison-operators. Inside `filter()`, column names work like variables: `species` refers to the `species` column, not an object in your global environment.
 
 Multiple conditions, separated by commas, are combined with AND:
 
@@ -69,9 +72,9 @@ When testing membership in a set, `%in%` is clearer than chaining `|`:
 filter(penguins, species %in% c("Adelie", "Chinstrap"))
 ```
 
-One detail worth knowing: `filter()` drops rows where the condition evaluates to `NA`. If `body_mass_g` is `NA` for a row, then `body_mass_g > 4000` is `NA`, and `filter()` excludes it. This is usually what you want. If you need to keep `NA` rows, test for them explicitly: `filter(penguins, is.na(body_mass_g))`.
+One detail worth knowing: `filter()` drops rows where the condition evaluates to `NA`. If `body_mass_g` is `NA` for a row, then `body_mass_g > 4000` is `NA`, and `filter()` excludes it. This is usually what you want, but if you need to keep `NA` rows, test for them explicitly: `filter(penguins, is.na(body_mass_g))`.
 
-Under the hood, `filter()` is doing the same logical subsetting from @sec-comparison-operators: `penguins[penguins$species == "Adelie", ]`. The verb makes the intent explicit — and, more importantly, composable with other verbs.
+Under the hood, `filter()` is doing the same logical subsetting from @sec-comparison-operators: `penguins[penguins$species == "Adelie", ]`. The verb makes the intent explicit and, more importantly, composable with other verbs. But keeping rows is only half the story; what about columns you don't need?
 
 
 ### Exercises {.unnumbered}
@@ -83,13 +86,13 @@ Under the hood, `filter()` is doing the same logical subsetting from @sec-compar
 
 ## `select()`: pick columns {#sec-select}
 
-`select()` keeps the columns you name and drops everything else.
+Eight columns is manageable. Eighty is not. When you only need species, bill length, and body mass, carrying around five extra columns clutters every printout, slows every join, and obscures what matters. `select()` strips a data frame down to the columns you name.
 
 ```{r}
 select(penguins, species, bill_length_mm, body_mass_g)
 ```
 
-The result keeps only those three columns; the rest are gone.
+The rest are gone.
 
 Drop columns by prefixing with `-`:
 
@@ -147,9 +150,7 @@ select(penguins, island, species, everything())
 
 ## `mutate()`: compute new columns {#sec-mutate}
 
-`mutate()` adds new columns. The original columns stay.
-
-`mutate()` is the functor pattern applied to data frames. It maps a function over a column (the container), producing a new column of the same length. The container's shape (344 rows) is preserved; only the contents change. You saw the same pattern with vectorized `sqrt()` on vectors (@sec-vectorized-ops), with `sapply()` on lists (@sec-passing-functions), and with `map()` on split data frames (@sec-purrr-map). Each time, the structure is 'apply a function inside a container, keep the container intact.' The word for this, across all of these instances, is functor.
+Body mass is recorded in grams, but your collaborator's model expects kilograms.
 
 ```{r}
 mutate(penguins, mass_kg = body_mass_g / 1000)
@@ -166,7 +167,7 @@ mutate(
 )
 ```
 
-`mass_lb` uses `mass_kg`, which was defined one line above. dplyr evaluates them in order, top to bottom.
+`mass_lb` uses `mass_kg`, which was defined one line above; dplyr evaluates them in order, top to bottom.
 
 Any function that works on vectors works inside `mutate()`: `log()`, `sqrt()`, `cumsum()`, `lag()`, `lead()`, `percent_rank()`. The conditional functions from @sec-vectorized-conditionals work here too:
 
@@ -212,12 +213,13 @@ mutate(
 
 ## `summarise()` and `group_by()`: aggregate {#sec-summarise-group-by}
 
-`summarise()` collapses an entire data frame into a single row:
+What is the average body mass of a penguin in this dataset?
+
 ```{r}
 summarise(penguins, mean_mass = mean(body_mass_g, na.rm = TRUE))
 ```
 
-On its own, collapsing everything into a single row is limited. Paired with `group_by()`, it does the real work.
+One row. One number. On its own, collapsing everything into a single summary is limited. The interesting question is not "what is the mean?" but "how does the mean differ across species?" That is where `group_by()` enters.
 
 `group_by()` marks a data frame as grouped. It doesn't change the data; it attaches metadata that tells subsequent verbs to operate per group:
 
@@ -238,7 +240,7 @@ summarise(
 )
 ```
 
-`n()` counts the number of rows in each group. `n_distinct()` counts unique values:
+`n()` counts the number of rows in each group; `n_distinct()` counts unique values:
 
 ```{r}
 summarise(
@@ -255,7 +257,7 @@ count(penguins, species)
 
 ::: callout-tip
 ## Opinion
-After `summarise()`, the last grouping variable is silently peeled off. The result may still be grouped. This causes subtle bugs downstream: a `mutate()` you expect to operate on the full data frame operates per group instead. Always add `.groups = "drop"` to `summarise()`, or call `ungroup()` afterward. Be explicit about grouping state.
+After `summarise()`, the last grouping variable is silently peeled off, which means the result may still be grouped. This causes subtle bugs downstream: a `mutate()` you expect to operate on the full data frame operates per group instead. Always add `.groups = "drop"` to `summarise()`, or call `ungroup()` afterward. Grouping state should never be implicit.
 :::
 
 
@@ -282,7 +284,7 @@ Wrap a column in `desc()` for descending order:
 arrange(penguins, desc(body_mass_g))
 ```
 
-Multiple columns break ties. Sort by species alphabetically, then by mass descending within each species:
+Multiple columns break ties; sort by species alphabetically, then by mass descending within each species:
 
 ```{r}
 #| results: hide
@@ -291,7 +293,7 @@ arrange(penguins, species, desc(body_mass_g))
 
 Unlike the other verbs, `arrange()` ignores grouping by default. If you want to sort within groups, set `.by_group = TRUE`.
 
-`arrange()` is pure display. It does not change the data, only the order of rows. No information is added or removed. But a well-sorted table can reveal patterns that a jumbled one hides — and sometimes you need more than the five core verbs to expose them.
+`arrange()` is pure display. No information is added or removed, only the order of rows changes. But a well-sorted table can reveal patterns that a jumbled one hides, and sometimes the five core verbs are not quite enough to expose them.
 
 
 ## More verbs {#sec-more-verbs}
@@ -316,7 +318,7 @@ slice_head(penguins, n = 3)
 slice_max(penguins, body_mass_g, n = 3)
 ```
 
-`pull()` extracts a single column as a vector. It is the pipe-friendly equivalent of `$`:
+`pull()` extracts a single column as a vector, the pipe-friendly equivalent of `$`:
 
 ```{r}
 pull(penguins, species) |> head()
@@ -335,7 +337,7 @@ Finally, `across()` applies a function to multiple columns at once. Summarise al
 summarise(penguins, across(where(is.numeric), \(x) mean(x, na.rm = TRUE)))
 ```
 
-`across()` applies a function to multiple columns at once. It pairs naturally with `where()`, `starts_with()`, and the other selection helpers from @sec-select. The same pattern — "apply a function to many things" — reappears in a broader context in @sec-iteration-without-loops.
+`across()` pairs naturally with `where()`, `starts_with()`, and the other selection helpers from @sec-select. The same pattern, "apply a function to many things," reappears in a broader context in @sec-iteration-without-loops. But before you build elaborate pipelines out of these verbs, it is worth seeing what they look like without dplyr at all.
 
 
 ### Exercises {.unnumbered}
@@ -348,7 +350,7 @@ summarise(penguins, across(where(is.numeric), \(x) mean(x, na.rm = TRUE)))
 
 ## The base R equivalents {#sec-base-r-equivalents}
 
-Everything dplyr does, base R can do too. The verbs are convenient wrappers, not new capabilities — so what exactly do you gain?
+Everything dplyr does, base R can do too. The verbs are convenient wrappers, not new capabilities. So what exactly do you gain?
 
 `filter()` is logical subsetting:
 
@@ -414,7 +416,7 @@ Base R also has `subset()`, which combines filtering and column selection:
 subset(penguins, species == "Adelie", select = c(species, body_mass_g))
 ```
 
-`subset()` is clean and readable. For simple operations, it works well. The advantage of dplyr is consistency: every verb takes a data frame first and returns a data frame, so they compose. In base R, `aggregate()` returns different column names, `order()` returns indices rather than a data frame, and `transform()` (the base equivalent of `mutate()`) cannot reference columns it just created. The dplyr verbs snap together; the base R equivalents each have their own interface.
+`subset()` is clean and readable; for simple operations, it works well. The advantage of dplyr is consistency: every verb takes a data frame first and returns a data frame, so they compose. In base R, `aggregate()` returns different column names, `order()` returns indices rather than a data frame, and `transform()` (the base equivalent of `mutate()`) cannot reference columns it just created. The dplyr verbs snap together; the base R equivalents each have their own interface.
 
 In fact, dplyr and SQL are the same language wearing different syntax. Both implement relational algebra, which is why they feel similar:
 
@@ -429,7 +431,7 @@ In category theory, a natural transformation maps one functor to another while p
 
 ::: callout-tip
 ## Opinion
-Learn the base R equivalents. You will read them in other people's code, in Stack Overflow answers, in older packages. But write dplyr in your own work. The verbs compose, the names communicate intent, and the argument order is consistent. When you read `filter(penguins, species == "Adelie")`, the operation is the function name. When you read `penguins[penguins$species == "Adelie", ]`, you have to parse the indexing to understand what's happening.
+Learn the base R equivalents. You will encounter them in other people's code, in Stack Overflow answers, in older packages. But write dplyr in your own work, because the verbs compose, the names communicate intent, and the argument order is consistent. When you read `filter(penguins, species == "Adelie")`, the operation is the function name. When you read `penguins[penguins$species == "Adelie", ]`, you have to parse the indexing to understand what's happening. That parsing cost, multiplied across every line of a script, is exactly the kind of friction Codd's algebra was designed to remove.
 :::
 
 

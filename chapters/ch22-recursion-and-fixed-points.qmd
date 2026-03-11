@@ -5,14 +5,14 @@
 source(here::here("_common.R"))
 ```
 
-A recursive function is a function that calls itself. That sentence sounds circular, and it should: circularity is the point. Recursion solves a problem by breaking it into smaller instances of the same problem, until the instances are small enough to solve directly. You saw `Reduce()` in @sec-reduce-and-accumulate collapse a list into a single value by repeatedly applying a binary function. Recursion is the more general mechanism underneath: `Reduce()` is a loop that hides a specific recursive pattern, but recursion itself can express any computation that a loop can, and several that loops express awkwardly.
+Suppose you need to process a tree of unknown depth, a structure that nests inside itself with no predetermined bottom. A `for` loop can't express this because you don't know how many levels to iterate; you would need a loop inside a loop inside a loop, turtles all the way down. What you actually need is a function that can call itself, peeling away one layer of nesting each time until it reaches something solid. That self-calling trick has a name, and it turns out to sit at the very foundation of what computation means.
 
-R supports recursion natively. Any function can call itself, and R will track the chain of calls on a stack. This chapter covers the mechanics (the call stack, depth limits), the patterns (accumulators, divide and conquer, mutual recursion), the workarounds for R's lack of tail-call optimization (trampolining), and the surprising theoretical result that recursion itself can be derived from anonymous functions alone (the fixed-point combinator). That last part previews @sec-r-as-mathematics, where Church's lambda calculus gets a full treatment.
+A recursive function calls itself. The sentence sounds circular because circularity is the point: you solve a problem by breaking it into smaller copies of the same problem, bottoming out when the copies are small enough to answer directly. You saw `Reduce()` in @sec-reduce-and-accumulate collapse a list into a single value by repeatedly applying a binary function, but `Reduce()` is just one specific recursive pattern wearing a loop's clothing. Recursion itself can express anything a loop can, and several things loops express awkwardly. What happens, though, when the chain of self-calls grows too long for R to handle?
 
 
 ## Recursive functions {#sec-recursive-functions}
 
-Start with the simplest case: the factorial. n! = n * (n-1) * ... * 1, with 0! = 1:
+The simplest case is the one every textbook reaches for: the factorial. n! = n * (n-1) * ... * 1, with 0! = 1:
 
 ```{r}
 factorial_r <- function(n) {
@@ -23,7 +23,7 @@ factorial_r <- function(n) {
 factorial_r(6)
 ```
 
-Every recursive function needs two parts: a *base case* that stops the recursion (here, `n == 0`), and a *recursive case* that makes progress toward the base case (here, `n - 1` is closer to 0 than `n` was). Forget the base case and you get infinite recursion, which in R means a stack overflow error.
+Two parts make this work. A *base case* stops the recursion (`n == 0` here), and a *recursive case* makes progress toward it (since `n - 1` is closer to 0 than `n` was). Forget the base case and you get infinite recursion, which in R means a stack overflow error, the computational equivalent of a sentence that never finds its period.
 
 Fibonacci numbers are the other classic:
 
@@ -36,7 +36,7 @@ fib <- function(n) {
 sapply(0:10, fib)
 ```
 
-This works but is spectacularly inefficient. Each call spawns two more calls, giving O(2^n) time complexity (see @sec-complexity for Big-O). `fib(30)` makes over a million calls. Memoization (@sec-memoization) or an accumulator (later in this chapter) fixes the performance problem, but the naive version illustrates a real danger of recursion: elegant code can hide terrible performance. Performance aside, there is a more basic question: does a recursive function even need a name?
+This works but is spectacularly inefficient: each call spawns two more calls, ballooning to O(2^n) time complexity (see @sec-complexity for Big-O), so `fib(30)` alone triggers over a million calls. Memoization (@sec-memoization) or an accumulator (later in this chapter) fixes the performance problem, but the naive version illustrates a real danger of recursion: elegant code can hide terrible performance. Performance aside, there is a more basic question. Does a recursive function even need a name?
 
 `Recall()` calls the current function without naming it:
 
@@ -47,7 +47,7 @@ This works but is spectacularly inefficient. Each call spawns two more calls, gi
 })(6)
 ```
 
-`Recall()` looks up the function on the call stack using `sys.function()`, so it works even when the function has no name. In practice, named functions are clearer, but `Recall()` occasionally appears in one-off recursive helpers passed to higher-order functions.
+It looks up the function on the call stack using `sys.function()`, so it works even inside an anonymous function. In practice, named functions are clearer, but `Recall()` occasionally appears in one-off recursive helpers passed to higher-order functions.
 
 
 ### Exercises {.unnumbered}
@@ -59,7 +59,7 @@ This works but is spectacularly inefficient. Each call spawns two more calls, gi
 
 ## The call stack {#sec-call-stack}
 
-Every time R calls a function, it creates a new *frame* on the call stack: a record of the function, its arguments, and its local variables (each frame corresponds to the execution environment from @sec-execution-environments). When the function returns, its frame is removed. Recursive calls stack up frames:
+Every time R calls a function, it creates a new *frame* on the call stack: a record of the function, its arguments, and its local variables (each frame corresponds to the execution environment from @sec-execution-environments). When the function returns, its frame is popped. Recursive calls pile up frames like plates on a spring-loaded stack, and you can watch it happen:
 
 ```{r}
 factorial_traced <- function(n) {
@@ -73,9 +73,9 @@ factorial_traced <- function(n) {
 factorial_traced(4)
 ```
 
-`sys.nframe()` returns the current depth of the call stack. Each recursive call adds one frame. For `factorial_traced(4)`, the stack grows to depth 4 (plus whatever depth the calling context contributes), then unwinds as each call returns.
+`sys.nframe()` returns the current depth of the call stack, and each recursive call adds one frame. For `factorial_traced(4)`, the stack grows to depth 4 (plus whatever depth the calling context contributes), then unwinds as each call returns its result back up the chain.
 
-R imposes a limit on stack depth. The default is around 5000 frames, controlled by `options(expressions = ...)`. Go deeper and you get:
+R imposes a limit on this depth. The default sits around 5,000 frames, controlled by `options(expressions = ...)`, and if you exceed it you get one of two messages:
 ```
 Error: C stack usage <number> is too close to the limit
 ```
@@ -84,7 +84,7 @@ or:
 Error: evaluation nested too deeply
 ```
 
-This is not a soft limit you should raise. It protects against infinite recursion crashing your R session. If your algorithm needs more than a few thousand levels of recursion, the right response is to restructure it, not to increase the limit.
+This is not a soft limit you should raise. It exists to protect against infinite recursion crashing your R session entirely, and if your algorithm needs more than a few thousand levels, the right response is to restructure it, not to bump a number in your options.
 
 ```{r}
 #| eval: false
@@ -105,7 +105,7 @@ count_down(10000)
 
 ## Tail recursion and accumulators {#sec-tail-recursion}
 
-Look at `factorial_r` again:
+Look at `factorial_r` one more time:
 
 ```{r}
 #| eval: false
@@ -115,9 +115,9 @@ factorial_r <- function(n) {
 }
 ```
 
-After the recursive call returns, there is still work to do: multiply the result by `n`. This means the function cannot forget about the current frame while waiting for the recursive call. Every frame must be kept alive until the recursion bottoms out.
+After the recursive call returns, there is still work left: multiply the result by `n`. That pending multiplication means R cannot discard the current frame while waiting for the recursion to bottom out; every single frame in the chain must stay alive, holding onto its local `n`, until the deepest call finally returns 1 and the whole tower of deferred multiplications collapses upward.
 
-A *tail-recursive* version moves the multiplication into an accumulator argument, so the recursive call is the very last thing the function does:
+A *tail-recursive* version eliminates that pending work by threading the partial answer through an accumulator argument, so the recursive call becomes the very last operation the function performs:
 
 ```{r}
 factorial_tail <- function(n, acc = 1) {
@@ -128,11 +128,9 @@ factorial_tail <- function(n, acc = 1) {
 factorial_tail(6)
 ```
 
-When the recursive call is in *tail position* (nothing happens after it), a smart compiler can reuse the current frame instead of allocating a new one. This is *tail-call optimization* (TCO), and it converts O(n) stack usage to O(1). Scheme guarantees TCO. Haskell effectively provides it. R does not. `factorial_tail(10000)` will still overflow the stack, even though the function is logically equivalent to a loop.
+When the recursive call sits in *tail position* (nothing happens after it), a smart compiler can reuse the current frame instead of allocating a new one, converting O(n) stack usage to O(1). This is *tail-call optimization* (TCO), and Scheme guarantees it. Haskell effectively provides it. R does not. So `factorial_tail(10000)` will still overflow the stack, even though the function is logically a loop in disguise.
 
-The accumulator pattern still buys you something. It clarifies the logic (the accumulator carries the "answer so far"), it is the prerequisite for trampolining (next section), and it turns exponential algorithms into linear ones:
-
-Here is Fibonacci with an accumulator, running in linear time instead of exponential:
+The accumulator pattern still pays its rent, though. It clarifies intent (the accumulator carries the "answer so far"), it is the prerequisite for trampolining (next section), and it can convert exponential algorithms into linear ones. Here is Fibonacci rewritten with two accumulators, running in linear time instead of exponential:
 
 ```{r}
 fib_tail <- function(n, a = 0, b = 1) {
@@ -143,7 +141,7 @@ fib_tail <- function(n, a = 0, b = 1) {
 fib_tail(30)
 ```
 
-Compare this to the naive `fib()` that takes millions of calls for `fib(30)`. The accumulator version makes exactly n calls.
+Where the naive `fib()` needed millions of calls for `fib(30)`, this version makes exactly n. But it still can't survive `fib_tail(10000)` on R's stack. What if we could get the O(1) stack usage ourselves, without waiting for a language feature R will never add?
 
 
 ### Exercises {.unnumbered}
@@ -155,7 +153,7 @@ Compare this to the naive `fib()` that takes millions of calls for `fib(30)`. Th
 
 ## Trampolining {#sec-trampolining}
 
-Since R will not optimize tail calls, we have to do it ourselves. The trick: instead of making a recursive call, return a *thunk* (a zero-argument function that represents the call you *would* have made). A loop, the *trampoline*, keeps calling the thunk until it gets a non-function result:
+Since R refuses to optimize tail calls, you can do it by hand. The idea: instead of making a recursive call, return a *thunk* (a zero-argument function that represents the call you *would* have made). Then a loop, the *trampoline*, keeps calling thunks until it gets a non-function result:
 
 ```{r}
 trampoline <- function(f, ...) {
@@ -179,13 +177,13 @@ trampoline(factorial_thunk, 10)
 trampoline(factorial_thunk, 1000)
 ```
 
-The second call processes 1,000 iterations without touching the stack. Each "recursive" step returns a closure, and the `while` loop in `trampoline` calls it. Stack depth stays constant at O(1).
+That second call churns through 1,000 iterations without growing the stack at all; each "recursive" step returns a closure, and the `while` loop in `trampoline` calls it, bouncing like a ball on a trampoline (hence the name). Stack depth stays at O(1) no matter how deep the logical recursion goes.
 
-The trampoline pattern works for any tail-recursive function: rewrite the tail call as a thunk, and let the trampoline do the looping. The cost is a closure allocation per step, which is cheap. The CRAN package `trampoline` provides a polished implementation with better error handling, but the core idea is exactly this `while` loop.
+The pattern works for any tail-recursive function: rewrite the tail call as a thunk and let the trampoline do the looping. The cost is one closure allocation per step, which is cheap. The CRAN package `trampoline` provides a polished implementation with better error handling, but the core idea is exactly this `while` loop.
 
 ::: callout-tip
 ## Opinion
-Trampolining is clever, but if you find yourself trampolining in production R code, step back and ask whether a `for` loop or `Reduce()` would be simpler. The trampoline exists to rescue recursive algorithms from the stack limit, not to replace straightforward iteration. Use it when you genuinely need recursion (tree traversal of unknown depth, for instance) but the depth could be large.
+Trampolining is clever, but if you catch yourself trampolining in production R code, pause and ask whether a `for` loop or `Reduce()` would be simpler. The trampoline rescues recursive algorithms from the stack limit; it does not replace straightforward iteration. Save it for cases where you genuinely need recursion (tree traversal of unknown depth, for instance) but the depth could be large.
 :::
 
 
@@ -197,9 +195,9 @@ Trampolining is clever, but if you find yourself trampolining in production R co
 
 ## Divide and conquer {#sec-divide-conquer}
 
-Recursion is most natural for problems that split into independent subproblems. This is the *divide and conquer* strategy: split the input, solve each half recursively, combine the results.
+Some problems split cleanly in half, and each half looks just like the original problem, only smaller. Split, solve each piece recursively, combine. This is the *divide and conquer* strategy, and recursion expresses it so naturally that the code almost reads like the definition.
 
-Merge sort is the cleanest example. Split the vector in half, sort each half, merge the sorted halves:
+Merge sort is the cleanest example: split the vector in half, sort each half, merge the sorted halves back together:
 
 ```{r}
 merge_sort <- function(x) {
@@ -231,9 +229,9 @@ merge_sorted <- function(a, b) {
 merge_sort(c(5, 2, 8, 1, 9, 3))
 ```
 
-Each level of recursion halves the problem, giving O(log n) levels. Each level does O(n) work merging, so the total is O(n log n), as discussed in @sec-complexity. The recursion depth is only log2(n), so even a million-element vector only needs 20 levels. Stack overflow is not a concern for balanced divide-and-conquer algorithms.
+Each level of recursion halves the problem, giving O(log n) levels, and each level does O(n) work merging, so the total comes to O(n log n) as discussed in @sec-complexity. The recursion depth is only log2(n), which means even a million-element vector needs just 20 levels. Stack overflow is not a concern for balanced divide-and-conquer algorithms; the branching that makes them powerful also keeps them shallow.
 
-Binary search follows the same pattern, but only recurses into one half:
+Binary search follows the same pattern but only recurses into one half:
 
 ```{r}
 binary_search <- function(x, target, lo = 1, hi = length(x)) {
@@ -256,7 +254,7 @@ binary_search(1:100, 73)
 
 ## Recursive list processing {#sec-recursive-lists}
 
-Nested lists are R's tree structure, and recursion is the natural way to walk them. Suppose you want to find all numeric values buried in an arbitrarily nested list:
+Nested lists are R's tree structure, and recursion is the natural way to walk them. Suppose you need to extract all numeric values buried somewhere inside an arbitrarily nested list, but you don't know how deep the nesting goes or where the numbers hide:
 
 ```{r}
 find_numbers <- function(x) {
@@ -269,7 +267,7 @@ nested <- list("a", list(1, list("b", 2, list(3, "c"))))
 find_numbers(nested)
 ```
 
-The function dispatches on type: numbers are returned, non-list non-numbers are discarded, and lists are processed element by element with a recursive `lapply`. This pattern of "check the base cases, recurse on the structure" is the backbone of tree-processing code.
+The function dispatches on type: numbers come back directly, non-list non-numbers get discarded, and lists trigger a recursive `lapply` that peels off one layer at a time. This pattern of "check the base cases, recurse on the structure" is the backbone of all tree-processing code; once you see it, you see it everywhere.
 
 Base R provides `rapply()` for recursive application over lists:
 
@@ -277,13 +275,13 @@ Base R provides `rapply()` for recursive application over lists:
 rapply(nested, sqrt, classes = "numeric", how = "unlist")
 ```
 
-`rapply()` walks the nested list, applies `sqrt` to every numeric element, and returns the results. The `classes` argument filters which elements to process, and `how` controls the output shape ("unlist", "replace", or "list").
+`rapply()` walks the nested structure, applies `sqrt` to every numeric element it encounters, and returns the results. The `classes` argument filters which elements get processed, and `how` controls the output shape ("unlist", "replace", or "list").
 
 ```{r}
 rapply(nested, toupper, classes = "character", how = "replace")
 ```
 
-With `how = "replace"`, the structure is preserved: character elements are uppercased in place, and everything else is left alone. `rapply()` is powerful but rarely seen in practice, partly because deeply nested lists are uncommon in day-to-day R, and partly because its interface is not as well known as `lapply` or `map`.
+With `how = "replace"`, the nesting is preserved: character elements are uppercased in place while everything else stays untouched. `rapply()` is surprisingly powerful but rarely seen in practice, partly because deeply nested lists are uncommon in day-to-day R work, and partly because fewer people know about it than about `lapply` or `map`. If your data is a tree, though, it deserves a look.
 
 
 ### Exercises {.unnumbered}
@@ -295,7 +293,7 @@ With `how = "replace"`, the structure is preserved: character elements are upper
 
 ## Mutual recursion {#sec-mutual-recursion}
 
-Two functions can call each other. The classic (if contrived) example:
+Two functions can call each other, passing control back and forth like a conversation. The classic (if deliberately silly) example:
 
 ```{r}
 is_even <- function(n) {
@@ -312,23 +310,23 @@ is_even(4)
 is_odd(7)
 ```
 
-Each function delegates to the other, peeling off one layer at a time. This is silly for parity checking, but mutual recursion appears naturally in recursive descent parsers (where each grammar rule is a function that may call functions for other rules) and in state machines (where each state is a function that transitions to another state by calling its function).
+Each function delegates to the other, peeling off one layer at a time. Nobody would check parity this way in practice, but mutual recursion appears naturally in recursive descent parsers (where each grammar rule becomes a function that may call functions for other rules) and in state machines (where each state is a function that transitions by calling another state's function).
 
-Mutual recursion has the same stack depth problem as ordinary recursion, doubled: each round consumes two frames. For deep mutual recursion, trampolining works the same way, just have both functions return thunks.
+The stack cost is the same as ordinary recursion, doubled: each round trip consumes two frames. For deep mutual recursion, trampolining works identically; just have both functions return thunks instead of calling each other directly.
 
 
 ## Fixed-point combinators {#sec-fixed-point-combinators}
 
-Here is an odd question: can you write a recursive function without giving it a name? A named function calls itself by name, but what if you only have anonymous functions?
+Here is an odd question. Can you write a recursive function without ever giving it a name? Named functions call themselves by name, so recursion seems to require naming. But what if you only have anonymous functions, nothing else?
 
-A *fixed point* of a function f is a value x where f(x) = x. The number 0 is a fixed point of `function(x) x^2`, because 0^2 = 0. A *fixed-point combinator* is a higher-order function that finds the fixed point of a *function-valued* function. Applied to the right argument, it produces recursion from nothing but anonymous functions.
+A *fixed point* of a function f is a value x where f(x) = x. The number 0 is a fixed point of `function(x) x^2`, because 0^2 = 0. A *fixed-point combinator* extends this idea to functions that return functions: it takes a "template" for recursion and threads the self-reference through automatically, producing a working recursive function from anonymous parts alone.
 
 In lazy languages (Haskell, untyped lambda calculus), the Y combinator does this:
 ```
 Y = λf. (λx. f(x x))(λx. f(x x))
 ```
 
-But R is strict: it evaluates arguments before passing them. If you try to translate Y directly into R, the self-application `x(x)` evaluates immediately, which triggers another `x(x)`, which triggers another, and the whole thing diverges before `f` ever runs. Here is what happens step by step: `Y(f)` calls `(function(x) f(x(x)))` with itself as argument, so `x` becomes `function(x) f(x(x))`. To evaluate `f(x(x))`, R must first evaluate `x(x)`, which means evaluating `f(x(x))` again, which means evaluating `x(x)` again, forever:
+R is strict, though: it evaluates arguments before passing them, and that eagerness is fatal here. If you translate Y directly into R, the self-application `x(x)` evaluates immediately, which triggers another `x(x)`, which triggers another, and the whole thing diverges before `f` ever gets a chance to run. Step by step: `Y(f)` calls `(function(x) f(x(x)))` with itself as argument, so `x` becomes `function(x) f(x(x))`. To evaluate `f(x(x))`, R must first evaluate `x(x)`, which means evaluating `f(x(x))` again, forever:
 
 ```{r}
 #| error: true
@@ -339,7 +337,7 @@ Y(function(f) function(n) if (n == 0) 1 else n * f(n - 1))
 # Error: C stack usage is too close to the limit
 ```
 
-The fix is the Z combinator, which wraps the self-application `x(x)` in a lambda `function(v) x(x)(v)` to delay it. The extra lambda acts as a thunk: `x(x)` is not evaluated when the combinator is constructed, only when the inner function is actually called with an argument `v`:
+The fix is the Z combinator, which wraps each `x(x)` in a lambda, `function(v) x(x)(v)`, to delay evaluation. That extra wrapper acts as a thunk: `x(x)` is not evaluated when the combinator is constructed, only when the inner function is actually called with an argument `v`:
 
 ```{r}
 Z <- function(f) {
@@ -348,9 +346,9 @@ Z <- function(f) {
 }
 ```
 
-The structure is identical to Y, except each `x(x)` is wrapped in `function(v) ...`. That single change is the difference between divergence and termination in a strict language.
+The structure is identical to Y, except each `x(x)` wears a `function(v) ...` coat. That single change is the difference between divergence and termination in a strict language.
 
-Now define factorial without any self-reference:
+Now define factorial without any self-reference at all:
 
 ```{r}
 fact <- Z(function(f) function(n) {
@@ -360,11 +358,11 @@ fact <- Z(function(f) function(n) {
 fact(6)
 ```
 
-The argument `f` inside the inner function is not a name the function gave itself. It is provided by the Z combinator, which threads the self-reference through. The function never names itself, never uses `Recall()`, yet it recurses.
+The argument `f` inside the inner function is not a name the function gave itself; it is threaded in by the Z combinator, which manufactures the self-reference from thin air. The function never names itself, never uses `Recall()`, yet it recurses.
 
-This is not a party trick. Church proved in 1936 that recursion can be derived from lambda calculus, which has only three constructs: variables, abstraction (function definition), and application (function calling). No built-in recursion, no looping, no assignment. The Y/Z combinator is the mechanism. Chapter @sec-r-as-mathematics explores this in depth, along with Church numerals and the deeper connections between lambda calculus and computation.
+This is not a party trick. In 1936, Church proved that recursion can be derived from lambda calculus, a system with only three constructs: variables, abstraction (function definition), and application (function calling). No built-in recursion, no loops, no assignment. The Y/Z combinator is the mechanism that makes it work, and @sec-r-as-mathematics explores the full implications, along with Church numerals and the deeper connections between lambda calculus and computation.
 
-For practical R, you will never use the Z combinator in production code. But understanding that recursion is not primitive, that it emerges from function application alone, reshapes how you think about what functions can do.
+You will never use the Z combinator in production R code. But understanding that recursion is not primitive, that it emerges from function application alone, changes how you think about what functions are capable of. If anonymous functions can bootstrap recursion without any help from the language, what else might be hiding in plain sight?
 
 
 ### Exercises {.unnumbered}
@@ -376,15 +374,15 @@ For practical R, you will never use the Z combinator in production code. But und
 
 ## When not to recurse {#sec-when-not-recurse}
 
-R is not Scheme. It does not optimize tail calls, its stack is limited, and function call overhead is high compared to vectorized operations. Recursion in R is the right tool in specific situations and the wrong tool in many others. The shape of the data tells you which.
+R is not Scheme. It does not optimize tail calls, its stack is limited, and function call overhead is high compared to vectorized operations. The shape of the data tells you whether recursion is the right tool or a trap.
 
-*Tree-shaped* problems — nested lists, file system traversal, parsing hierarchical data, divide-and-conquer algorithms where the depth is O(log n) — stay well within stack limits and express naturally as recursive functions.
+*Tree-shaped* problems, where the structure branches and nests (nested lists, file system traversal, parsing hierarchical data, divide-and-conquer algorithms with O(log n) depth), stay well within stack limits and express naturally as recursive functions. These are recursion's home territory.
 
-Do not use recursion for *linear* problems. Summing a vector, computing a running total, filtering elements: these are loops, `Reduce()` calls, or vectorized operations. A recursive sum of n elements uses n stack frames for something that `sum()` does in one C call.
+*Linear* problems are a different story. Summing a vector, computing a running total, filtering elements: these are loops, `Reduce()` calls, or vectorized operations, and writing them recursively wastes n stack frames on something that `sum()` handles in a single C call.
 
 ::: callout-tip
 ## Opinion
-If your recursive function processes a flat sequence from left to right, it is a fold. Use `Reduce()` or `purrr::reduce()` from @sec-reduce-and-accumulate. If it processes elements independently, it is a map. Use `lapply()` or `purrr::map()` from @sec-passing-functions. Recursion should be reserved for problems where the structure of the data is itself recursive.
+If your recursive function processes a flat sequence from left to right, it is a fold; use `Reduce()` or `purrr::reduce()` from @sec-reduce-and-accumulate. If it processes elements independently, it is a map; use `lapply()` or `purrr::map()` from @sec-passing-functions. Reserve recursion for problems where the structure of the data is itself recursive. When the data branches, your code should too.
 :::
 
 The table below summarizes when each approach fits:
@@ -400,10 +398,10 @@ The table below summarizes when each approach fits:
 
 ## Historical notes {#sec-recursion-history}
 
-Recursive functions predate programming. Kurt Godel used *primitive recursive functions* in his 1931 incompleteness theorems to encode logical statements as numbers. Alonzo Church's lambda calculus (1936) showed that recursion could be derived from pure function application, via the fixed-point combinator. Alan Turing's machines (also 1936) provided the alternative, imperative model; Church and Turing proved them equivalent.
+Recursive functions predate programming by decades. Kurt Godel used *primitive recursive functions* in his 1931 incompleteness theorems to encode logical statements as numbers, turning metamathematics into arithmetic. Five years later, Alonzo Church's lambda calculus showed that recursion could be derived from pure function application via the fixed-point combinator, while Alan Turing's machines provided the alternative, imperative model; Church and Turing proved the two equivalent.
 
-John McCarthy brought recursion into programming with LISP (1960), the first language where recursive function calls were the primary control structure. LISP's `car`, `cdr`, and `cons` made recursive list processing practical. McCarthy's "Recursive Functions of Symbolic Expressions and Their Computation by Machine" remains one of the most influential papers in computer science.
+John McCarthy brought recursion into programming with LISP in 1960, the first language where recursive function calls served as the primary control structure. LISP's `car`, `cdr`, and `cons` made recursive list processing practical, and McCarthy's paper "Recursive Functions of Symbolic Expressions and Their Computation by Machine" remains one of the most influential in computer science.
 
-Peter Landin's SECD machine (1964) showed how to mechanically evaluate expressions with closures and recursive calls, connecting lambda calculus to real implementation. Guy Steele and Gerald Sussman's "Lambda: The Ultimate" papers (1975-1980) proved that tail-recursive calls and GOTOs are the same thing, that lambda expressions can replace every control structure, and that a sufficiently smart compiler can make functional code as fast as imperative code. Their work led to Scheme's guarantee of tail-call optimization, a guarantee that most other languages (R included) chose not to make.
+Peter Landin's SECD machine (1964) showed how to mechanically evaluate expressions with closures and recursive calls, connecting Church's theory to real implementation. A decade later, Guy Steele and Gerald Sussman's "Lambda: The Ultimate" papers (1975-1980) proved that tail-recursive calls and GOTOs are the same thing, that lambda expressions can replace every control structure, and that a sufficiently smart compiler can make functional code as fast as imperative code. Their work led to Scheme's guarantee of tail-call optimization, a guarantee most other languages (R included) chose not to make.
 
-R inherits its recursive capabilities from S, which inherited them from the general tradition of expression-based languages. S was not designed for deep recursion; it was designed for interactive statistical computing, where vectorized operations dominate. The lack of TCO in R is not an oversight but a reflection of priorities: the language optimized for the common case (vectorized numerical work) at the cost of the uncommon one (deep recursion).
+R inherits its recursive capabilities from S, which drew from the broad tradition of expression-based languages. S was never designed for deep recursion; it was designed for interactive statistical computing, where vectorized operations do the heavy lifting. The absence of TCO in R is not an oversight but a reflection of priorities: the language optimized for the common case (vectorized numerical work) at the cost of the uncommon one. Whether that tradeoff still makes sense, now that R is used for things its designers never imagined, is a question the language's future will have to answer.

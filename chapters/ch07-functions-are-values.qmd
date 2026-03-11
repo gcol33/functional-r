@@ -5,7 +5,9 @@
 source(here::here("_common.R"))
 ```
 
-In @sec-functions-are-values, you saw that a function is a value: you can assign `sqrt` to a new name and call it, the same way you'd assign a number. If functions are values, you can pass them to other functions, store them in lists, and build functions that create new functions.
+You have probably written the same loop a dozen times: iterate over a vector, do something to each element, store the result. The skeleton is always identical, only the "something" changes. What if you could rip out the operation, hand it to someone else, and let them handle the iteration?
+
+In @sec-functions-are-values, you saw that a function is a value, that you can assign `sqrt` to a new name and call it just as you would with a number or a string. That single fact opens a door to everything in this chapter: passing functions to other functions, storing them in lists, and building functions that manufacture new functions on demand.
 
 
 ## Passing functions to functions {#sec-passing-functions}
@@ -16,9 +18,9 @@ In @sec-functions-are-values, you saw that a function is a value: you can assign
 sapply(1:5, sqrt)
 ```
 
-Notice: `sqrt` has no parentheses. You are not calling `sqrt`; you are handing it to `sapply`, which calls it five times, once per element. This is the same distinction from @sec-programs-and-proofs: `fact` is the definition (a rule), `fact(n)` is the rule applied to an argument. Here, `sqrt` is the function itself, and `sqrt(4)` is the function applied to 4. When you write `sapply(1:5, sqrt)`, you pass the definition; `sapply` decides when to apply it.
+Notice that `sqrt` has no parentheses. You are not calling `sqrt` here; you are handing the function itself to `sapply`, which calls it five times, once per element. This is the same distinction from @sec-programs-and-proofs: `fact` is the definition (a rule), while `fact(n)` is the rule applied to an argument. When you write `sapply(1:5, sqrt)`, you pass the definition, and `sapply` decides when to apply it.
 
-This is the pattern behind most of R's power: instead of writing a loop that processes each element, you hand a function to something that knows how to apply it. The loop is still happening inside `sapply`, but you didn't have to write it. You said *what* to compute, not *how* to iterate.
+Here is the pattern behind most of R's power: instead of writing a loop that processes each element, you hand a function to something that knows how to apply it. The loop is still running inside `sapply`, but you never had to write it. You described *what* to compute, not *how* to iterate.
 
 ```{r}
 sapply(c(-3, 0, 4, -1, 7), abs)
@@ -28,7 +30,7 @@ sapply(c(-3, 0, 4, -1, 7), abs)
 sapply(c("hello", "world"), nchar)
 ```
 
-Any function that takes a single argument works here. `abs` computes absolute values. `nchar` counts characters. You can pass any of them to `sapply` the same way --- but what exactly is `sapply` doing with the function you hand it?
+Any function that takes a single argument works here: `abs` computes absolute values, `nchar` counts characters, and you can pass either to `sapply` with the same syntax. But what exactly is `sapply` doing with the function you give it?
 
 In lambda calculus notation (@sec-church), passing a function to another function is just application:
 
@@ -37,9 +39,9 @@ sapply = λxs. λf. [f(xs₁), f(xs₂), ..., f(xsₙ)]
 sapply([1,2,3,4,5])(sqrt) = [sqrt(1), sqrt(2), sqrt(3), sqrt(4), sqrt(5)]
 ```
 
-The function `sapply` takes a list and a function, and produces a new list by applying the function to each element. This is the same term replacement from @sec-atomic-vectors: replace each `f(xsᵢ)` with its value, and the expression reduces to a vector of results. A function that takes another function as an argument is called a *higher-order function*. `sapply` is one; most of R's power comes from others.
+The function `sapply` takes a list and a function, then produces a new list by applying the function to each element, the same term replacement from @sec-atomic-vectors where you replace each `f(xsᵢ)` with its value and the expression reduces to a vector of results. A function that takes another function as an argument is called a *higher-order function*. `sapply` is one; most of R's expressive power flows from others.
 
-The structure of `sapply` is the functor pattern from @sec-vectorized-ops: take a container (a vector or list), apply a function to each element, return a container of the same shape with transformed contents. In @sec-vectorized-ops, R did this implicitly with vectorization (`sqrt(c(1,4,9))`). Here, `sapply` does it explicitly: you choose the function, and `sapply` handles the mapping. The abstraction is the same; only the interface changes.
+The structure of `sapply` is the functor pattern from @sec-vectorized-ops: take a container (a vector or list), apply a function to each element, return a container of the same shape with transformed contents. In @sec-vectorized-ops, R did this implicitly through vectorization (`sqrt(c(1,4,9))`), while here `sapply` does it explicitly, letting you choose the function while it handles the mapping. The abstraction is the same; only the interface differs. So if `sapply` can accept any named function, what happens when the function you need doesn't exist yet?
 
 
 ### Exercises {.unnumbered}
@@ -51,13 +53,13 @@ The structure of `sapply` is the functor pattern from @sec-vectorized-ops: take 
 
 ## Anonymous functions {#sec-anonymous-functions}
 
-You can pass a named function like `sqrt` to `sapply`. But what if the function you need doesn't have a name?
+You can pass a named function like `sqrt` to `sapply`. But suppose you need to square every element: there is no built-in `square` function sitting in base R, and creating one just to use it once feels like overkill.
 
 ```{r}
 sapply(1:5, function(x) x^2)
 ```
 
-`function(x) x^2` creates a function right where it's needed: no name, no assignment. It exists only for this one call to `sapply`, and then it's gone. This is an *anonymous function*, and you already saw a brief example in @sec-functions-are-values.
+`function(x) x^2` creates a function right where it is needed, with no name and no assignment; it exists only for this one call to `sapply`, and then it vanishes. This is an *anonymous function*, and you already saw a brief example in @sec-functions-are-values.
 
 R 4.1 introduced a shorter syntax:
 
@@ -65,9 +67,9 @@ R 4.1 introduced a shorter syntax:
 sapply(1:5, \(x) x^2)
 ```
 
-`\(x)` is shorthand for `function(x)`. The backslash is meant to evoke the Greek letter lambda (λ), which is where the whole idea comes from (@sec-church). In lambda calculus, this function is written `λx. x²`. In R before 4.1, it's `function(x) x^2`. In R 4.1+, it's `\(x) x^2`. Three notations for the same thing.
+`\(x)` is shorthand for `function(x)`, and the backslash is meant to evoke the Greek letter lambda (λ), which is where the whole idea comes from (@sec-church). In lambda calculus, this function is written `λx. x²`; in R before 4.1, it is `function(x) x^2`; in R 4.1+, it is `\(x) x^2`. Three notations for the same thing.
 
-Anonymous functions are useful when the operation is short and you only need it once:
+Anonymous functions shine when the operation is short and you only need it once:
 
 ```{r}
 sapply(c(10, 20, 30), \(x) x / sum(c(10, 20, 30)))
@@ -77,11 +79,11 @@ sapply(c(10, 20, 30), \(x) x / sum(c(10, 20, 30)))
 sapply(c("alice", "bob"), \(name) paste("Hello,", name))
 ```
 
-When the function gets longer than one line, or when you need it in more than one place, give it a name. A function called `normalize` is easier to read than an anonymous function that divides by the sum. A function called `greet` is easier to maintain than a lambda pasted into three different `sapply` calls.
+When the function stretches beyond one line, or when you find yourself reaching for it in more than one place, give it a name. A function called `normalize` reads more clearly than an anonymous function that divides by the sum, and a function called `greet` is easier to maintain than a lambda copy-pasted into three different `sapply` calls. But where do you draw the line between "too trivial to name" and "complex enough to deserve one"?
 
 ::: callout-tip
 ## Opinion
-If you use a function twice, name it. Anonymous functions are for one-off operations inside `sapply`, `lapply`, and similar. If you find yourself copying and pasting the same `\(x) ...` expression, that's a sign it deserves a name.
+If you use a function twice, name it. Anonymous functions belong inside `sapply`, `lapply`, and similar one-off contexts. The moment you catch yourself copying the same `\(x) ...` expression, that function is asking for a name.
 :::
 
 
@@ -94,7 +96,7 @@ If you use a function twice, name it. Anonymous functions are for one-off operat
 
 ## Storing functions in lists {#sec-functions-in-lists}
 
-If functions are values, you can put them in a list:
+If functions are values, they should fit anywhere a value fits, including inside a list:
 
 ```{r}
 transforms <- list(
@@ -108,9 +110,9 @@ transforms$triple(5)
 transforms$negate(5)
 ```
 
-`transforms` is a list of three functions, accessed with `$` the same way you access any named list element.
+`transforms` is a list of three functions, accessed with `$` the same way you would access any named list element.
 
-Why is this useful? Suppose you have data that needs different processing depending on a column type. You can store the processing functions in a named list and look up the right one:
+Now imagine you have data that needs different processing depending on a column type. Instead of writing a chain of `if` / `else if` branches, you store the processing functions in a named list and look up the right one:
 
 ```{r}
 summarizers <- list(
@@ -124,7 +126,7 @@ summarizers$character(c("a", "b", "a", "c"))
 summarizers$logical(c(TRUE, FALSE, TRUE, TRUE))
 ```
 
-The list acts as a dispatch table: given a type name, it returns the appropriate function. Package internals, Shiny applications, and testing frameworks all use lists of functions to select behavior at runtime. The dispatch table stores functions that already exist --- but you can also create new functions on the fly.
+The list acts as a dispatch table: given a type name, it returns the appropriate function. Package internals, Shiny applications, and testing frameworks all use lists of functions to select behavior at runtime. A dispatch table stores functions that already exist, but what if you need to create new functions on the fly, with specific values baked in?
 
 
 ### Exercises {.unnumbered}
@@ -143,7 +145,7 @@ make_adder <- function(n) {
 }
 ```
 
-`make_adder` takes a number `n` and returns a *new function* that adds `n` to its argument. Watch:
+`make_adder` takes a number `n` and returns a *new function* that adds `n` to its argument:
 
 ```{r}
 add5 <- make_adder(5)
@@ -156,11 +158,11 @@ add10 <- make_adder(10)
 add10(3)
 ```
 
-`add5` and `add10` are both functions, built by `make_adder` with different values of `n`. Each returned function remembers the value of `n` it was created with. `add5` remembers 5; `add10` remembers 10.
+`add5` and `add10` are both functions, built by `make_adder` with different values of `n`, and each one remembers the value it was created with. `add5` remembers 5; `add10` remembers 10. How?
 
-How does the returned function "remember" `n`? When `make_adder(5)` runs, it creates a local environment where `n = 5`. The returned function `function(x) x + n` was defined inside that environment. When you later call `add5(3)`, R looks for `n` in the function's own environment, doesn't find it, and looks in the environment where the function was defined, the one created by `make_adder(5)`. There it finds `n = 5`. This is the same lexical scoping from @sec-scope-first-look, taken one step further.
+When `make_adder(5)` runs, it creates a local environment where `n = 5`. The returned function `function(x) x + n` was defined inside that environment, so when you later call `add5(3)`, R looks for `n` in the function's own environment, fails to find it, then looks in the environment where the function was defined (the one created by `make_adder(5)`) and there discovers `n = 5`. This is the same lexical scoping from @sec-scope-first-look, taken one step further: the function carries its birthplace with it.
 
-A function that carries its creation environment with it is called a *closure*. Every function in R is technically a closure, but the term is most useful when a function returned by another function captures variables from the enclosing scope. Closures are powerful enough to deserve their own chapter (@sec-closures-and-scope); the mechanism that makes `make_adder` work has consequences far beyond adding numbers.
+A function that travels with its creation environment is called a *closure*. Every function in R is technically a closure, but the term earns its weight when a function returned by another function captures variables from the enclosing scope. Closures are powerful enough to deserve their own chapter (@sec-closures-and-scope); the mechanism that makes `make_adder` work has consequences far beyond adding numbers.
 
 In lambda calculus notation:
 
@@ -169,9 +171,9 @@ make_adder = λn. λx. x + n
 make_adder(5) = (λn. λx. x + n)(5) = λx. x + 5
 ```
 
-Replacing `n` with 5 gives a new function, `λx. x + 5`. That is `add5`. The returned function is a partially applied version of the original, with one argument already filled in. This is currying: fixing one argument to produce a simpler function.
+Replacing `n` with 5 gives a new function, `λx. x + 5`, which is `add5`. The returned function is a partially applied version of the original, with one argument already filled in. This is currying: fixing one argument to produce a simpler function.
 
-In lambda calculus terms, `make_adder(5)` is a beta reduction: `(λn. λx. x + n)(5)` reduces to `λx. x + 5`. The outer lambda absorbs its argument and disappears, leaving a simpler function. Every time you call a function factory in R, you are performing a beta reduction. The returned function is the reduced term, with one variable already bound.
+In lambda calculus terms, `make_adder(5)` is a beta reduction: `(λn. λx. x + n)(5)` reduces to `λx. x + 5`, where the outer lambda absorbs its argument and disappears, leaving a simpler function behind. Every time you call a function factory in R, you are performing a beta reduction; the returned function is the reduced term, with one variable already bound.
 
 ```{r}
 make_multiplier <- function(factor) {
@@ -185,7 +187,7 @@ double(7)
 triple(7)
 ```
 
-`make_multiplier` is another function factory. It produces `double` and `triple` from the same template, with different values baked in. Function factories appear throughout R: custom plot themes, parameterized statistical tests, configured data transformations. Chapter @sec-function-factories covers them in depth.
+`make_multiplier` is another function factory, producing `double` and `triple` from the same template with different values baked in. Function factories appear throughout R: custom plot themes, parameterized statistical tests, configured data transformations. Chapter @sec-function-factories covers them in depth. For now, notice that the functions we have been passing around, storing in lists, and returning from factories all share a quiet assumption: that operators like `+` and `*` are themselves functions. Are they?
 
 
 ### Exercises {.unnumbered}
@@ -203,7 +205,7 @@ Try this:
 `+`(2, 3)
 ```
 
-`+` is a function. It takes two arguments and returns their sum. When you write `2 + 3`, R translates it to `` `+`(2, 3) ``. The infix notation is syntactic sugar; underneath, it's a function call.
+`+` is a function. It takes two arguments and returns their sum, and when you write `2 + 3`, R translates it to `` `+`(2, 3) ``. The infix notation is syntactic sugar; underneath, it is a function call.
 
 The same is true for every operator:
 
@@ -213,20 +215,20 @@ The same is true for every operator:
 `&`(TRUE, FALSE)
 ```
 
-And it goes further than operators. Indexing with `[` is a function call:
+It goes further than arithmetic. Indexing with `[` is a function call:
 
 ```{r}
 x <- c(10, 20, 30)
 `[`(x, 2)
 ```
 
-Accessing a list element with `$` is a function call. Even the curly brace `{` is a function call (it evaluates each expression inside and returns the last one). Assignment `<-` is a function call.
+Accessing a list element with `$` is a function call. Even the curly brace `{` is a function call (it evaluates each expression inside and returns the last one). Assignment with `<-` is a function call.
 
 John Chambers, the creator of S (@sec-s-language), summarized R's design with two principles:
 
 > "Everything that exists is an object. Everything that happens is a function call."
 
-The first rule says that numbers, strings, vectors, functions, and even `NULL` are all objects. The second says that addition, comparison, indexing, assignment, and control flow are all function calls. These two rules, together with the fact that functions are values (so they are objects too, covered by the first rule), define what it means for R to be a functional language.
+The first rule says that numbers, strings, vectors, functions, and even `NULL` are all objects. The second says that addition, comparison, indexing, assignment, and control flow are all function calls. Together with the fact that functions are values (and therefore objects too, covered by the first rule), these two statements define what it means for R to be a functional language.
 
 You can even override built-in operators. (This is a demonstration, not a recommendation.)
 
@@ -240,11 +242,11 @@ rm(`+`)
 2 + 3
 ```
 
-After redefining `+` to mean multiplication, `2 + 3` returns 6. `rm()` removes the custom definition and restores the original. The fact that you *can* redefine `+` shows that it really is just a name bound to a function, like any other name. R's entire syntax is built on function calls, and those functions are values you can inspect, replace, and pass around.
+After redefining `+` to mean multiplication, `2 + 3` returns 6. Calling `rm()` removes the custom definition and restores the original. The fact that you *can* redefine `+` reveals that it really is just a name bound to a function, like any other name: R's entire syntax is built on function calls, and those functions are values you can inspect, replace, and pass around. If everything that happens in R is a function call, and functions are values, then the language itself is something you can take apart and reassemble.
 
 ::: callout-tip
 ## Opinion
-Never redefine built-in operators in real code. The example above is to show you what R is made of, not to suggest a workflow. Code that redefines `+` is code that nobody (including you, six months later) will be able to read.
+Never redefine built-in operators in real code. The example above exists to show you what R is made of, not to suggest a workflow. Code that redefines `+` is code that nobody, including you six months later, will be able to read.
 :::
 
 

@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-A function factory doesn't compute a result. It builds a tool that computes results. You give it parameters once, and it gives you back a specialized function you can use forever. In @sec-functions-returning-functions, you saw `make_adder`: a function that returns a function. In @sec-closures-and-scope, you learned why it works: the returned function is a closure that captures its creation environment. This chapter puts both ideas to work: building families of functions from a single template.
+Suppose you need twelve formatting functions: one for dollars, one for euros, one for percentages, one for each of nine other currencies your client cares about. You could write twelve functions by hand, each identical except for a prefix string. Or you could write one function that manufactures the other twelve. In @sec-functions-returning-functions, you saw `make_adder`, a function that returns a function; in @sec-closures-and-scope, you learned why it works, because the returned function is a closure that captures its creation environment. This chapter puts both ideas to serious use, building entire families of functions from a single template, and it will change how you think about the relationship between parameters and behavior.
 
 
 ## The pattern {#sec-factory-pattern}
@@ -26,11 +26,11 @@ square(5)
 cube(5)
 ```
 
-`power(2)` creates an execution environment where `exponent` is 2, then returns a function that captures that environment. `square` remembers `exponent = 2` forever, and `cube` remembers `exponent = 3`: same logic, different parameters. The factory produces a *family* of related functions.
+When you call `power(2)`, R creates an execution environment where `exponent` is 2, then returns an anonymous function that closes over that environment. `square` remembers `exponent = 2` forever; `cube` remembers `exponent = 3`. Same logic, different parameters. The factory produces a *family* of related functions, and each member of that family carries its own private copy of the parameter that distinguishes it from its siblings.
 
-This is exactly `make_adder` from @sec-functions-returning-functions, with a different operation. That section introduced the idea without naming it. The name is *function factory*, and the functions it produces are *closures*.
+This is exactly `make_adder` from @sec-functions-returning-functions, with exponentiation instead of addition. That section introduced the idea without naming it. The name is *function factory*, and the functions it produces are *closures*.
 
-Function factories are *partial application* made explicit. `power(2)` fixes one argument of a two-argument operation and returns a function of the remaining argument. In lambda calculus, `power` is `λe. λx. x^e`; applying it to 2 gives `λx. x^2`. This decomposition of multi-argument functions into chains of single-argument functions is called *currying* (Schonfinkel 1924, Curry 1958). In Haskell, all functions are curried by default: `add 5 3` is really `(add 5) 3`, where `add 5` returns a function. R's function factories are manual currying. In combinatory logic, the simplest factory is the K combinator (`K = λx.λy. x`): it takes a value and returns a function that always produces that value, ignoring its argument. `make_formatter("$")` is K at work: it captures `"$"` and returns a function whose behavior is fixed regardless of how it was called.
+Function factories are *partial application* made explicit: `power(2)` fixes one argument of a two-argument operation and returns a function of the remaining argument. In lambda calculus, `power` is `λe. λx. x^e`; applying it to 2 gives `λx. x^2`. This decomposition of multi-argument functions into chains of single-argument functions is called *currying* (Schonfinkel 1924, Curry 1958). In Haskell, all functions are curried by default: `add 5 3` is really `(add 5) 3`, where `add 5` returns a function. R's function factories are manual currying. In combinatory logic, the simplest factory is the K combinator (`K = λx.λy. x`): it takes a value and returns a function that always produces that value, ignoring its argument. `make_formatter("$")` is K at work: it captures `"$"` and returns a function whose behavior is fixed regardless of how it was called.
 
 
 ### Exercises {.unnumbered}
@@ -42,7 +42,7 @@ Function factories are *partial application* made explicit. `power(2)` fixes one
 
 ## The lazy evaluation trap {#sec-lazy-eval-trap}
 
-R evaluates arguments lazily: they are not computed until they are used. This matters in factories:
+Here is a bug that will cost you an afternoon if you have never seen it before. R evaluates arguments lazily, meaning they are not computed until they are actually used, and this seemingly innocent optimization has consequences for factories that are anything but innocent:
 
 ```{r}
 exp <- 2
@@ -51,7 +51,7 @@ exp <- 3
 sq(5)
 ```
 
-That returns 125, not 25. The variable `exponent` inside the factory is a *promise* pointing to `exp`. When `sq(5)` finally evaluates `exponent`, `exp` has already been changed to 3. The factory captured a promise, not a value.
+That returns 125, not 25. Why? Because the variable `exponent` inside the factory is a *promise* pointing to `exp` in the calling environment. When `sq(5)` finally forces the evaluation of `exponent`, `exp` has already been changed to 3. The factory captured a promise, not a value.
 
 The loop version is worse:
 
@@ -77,7 +77,7 @@ power <- function(exponent) {
 }
 ```
 
-`force(exponent)` evaluates the argument immediately, capturing the value, not the promise. Now the factory works correctly:
+`force(exponent)` evaluates the argument immediately, capturing the value rather than the promise, and now the factory works correctly:
 
 ```{r}
 exp <- 2
@@ -96,7 +96,7 @@ fns[[2]](2)
 fns[[3]](2)
 ```
 
-Why does this work when the `for` loop didn't? The anonymous function `\(i)` creates a new scope for each iteration. When `lapply` calls `\(i)` with the value `1`, that call gets its own execution environment where `i` is `1`, and the inner `function(x) x ^ i` closes over that environment. The next call gets a fresh environment where `i` is `2`, and so on. Each manufactured function captures a different `i` in a different environment. In the `for` loop, by contrast, there is only one `i` in one environment, and every function points to the same variable. The `\(i)` wrapper is doing what `force()` does, but structurally: by binding `i` as a function argument, it forces evaluation at the moment of the call.
+Why does this work when the `for` loop didn't? Because the anonymous function `\(i)` creates a new scope for each iteration. When `lapply` calls `\(i)` with the value `1`, that call gets its own execution environment where `i` is `1`, and the inner `function(x) x ^ i` closes over that environment. The next call gets a fresh environment where `i` is `2`, and so on. Each manufactured function captures a different `i` in a different environment, whereas in the `for` loop there is only one `i` in one environment and every function points to the same variable. The `\(i)` wrapper is doing what `force()` does, but structurally: by binding `i` as a function argument, it forces evaluation at the moment of the call.
 
 ::: callout-tip
 ## Opinion
@@ -122,7 +122,7 @@ Every factory should `force()` every argument that the manufactured function use
 
 ## Practical factories {#sec-practical-factories}
 
-Formatting, filtering, statistical transformations — any task where you repeat the same logic with different parameters is a factory waiting to happen.
+So far the examples have been small, almost toy-like, and you might reasonably wonder whether factories earn their keep in real code. They do, and the pattern shows up wherever you find yourself repeating the same logic with different parameters: formatting, filtering, statistical transformations, anywhere a family of behaviors differs by a handful of constants.
 
 **Parameterized formatters.** A factory can bake a prefix and suffix into a formatting function:
 
@@ -154,7 +154,7 @@ above_zero <- above(0)
 above_zero(c(-2, 0, 3, -1, 5))
 ```
 
-**Statistical function families.** The Box-Cox transformation is parameterized by a single value, lambda. A factory makes this natural:
+**Statistical function families.** The Box-Cox transformation is parameterized by a single value, lambda, which makes it a natural fit for a factory:
 
 ```{r}
 box_cox <- function(lambda) {
@@ -173,7 +173,7 @@ bc1(c(1, 2, 4))
 bc0(c(1, 2, 4))
 ```
 
-The `if` runs once, when the factory is called, not every time the produced function is called. The factory picks the right formula at creation time and returns a function that does no branching. The same pattern drives much of ggplot2. Functions like `scale_color_brewer()` and `theme_minimal()` are factories or factory-like: they take parameters and return objects that modify a plot.
+Notice something subtle about that `if` statement: it runs once, when the factory is called, not every time the produced function is called. The factory picks the right formula at creation time and returns a function that does no branching at all. This same pattern drives much of ggplot2, where functions like `scale_color_brewer()` and `theme_minimal()` are factories or factory-like: they take parameters and return objects that modify a plot. But what happens when the function you want to specialize already exists, and you want to modify its behavior rather than build from scratch?
 
 
 ### Exercises {.unnumbered}
@@ -184,7 +184,7 @@ The `if` runs once, when the factory is called, not every time the produced func
 
 ## Memoization {#sec-memoization}
 
-A special factory pattern: wrap a function so it caches its results. The first call computes normally, but subsequent calls with the same arguments return the cached value instantly.
+Sometimes you do not need a new function; you need the same function, only faster. Memoization wraps a function so it caches its results: the first call computes normally, but subsequent calls with the same arguments return the cached value instantly, skipping the computation entirely.
 
 ```{r}
 #| message: false
@@ -203,7 +203,7 @@ system.time(fast_square(10))
 system.time(fast_square(10))
 ```
 
-The first call takes about a second. The second is instant: `memoise` recognizes the argument and returns the cached result.
+The first call takes about a second. The second is instant, because `memoise` recognizes the argument and returns the cached result without re-executing the function body.
 
 `forget()` clears the cache:
 
@@ -211,9 +211,9 @@ The first call takes about a second. The second is instant: `memoise` recognizes
 forget(fast_square)
 ```
 
-**When to memoize:** expensive computations with repeated inputs. API calls, simulations, recursive algorithms like Fibonacci, file parsing.
+**When to memoize:** expensive computations with repeated inputs, API calls, simulations, recursive algorithms like Fibonacci, file parsing.
 
-**When not to:** functions with side effects (plotting, writing files), functions whose inputs are large or unique every time (the cache grows without bound), functions that depend on external state (database contents, system time).
+**When not to:** functions with side effects (plotting, writing files), functions whose inputs are large or unique every time (the cache grows without bound), functions that depend on external state (database contents, system time). Memoization trades memory for speed, and it only pays off when inputs recur.
 
 
 ### Exercises {.unnumbered}
@@ -224,9 +224,11 @@ forget(fast_square)
 
 ## Function operators {#sec-function-operators}
 
-A function operator takes a function as input and returns a modified function as output. Like a factory, but the raw material is a function, not a number or string. This pattern is called a "decorator" in Python (where `@decorator` syntax makes it first-class) and appeared in the Gang of Four design patterns book (1994) as the Decorator Pattern. R has no `@`-syntax, but `safely()`, `memoise()`, and `with_logging()` are all decorators: they modify behavior by wrapping, without changing the original. What do you do when a function might fail on some inputs but you need to apply it to hundreds?
+What do you do when a function might fail on some inputs, but you need to apply it to hundreds of values and cannot afford to let one error kill the whole pipeline? You could wrap every call in `tryCatch`. Or you could wrap the function itself once, producing a new function that handles errors gracefully everywhere it is called.
 
-`safely()` wraps a function so it never errors. Instead, it returns a list with `$result` and `$error`:
+A function operator takes a function as input and returns a modified function as output. Like a factory, but the raw material is a function rather than a number or string. This pattern is called a "decorator" in Python (where `@decorator` syntax makes it first-class) and appeared in the Gang of Four design patterns book (1994) as the Decorator Pattern. R has no `@`-syntax, but `safely()`, `memoise()`, and `with_logging()` are all decorators: they modify behavior by wrapping, without changing the original.
+
+`safely()` wraps a function so it never errors, returning instead a list with `$result` and `$error`:
 
 ```{r}
 #| message: false
@@ -252,7 +254,7 @@ quiet_log <- quietly(log)
 quiet_log(-1)
 ```
 
-You can write your own operators. Here is a logging wrapper:
+You can write your own operators just as easily:
 
 ```{r}
 with_logging <- function(f) {
@@ -267,7 +269,7 @@ logged_mean <- with_logging(mean)
 logged_mean(1:10)
 ```
 
-Notice the `force(f)` call. Function operators are factories whose input happens to be a function. The same lazy evaluation trap from @sec-lazy-eval-trap applies: without `force()`, `f` is a promise, and if the variable it points to changes before the operator's result is called, you get the wrong function.
+Notice the `force(f)` call. Function operators are factories whose input happens to be a function, so the same lazy evaluation trap from @sec-lazy-eval-trap applies: without `force()`, `f` is a promise, and if the variable it points to changes before the operator's result is called, you get the wrong function.
 
 
 ### Exercises {.unnumbered}
@@ -279,7 +281,7 @@ Notice the `force(f)` call. Function operators are factories whose input happens
 
 ## Composing factories and operators {#sec-composing-factories-operators}
 
-Factories and operators compose. You can apply an operator to a factory's output, or feed a factory into `map()`:
+Each of these patterns (factories, operators, functionals like `map()`) does one small thing. The real power emerges when you compose them:
 
 ```{r}
 safe_log <- safely(log)
@@ -288,7 +290,7 @@ results <- map(list(1, -1, "a", 10), safe_log)
 str(results)
 ```
 
-`safely(log)` is a function operator applied to `log`. The result is passed to `map()`, a functional from @sec-passing-functions. Three concepts from three chapters, working together. What if you need both safety *and* logging on the same function?
+`safely(log)` is a function operator applied to `log`; the result is passed to `map()`, a functional from @sec-passing-functions. Three concepts from three chapters, working together in a single pipeline. What if you need both safety *and* logging on the same function?
 
 ```{r}
 safe_logged_log <- with_logging(safely(log))
@@ -296,9 +298,9 @@ safe_logged_log(10)
 safe_logged_log("a")
 ```
 
-The inner operator (`safely`) handles errors, while the outer one (`with_logging`) adds logging. Each layer does one thing, and you combine them to get the behavior you want.
+The inner operator (`safely`) handles errors; the outer one (`with_logging`) adds logging. Each layer does one thing, and you combine them to get the behavior you want, like stacking lenses on a camera.
 
-This is the payoff of thinking functionally: small, composable pieces that combine cleanly. A factory builds specialized functions, an operator modifies them, and `map()` applies them across inputs. Each piece is simple on its own, yet together they handle complex workflows with very little code.
+This is the payoff of thinking functionally. A factory builds specialized functions, an operator modifies them, and `map()` applies them across inputs; each piece is simple on its own, yet together they handle workflows that would otherwise require pages of boilerplate.
 
 ```{r}
 formatters <- map(c("$", "EUR ", "GBP "), make_formatter)
@@ -306,4 +308,4 @@ formatters <- map(c("$", "EUR ", "GBP "), make_formatter)
 map(formatters, \(f) f(100))
 ```
 
-`map()` over a vector of prefixes produces a list of formatters. Then `map()` over the formatters applies each one. No loops, no intermediate variables, no boilerplate.
+`map()` over a vector of prefixes produces a list of formatters, then `map()` over the formatters applies each one. No loops, no intermediate variables. And if you squint at this pattern long enough, you start to see something: the boundary between data and code has gotten very thin. A list of functions is data you can iterate over, filter, compose, and pass around just like a list of numbers. That idea, that functions are values, has been running quietly beneath every chapter so far. The next chapter picks it up and runs with it.

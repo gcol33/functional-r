@@ -5,7 +5,11 @@
 source(here::here("_common.R"))
 ```
 
-A data frame is a list where every element is a vector of the same length. That is the entire definition. Lists hold anything; a data frame constrains that freedom to equal-length columns. Once you see this, subsetting, column operations, and the entire tidyverse make sense. The idea is older than R: Edgar Codd's 1970 paper at IBM defined relations as sets of tuples, each row a tuple of typed values. R's data frames, SQL tables, pandas DataFrames, and Spark datasets are all descendants of that same relational algebra.
+You have a hundred measurements of penguin body mass, another hundred of bill length, and a character vector of species names. Three vectors, all the same length, all describing the same 100 birds. You could keep them as separate objects, indexing carefully, hoping that nobody reorders one without reordering the others. Or you could store them together in a structure that enforces the constraint for you: every column the same length, every row one observation, the whole thing accessible with the list operations you already know.
+
+That structure is the data frame, and its definition fits in a single sentence: a list where every element is a vector of the same length. Lists hold anything; a data frame constrains that freedom to equal-length columns, and once you see this, subsetting, column operations, and the entire tidyverse make sense. The idea predates R by decades: Edgar Codd's 1970 paper at IBM defined relations as sets of tuples, each row a typed record, and R's data frames, SQL tables, pandas DataFrames, and Spark datasets all descend from that same relational algebra.
+
+So what does this constraint actually buy you?
 
 
 ## A list of equal-length vectors {#sec-list-of-vectors}
@@ -14,16 +18,14 @@ A data frame is a list where every element is a vector of the same length. That 
 library(palmerpenguins)
 ```
 
-Start by asking R what a data frame actually is:
+Ask R what a data frame actually is:
 
 ```{r}
 typeof(penguins)
 is.list(penguins)
 ```
 
-A data frame has type `"list"` because it *is* a list. The difference is that every element (every column) must be a vector of the same length. Each column is one vector. Each row is one observation across those vectors. The constraint is simple: all vectors must have the same number of elements.
-
-Build one yourself:
+Type `"list"`, because it *is* a list. The difference from an ordinary list is that every element (every column) must be a vector of the same length, so each row lines up across all columns; one observation, one position in every vector. Build one yourself:
 
 ```{r}
 df <- data.frame(
@@ -33,15 +35,15 @@ df <- data.frame(
 df
 ```
 
-You are building a list with two elements (`name` and `mass`), both of length 2. R adds a `class` attribute (`"data.frame"`) and row numbers, but the underlying structure is just a list. You can verify this with `str()`:
+You are building a list with two elements (`name` and `mass`), both of length 2. R adds a `class` attribute (`"data.frame"`) and row numbers, but the underlying structure is just a named list with bookkeeping on top. You can verify this with `str()`:
 
 ```{r}
 str(df)
 ```
 
-The result has two columns and two rows, but the underlying representation is just a list with extra bookkeeping.
+Two columns, two rows, and nothing more than a list wearing a label.
 
-In type theory, this structure is a *product type*: a tuple of named, typed fields. A data frame with columns `name` (character) and `mass` (double) has type `character × double`, meaning each row is a pair of one character value and one double value. Complex data structures are built from simpler combinators, and the product (pairing things together with AND) is the most basic one. Every time you add a column, you extend the product with another factor.
+In type theory, this structure is a *product type*: a tuple of named, typed fields. A data frame with columns `name` (character) and `mass` (double) has type `character × double`, meaning each row is a pair of one character value and one double value. Complex data structures are built from simpler combinators, and the product (pairing things together with AND) is the most basic one. Every time you add a column, you extend the product with another factor, which raises a practical question: how do you control what goes into those columns when you build one from scratch?
 
 
 ### Exercises {.unnumbered}
@@ -64,22 +66,22 @@ measurements <- data.frame(
 measurements
 ```
 
-Before R 4.0, `data.frame()` converted character vectors to factors by default (`stringsAsFactors = TRUE`). This caused confusion for over two decades. Strings that looked like text silently became categorical variables with integer codes underneath.
+Before R 4.0, `data.frame()` converted character vectors to factors by default (`stringsAsFactors = TRUE`), which meant that strings that looked like text silently became categorical variables with integer codes underneath. This caused confusion for over two decades.
 
 ::: callout-tip
 ## Opinion
-The `stringsAsFactors` default was wrong for 23 years. It was fixed in R 4.0 (2020). If someone's tutorial still warns about it, their tutorial is outdated.
+The `stringsAsFactors` default was wrong for 23 years and finally fixed in R 4.0 (2020). If someone's tutorial still warns about it, the tutorial is outdated.
 :::
 
 ### Row names {#sec-row-names}
 
-Data frames have row names. Some built-in datasets use them:
+Some built-in datasets carry a feature you might not expect:
 
 ```{r}
 head(mtcars, 3)
 ```
 
-The car names ("Mazda RX4", etc.) are row names, not a column. This causes problems: row names can't contain duplicates, they're silently dropped by many functions, and they behave differently from columns. You can't filter by row name without extra syntax.
+The car names ("Mazda RX4", etc.) are row names, not a column. They look like data, they smell like data, but they live in a separate metadata slot that can't contain duplicates, gets silently dropped by many functions, and behaves nothing like a real column. You can't filter by row name without extra syntax, and you can't have two rows with the same label.
 
 ::: callout-tip
 ## Opinion
@@ -95,42 +97,42 @@ Pretend row names don't exist. If something is data, put it in a column. `tibble
 
 ## Subsetting data frames {#sec-subsetting-data-frames}
 
-A data frame is a list, so the same accessors work:
+Because a data frame is a list, the same accessors work:
 
 ```{r}
 penguins$species[1:3]
 ```
 
-`$` extracts a column and returns a vector, the same way `[[` extracts an element from a list.
+`$` extracts a column and returns a vector, the same way `[[` extracts an element from a list:
 
 ```{r}
 penguins[["species"]][1:3]
 ```
 
-`[[` does the same thing, but takes a string. This matters when the column name is stored in a variable:
+`[[` does the same thing but takes a string, which matters when the column name lives in a variable rather than in your source code:
 
 ```{r}
 col <- "species"
 penguins[[col]][1:3]
 ```
 
-Single brackets return a one-column data frame (a sub-list), not a vector:
+Single brackets, by contrast, return a one-column data frame (a sub-list), not a vector:
 
 ```{r}
 penguins["species"][1:3, ]
 ```
 
-Same rule as lists: `[` keeps the container, `[[` extracts the contents.
+Same rule as lists: `[` keeps the container, `[[` extracts the contents. But data frames are rectangular, which opens a second dimension.
 
 ### Two-dimensional indexing {#sec-two-dim-indexing}
 
-Because a data frame is rectangular, it also takes two indices: `[row, column]`.
+Because a data frame has rows and columns, it also accepts two indices: `[row, column]`.
 
 ```{r}
 penguins[1, ]
 ```
 
-This selects the first row across all columns and returns a data frame.
+First row, all columns, returned as a data frame. Now try the reverse:
 
 ```{r}
 penguins[, 1]
@@ -148,13 +150,13 @@ To keep the data frame structure, use `drop = FALSE`:
 class(penguins[, 1, drop = FALSE])
 ```
 
-This `drop` behavior is a common source of bugs. You write a function that subsets a data frame, test it with two columns, and it works. Someone passes one column, and your function breaks because it suddenly receives a vector instead of a data frame.
+This `drop` behavior is a common source of bugs. You write a function that subsets a data frame, test it with two columns, and it works; someone passes one column, and your function breaks because it suddenly receives a vector instead of a data frame.
 
 ```{r}
 penguins[1, 2]
 ```
 
-Row 1, column 2. Returns a single value (a vector of length 1).
+Row 1, column 2: a single value (a vector of length 1). So `[` with two indices gives you surgical access to any cell, any row, any column, but the `drop` trap lurks whenever your selection narrows to a single column.
 
 ### Logical subsetting {#sec-logical-subsetting-df}
 
@@ -166,7 +168,7 @@ nrow(heavy)
 head(heavy, 3)
 ```
 
-`penguins$body_mass_g > 5000` produces a logical vector, `TRUE` for heavy penguins and `FALSE` (or `NA`) for the rest. Placing it before the comma selects rows. This is what `dplyr::filter()` does under the hood (@sec-data-transformation).
+`penguins$body_mass_g > 5000` produces a logical vector, `TRUE` for heavy penguins and `FALSE` (or `NA`) for the rest, and placing it before the comma selects the matching rows. This is exactly what `dplyr::filter()` does under the hood (@sec-data-transformation), but the base R syntax forces you to name the data frame twice, once to build the condition and once to subset. When conditions get complex, the repetition gets ugly fast.
 
 
 ### Exercises {.unnumbered}
@@ -206,7 +208,7 @@ df2 <- within(penguins, {
 head(df2[, c("mass_kg", "bill_ratio")])
 ```
 
-`within()` evaluates the expressions inside the data frame's environment, so you can refer to columns by name without the `df$` prefix. The result is a new data frame. `dplyr::mutate()` (@sec-data-transformation) does this more cleanly.
+`within()` evaluates the expressions inside the data frame's environment, so you can refer to columns by name without the `df$` prefix, and the result is a new data frame. `dplyr::mutate()` (@sec-data-transformation) does this more cleanly, but `within()` shows that the idea of "evaluate expressions in a data context" is older than the tidyverse.
 
 ```{r}
 #| include: false
@@ -223,7 +225,7 @@ penguins$mass_kg <- NULL
 
 ## Combining data frames {#sec-combining-data-frames}
 
-`rbind()` stacks rows. The column names and types must match:
+`rbind()` stacks rows; the column names and types must match:
 
 ```{r}
 batch1 <- data.frame(species = "Adelie", mass = 3750)
@@ -231,7 +233,7 @@ batch2 <- data.frame(species = "Gentoo", mass = 5200)
 rbind(batch1, batch2)
 ```
 
-`cbind()` glues columns. The row counts must match:
+`cbind()` glues columns side by side; the row counts must match:
 
 ```{r}
 ids <- data.frame(id = c("A1", "G1"))
@@ -239,7 +241,7 @@ masses <- data.frame(mass = c(3750, 5200))
 cbind(ids, masses)
 ```
 
-When they fail, the error messages are not always helpful. Mismatched column names in `rbind()` or mismatched row counts in `cbind()` produce errors that mention dimensions rather than the real problem. Check `names()` and `nrow()` before combining.
+When they fail, the error messages mention dimensions rather than the real problem, which is almost always mismatched column names in `rbind()` or mismatched row counts in `cbind()`. Check `names()` and `nrow()` before combining, and you will save yourself a frustrating debugging session.
 
 
 
@@ -252,7 +254,9 @@ When they fail, the error messages are not always helpful. Mismatched column nam
 
 ## Tibbles {#sec-tibbles}
 
-A tibble is a modern data frame from the tidyverse:
+Print a large data frame in R, and thousands of rows flood the console. Subset a single column, and you silently get a vector instead of a data frame. Type a column name wrong, and partial matching guesses what you meant, correctly, until the day it guesses wrong.
+
+A tibble is the tidyverse's answer to all three problems:
 
 ```{r}
 library(tibble)
@@ -263,11 +267,11 @@ tbl <- tibble(
 tbl
 ```
 
-Three differences matter:
+Three differences matter.
 
-**Printing.** A tibble shows the first 10 rows, column types, and fits the screen. No more flooding the console with 10,000 rows because you forgot `head()`.
+**Printing.** A tibble shows the first 10 rows, column types, and fits the screen width. No more flooding the console because you forgot `head()`.
 
-**Subsetting.** `tbl[, 1]` always returns a tibble, never a vector. The `drop` gotcha is gone:
+**Subsetting.** `tbl[, 1]` always returns a tibble, never a vector, so the `drop` gotcha is gone:
 
 ```{r}
 class(tbl[, 1])
@@ -285,7 +289,7 @@ tbl$sp
 Partial matching is autocomplete for bugs. You type `df$sp`, R guesses you meant `df$species`, and your code works until someone adds a column called `spine_count`. Then `df$sp` becomes ambiguous and silently returns `NULL`. A tibble catches this immediately.
 :::
 
-A tibble is still a data frame. Every function that takes a data frame takes a tibble:
+A tibble is still a data frame, which means every function that accepts a data frame accepts a tibble:
 
 ```{r}
 is.data.frame(tbl)
@@ -299,7 +303,7 @@ as_tibble(mtcars)
 
 ::: callout-tip
 ## Opinion
-Use tibbles by default. Use data frames when a package demands one (rare) or when you want zero dependencies.
+Use tibbles by default. Use plain data frames when a package demands one (rare) or when you want zero dependencies.
 :::
 
 
@@ -312,13 +316,13 @@ Use tibbles by default. Use data frames when a package demands one (rare) or whe
 
 ## Exploring data frames {#sec-exploring-data-frames}
 
-You have met `str()` already. It is the single most useful function for understanding any R object:
+You have a new dataset. Before you filter, mutate, or plot anything, you need to know what you are working with: how many rows, how many columns, what types, how much is missing. `str()` answers all of these at once:
 
 ```{r}
 str(penguins)
 ```
 
-The output tells you: 344 rows, 8 columns, the type of each column, and a preview of the values. This is the first thing to run when you load a new dataset.
+344 rows, 8 columns, the type of each column, and a preview of the values. This is the first thing to run when you load a new dataset.
 
 Other useful functions:
 
@@ -340,9 +344,9 @@ head(penguins, 3)
 summary(penguins)
 ```
 
-`summary()` gives per-column summaries: min, max, mean, and quartiles for numeric columns; counts for factors. NA counts appear at the bottom of each column.
+`summary()` gives per-column summaries: min, max, mean, and quartiles for numeric columns; counts for factors. NA counts appear at the bottom of each column, which makes it the quickest way to spot missing data before you write a single line of analysis code.
 
-In RStudio, `View(penguins)` opens a spreadsheet-style viewer. Useful for browsing, but not for code: `View()` is interactive and does nothing in a script.
+In RStudio, `View(penguins)` opens a spreadsheet-style viewer, useful for browsing but invisible to scripts. It does nothing when your code runs non-interactively, so treat it as a debugging aid, not a workflow step.
 
 
 
@@ -355,8 +359,8 @@ In RStudio, `View(penguins)` opens a spreadsheet-style viewer. Useful for browsi
 
 ## Putting it together {#sec-df-putting-together}
 
-A data frame is a list (@sec-list-of-vectors). Each column is a vector (@sec-atomic-vectors). Subsetting uses the same `[`, `[[`, and `$` operators you learned for lists (Chapter 8) and vectors (@sec-indexing). Logical indexing filters rows (@sec-logical-subsetting-df), the same mechanism from @sec-vectorized-ops applied to a two-dimensional structure.
+A data frame is a list (@sec-list-of-vectors), each column is a vector (@sec-atomic-vectors), and subsetting uses the same `[`, `[[`, and `$` operators you learned for lists (Chapter 8) and vectors (@sec-indexing). Logical indexing filters rows (@sec-logical-subsetting-df) with the same mechanism from @sec-vectorized-ops, just applied to a two-dimensional structure. Everything connects.
 
-One consequence of this structure: R stores data frames column by column. Each column is one contiguous vector in memory, so column operations (`mean(df$x)`) are fast (sequential memory access) while row operations (`apply(df, 1, sum)`) are slow (jumping between columns). This is the same trade-off databases make: columnar stores (DuckDB, Parquet) optimize for analytical aggregation; row stores (PostgreSQL, MySQL) optimize for single-record transactions.
+One consequence of this design matters more than any syntax detail: R stores data frames column by column, each column a single contiguous vector in memory. Column operations like `mean(df$x)` walk sequential memory and run fast, while row operations like `apply(df, 1, sum)` jump between columns on every row and run slow. This is the same trade-off databases make: columnar stores (DuckDB, Parquet) optimize for analytical aggregation; row stores (PostgreSQL, MySQL) optimize for single-record transactions.
 
-@sec-strings-factors-dates covers the column types you will encounter most often: strings, factors, and dates. @sec-data-transformation introduces `dplyr`, which replaces the `df[df$x > 5, ]` syntax with readable verbs like `filter()`, `mutate()`, and `summarize()`. Those verbs work because data frames are lists of vectors --- and you now know what that means at every layer.
+@sec-strings-factors-dates covers the column types you will encounter most often: strings, factors, and dates. @sec-data-transformation introduces `dplyr`, which replaces the `df[df$x > 5, ]` syntax with readable verbs like `filter()`, `mutate()`, and `summarize()`. Those verbs work because data frames are lists of vectors. You started this chapter with three loose vectors and a prayer that they stayed aligned; you end it knowing why R binds them together and what that binding makes possible.

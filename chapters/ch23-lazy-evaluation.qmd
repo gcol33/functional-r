@@ -5,20 +5,20 @@
 source(here::here("_common.R"))
 ```
 
-You write `filter(penguins, species == "Adelie")` and it works. But `species` isn't a variable in your environment. How does R know you mean a column? The answer starts with laziness.
+You write `filter(penguins, species == "Adelie")` and it works. But `species` isn't a variable in your environment; it's a column buried inside a data frame, invisible to ordinary evaluation rules. So how does R find it?
 
-R doesn't evaluate function arguments when you pass them. It waits. Arguments are wrapped in invisible objects called *promises*, and those promises sit unevaluated until someone actually needs their value. This small design choice has enormous consequences: it enables default arguments that depend on other arguments, functions that capture your expressions instead of evaluating them, and the entire tidyverse style of writing column names without quotes.
+The answer begins with something R does not do. When you pass an argument to a function, R does not evaluate it. Not yet. Instead, R wraps the argument in an invisible object called a *promise*, a small bundle containing the expression you wrote and the environment where that expression should eventually be evaluated, and then it waits, holding the unevaluated expression in suspension until the function actually needs the result. This single design choice, the decision to procrastinate, ripples outward into default arguments that reference other arguments, functions that inspect your code before running it, and the entire tidyverse convention of writing column names as if they were variables.
 
-The idea has a history. In the early days of programming languages, there were two camps. Fortran and C evaluated arguments before passing them (call-by-value): compute the result, hand it over. Algol 60 (1960) tried call-by-name: pass the expression itself, re-evaluate it every time the function uses it. Call-by-name turned out to be expensive and confusing. In 1976, Dan Friedman and David Wise, and independently Peter Henderson and James Morris, proposed a compromise: pass the expression unevaluated, but cache the result after the first evaluation. Evaluate at most once, not eagerly, not repeatedly. They called it *lazy evaluation*. Haskell (1990) made laziness the default for everything. R took a narrower path: function arguments are lazy, everything else is eager. This middle ground, inherited through Scheme and S, gives R the power of expression capture without the performance puzzles of pervasive laziness.
+The idea has a lineage. In the early days of programming languages, two camps formed around a simple question: when should arguments be evaluated? Fortran and C chose eagerness, computing each argument before handing it to the function (call-by-value). Algol 60 tried the opposite, passing the raw expression and re-evaluating it every time the function touched it (call-by-name), which turned out to be expensive and confusing. Then in 1976, Dan Friedman and David Wise, and independently Peter Henderson and James Morris, proposed a compromise: pass the expression unevaluated, but cache the result after the first evaluation. Evaluate at most once. They called it *lazy evaluation*. Haskell made laziness the default for everything when it launched in 1990; R took a narrower path, inheriting through Scheme and S a design where function arguments are lazy but everything else is eager. That middle ground gives you the power of expression capture without the performance puzzles of pervasive laziness.
 
-The mechanism behind all of this is promises. Once you see how they work, non-standard evaluation, data masking, and `{{ }}` follow as consequences. Full metaprogramming is in @sec-metaprogramming; here, the goal is understanding the mechanism well enough to use it.
+The mechanism behind all of this is promises. Once you see how they work, non-standard evaluation, data masking, and `{{ }}` follow as consequences rather than mysteries. Full metaprogramming lives in @sec-metaprogramming; here, the goal is understanding the machinery well enough to use it, and well enough to know when it's working against you.
 
 
 ## Promises {#sec-promises}
 
 When you call `f(x + 1)`, R does not compute `x + 1` and pass the result. It wraps `x + 1` in a *promise*: a bundle containing the expression (`x + 1`) and the environment where that expression should be evaluated (your calling environment). The promise travels into `f` unevaluated.
 
-The first time `f` uses that argument, R evaluates the promise: it takes the expression, evaluates it in the stored environment, and caches the result. If the argument is never used, the promise is never evaluated. If it's used twice, the second access returns the cached value, not a re-evaluation.
+The first time `f` actually touches that argument, R cracks the promise open: it takes the stored expression, evaluates it in the stored environment, and caches the result. If the argument is never used, the promise is never evaluated, which means side effects inside it never happen. If the argument is used twice, the second access returns the cached value rather than re-evaluating the expression. One evaluation, at most.
 
 A promise has three components:
 
@@ -26,31 +26,31 @@ A promise has three components:
 2. **The environment**: where to evaluate it (the caller's environment).
 3. **The cached value**: filled in after the first evaluation, empty before.
 
-Promises are invisible by design: R has no user-facing "promise" type. You cannot create one, inspect one with `str()`, or test with `is.promise()`. The invisibility is deliberate, because inspecting a promise would force it, changing program behavior. The abstraction only works because you cannot look behind it.
+Promises are invisible by design: R has no user-facing "promise" type. You cannot create one manually, inspect one with `str()`, or test for one with `is.promise()`. The invisibility is deliberate, because the act of inspecting a promise would force its evaluation, changing program behavior. The abstraction only works because you cannot look behind it.
 
 In the terminology of lambda calculus, this is *call-by-need* evaluation: the argument is passed unevaluated (like call-by-name) but the result is cached after the first evaluation (unlike call-by-name, which would re-evaluate each time). Lambda calculus defines three evaluation strategies: call-by-value (strict, as in C and Python), call-by-name (non-strict, as in Algol 60), and call-by-need (lazy, as in Haskell). R is mostly call-by-value but uses call-by-need for function arguments via promises. The Church-Rosser theorem guarantees that if a reduction terminates, all strategies reach the same normal form, but they may differ in whether they terminate at all.
 
-This is why default arguments can refer to other arguments:
+What does laziness buy you in practice? Default arguments that would be impossible under eager evaluation:
 
 ```{r}
 f <- function(x, y = x * 2) y
 f(5)
 ```
 
-The default for `y` is a promise containing the expression `x * 2`. When R needs `y`'s value, it evaluates `x * 2` inside the function body, where `x` is already 5. The result is 10. If you supply `y` explicitly, the default promise is never evaluated:
+The default for `y` is a promise containing the expression `x * 2`. When R needs `y`'s value, it evaluates `x * 2` inside the function body, where `x` is already bound to 5, yielding 10. Supply `y` explicitly and the default promise is never touched:
 
 ```{r}
 f(5, 99)
 ```
 
-Defaults can even depend on computations that happen inside the function:
+Defaults can depend on computations that happen inside the function itself, which gets stranger:
 
 ```{r}
 g <- function(x, n = length(x)) n
 g(c(1, 2, 3))
 ```
 
-The default `n = length(x)` is an expression, not a value. It's evaluated when `n` is needed, by which time `x` is already bound. This would be impossible if R evaluated defaults at the moment of the call.
+The default `n = length(x)` is an expression, not a precomputed value; R evaluates it when `n` is first accessed, by which time `x` is already bound. If R evaluated defaults at the moment of the call, before the function body had a chance to run, none of this would work. But what happens when laziness interacts with side effects?
 
 
 ### Exercises {.unnumbered}
@@ -83,18 +83,18 @@ The default `n = length(x)` is an expression, not a value. It's evaluated when `
 
 ## Consequences of laziness {#sec-consequences-laziness}
 
-In R, only function arguments are lazy; everything else is eager. Haskell took the opposite approach: *everything* is lazy. `let xs = [1..]` creates an infinite list without computing all elements, enabling infinite streams and on-demand computation, but making reasoning about performance harder. R chose a middle ground: arguments are lazy (enabling NSE and flexible defaults), the rest is eager.
+R chose a specific point in the design space: function arguments are lazy, everything else is eager. Haskell sits at the other extreme, where *everything* is lazy (`let xs = [1..]` creates an infinite list without computing all elements), enabling infinite streams and on-demand computation at the cost of making performance harder to reason about. R's middle ground gives you NSE and flexible defaults without the mental overhead of tracking which values exist yet and which are still suspended.
 
-**Side effects in arguments may never happen.** If a function doesn't use an argument, the argument's expression is never evaluated. That means side effects (printing, writing files, raising errors) inside the expression never occur:
+**Side effects in arguments may never happen.** If a function ignores an argument, the promise wrapping it is never forced, which means any side effects buried in the expression (printing, writing files, raising errors) simply vanish:
 
 ```{r}
 quiet <- function(x) "I ignore my argument"
 quiet(print("you will never see this"))
 ```
 
-No output from `print()`. The promise was never forced.
+No output from `print()`. The promise sat there, inert, and was eventually garbage-collected without ever running. This is not a bug; it's the logical consequence of evaluate-only-when-needed. But it does mean you cannot rely on argument expressions to produce side effects unless the function actually touches them.
 
-**`missing()` can detect unsupplied arguments.** Because arguments start as unevaluated promises, R can tell the difference between "the caller supplied this argument" and "the caller didn't." The `missing()` function checks this:
+**`missing()` can detect unsupplied arguments.** Because arguments start life as unevaluated promises, R can distinguish between "the caller supplied this argument" and "the caller didn't," a distinction that would be impossible if all arguments were evaluated before the function saw them:
 
 ```{r}
 report <- function(x) {
@@ -104,11 +104,11 @@ report()
 report(42)
 ```
 
-This only works because promises are inspectable before evaluation. Once an argument is used, `missing()` is no longer meaningful.
+This only works in the window before evaluation. Once an argument is used, `missing()` loses its ability to answer the question.
 
-**Default expressions, not default values.** A function like `function(x, n = length(x))` does not store a default *value* for `n`. It stores a default *expression*. That expression is evaluated lazily, inside the function, at the moment `n` is first accessed. This means defaults can depend on other arguments, on computations that happen earlier in the function body, or on variables in the function's environment.
+**Default expressions, not default values.** A function like `function(x, n = length(x))` does not store a default *value* for `n`. It stores a default *expression*, evaluated lazily inside the function at the moment `n` is first accessed. Defaults can therefore depend on other arguments, on computations that happen earlier in the function body, or on variables in the function's enclosing environment. The entire default-argument system is built on promises.
 
-**The lazy evaluation trap in function factories.** If you read @sec-function-factories, you saw that promises can cause trouble when a function factory captures a loop variable:
+**The lazy evaluation trap in function factories.** If you read @sec-function-factories, you saw that promises can cause trouble when a factory captures a loop variable:
 
 ```{r}
 funs <- list()
@@ -119,7 +119,7 @@ funs[[1]]()
 funs[[2]]()
 ```
 
-All three functions return 3 because `i` was captured as a promise, and by the time any function is called, the loop has finished and `i` is 3. The fix is `force()`, which evaluates a promise immediately. But `force()` alone is not enough: you also need `local()` to create a fresh environment for each iteration, so that each function captures its own copy of `i` rather than sharing the loop variable:
+All three functions return 3. Why? Because `i` was captured as a promise pointing to the loop variable, and by the time any function is called, the loop has finished and `i` is 3. The fix requires two tools working together: `force()`, which evaluates a promise immediately, and `local()`, which creates a fresh environment for each iteration so that each function captures its own copy of `i` rather than sharing the loop variable:
 
 ```{r}
 funs <- list()
@@ -133,9 +133,9 @@ funs[[1]]()
 funs[[2]]()
 ```
 
-`local()` evaluates its body in a new, temporary environment. Each iteration gets its own environment with its own `i`. `force(i)` inside that environment evaluates the promise immediately, locking in the current loop value. Without `local()`, all three functions would still share the same `i` binding. Without `force()`, the promise might not be evaluated until after the loop finishes. You need both: `local()` for isolation, `force()` for immediate evaluation.
+`local()` evaluates its body in a new, temporary environment, giving each iteration its own `i` binding. `force(i)` inside that environment evaluates the promise immediately, locking in the current loop value before the next iteration overwrites it. Without `local()`, all three functions share the same binding. Without `force()`, the promise might linger unevaluated until after the loop finishes. You need both: `local()` for isolation, `force()` for immediacy.
 
-`force(x)` is just `x`, nothing more. It accesses the argument, which triggers evaluation and caching. The name communicates intent: "evaluate this now, don't wait."
+What is `force(x)` actually doing? Nothing clever. Its definition is just `x`, which accesses the argument and thereby triggers evaluation and caching. The name exists purely to communicate intent: "evaluate this now, don't wait." Which raises a broader question: if laziness can cause subtle bugs in loops and closures, why does R use it at all?
 
 
 ### Exercises {.unnumbered}
@@ -147,16 +147,16 @@ funs[[2]]()
 
 ## What is non-standard evaluation? {#sec-nse}
 
-Standard evaluation is simple: R evaluates an expression, gets a value, and passes the value to a function. When you write `mean(c(1, 2, 3))`, R evaluates `c(1, 2, 3)` to produce a numeric vector, then passes that vector to `mean`. The function never sees the expression `c(1, 2, 3)`. It only sees `[1] 1 2 3`.
+Standard evaluation is straightforward: R evaluates an expression, produces a value, and hands the value to a function. When you write `mean(c(1, 2, 3))`, R computes the vector `[1] 1 2 3` first, then passes it to `mean`, and `mean` never sees the expression `c(1, 2, 3)` at all.
 
-But `subset(df, x > 3)` cannot work that way. If R evaluated `x > 3` in your environment, it would fail: there is no `x`. Instead, `subset` captures the *expression* before evaluating it, then decides where to evaluate it. Consider what happens:
+Now try `subset(df, x > 3)`. If R evaluated `x > 3` in your environment before passing it to `subset`, the call would fail: there is no `x` in your workspace. Something different is happening here, something that depends on the laziness you've been studying. Instead of evaluating the argument, `subset` reaches into the promise, extracts the *expression* before evaluation, and then decides for itself where that expression should run:
 
 ```{r}
 df <- data.frame(x = 1:5, y = c(10, 20, 30, 40, 50))
 subset(df, x > 3)
 ```
 
-You wrote `x > 3`, but `x` isn't a variable in your global environment. It's a column of `df`. How did `subset` know? Because `subset` doesn't evaluate `x > 3` in your environment. It captures the expression using `substitute()`, then evaluates it inside `df` using `eval()`:
+You wrote `x > 3`, but `x` is a column of `df`, not a variable in your global environment. `subset` found it because `subset` doesn't evaluate `x > 3` in your environment at all. It captures the expression using `substitute()`, then evaluates it inside `df` using `eval()`:
 ```r
 # Simplified subset internals
 subset.data.frame <- function(x, subset, ...) {
@@ -166,9 +166,9 @@ subset.data.frame <- function(x, subset, ...) {
 }
 ```
 
-`substitute()` grabs the unevaluated promise. `eval(expr, x)` evaluates it in an environment where the columns of `x` are visible as variables. That's why `x > 3` finds the column `x` instead of looking for a variable named `x` in your workspace.
+`substitute()` grabs the unevaluated promise. `eval(expr, x)` evaluates it in an environment where the columns of `x` are visible as variables. That's why `x > 3` finds the column instead of failing with "object 'x' not found."
 
-This is the core of NSE: intercept the expression, choose where to evaluate it. The benefit is convenience. Compare:
+This is NSE in its simplest form: intercept the expression, choose where to evaluate it. Compare the two approaches side by side:
 
 ```{r}
 #| eval: false
@@ -179,7 +179,7 @@ df[df$x > 3, ]
 subset(df, x > 3)
 ```
 
-NSE is the reason the tidyverse feels like a domain-specific language for data analysis. `filter(penguins, species == "Adelie")` reads like a sentence because you write column names directly, without `$` or quotes. The cost is that the rules are less obvious: the meaning of `species` depends on which function you're inside, not just on what's in your environment.
+NSE is the reason the tidyverse feels like a domain-specific language for data analysis. `filter(penguins, species == "Adelie")` reads almost like English because you write column names directly, without `$` or quotes. The cost is that the rules become less transparent: the meaning of `species` depends on which function you're inside, not just on what's in your environment. That tension between conciseness and predictability runs through everything that follows.
 
 
 ### Exercises {.unnumbered}
@@ -191,7 +191,7 @@ NSE is the reason the tidyverse feels like a domain-specific language for data a
 
 ## Data masking {#sec-data-masking}
 
-Data masking is the tidyverse's name for NSE applied to data frames. When you write:
+Data masking is the tidyverse's name for NSE applied to data frames, and it follows a specific lookup order. When you write:
 
 ```{r}
 #| eval: false
@@ -199,13 +199,11 @@ library(dplyr)
 filter(penguins, species == "Adelie")
 ```
 
-the column `species` is looked up first in `penguins`, then in your calling environment. The data *masks* the environment. If the data frame has a column called `species`, that column wins over any variable named `species` in your workspace.
+R looks for `species` first in `penguins`, then in your calling environment. The data *masks* the environment: if the data frame has a column called `species`, that column wins over any variable named `species` in your workspace. Same principle applies to `aes(x = bill_length_mm)` in ggplot2, which captures the expression and evaluates it against the data at plot time, treating columns as if they were ordinary variables.
 
-This is why `aes(x = bill_length_mm)` works in ggplot2 without quotes. ggplot2 captures the expression and evaluates it against the data at plot time. The data frame's columns become temporarily available as if they were variables.
+The benefit for interactive analysis is enormous. You type column names hundreds of times in a session; not having to write `penguins$species` or `penguins[["species"]]` each time keeps your code compact and readable, closer to how you think about the data than to how the computer stores it.
 
-The benefit is enormous for interactive analysis. You type column names hundreds of times in a session. Not having to write `penguins$species` or `penguins[["species"]]` each time saves keystrokes and keeps your code readable.
-
-The cost appears when you try to program with data-masked functions. Suppose you want to write a function that filters by a column whose name is stored in a variable:
+The cost appears the moment you try to program with data-masked functions. Suppose you want to write a function that filters by a column whose name is stored in a variable:
 
 ```{r}
 #| eval: false
@@ -213,9 +211,9 @@ col <- "species"
 filter(penguins, col == "Adelie")
 ```
 
-This doesn't work. `filter` looks for a column named `col` in `penguins`, doesn't find one, then finds `col` in your environment (the string `"species"`), and compares the string `"species"` to `"Adelie"`. That's not what you wanted.
+This doesn't do what you want. `filter` looks for a column named `col` in `penguins`, doesn't find one, then finds `col` in your environment (the string `"species"`), and compares that string to `"Adelie"`. No error, just wrong results, the most dangerous kind of failure.
 
-To see the mechanism concretely, here is a simplified `filter()` that you could write yourself in about ten lines:
+To see the mechanism concretely, here is a simplified `filter()` you could write yourself in about ten lines:
 
 ```{r}
 my_filter <- function(.data, expr) {
@@ -229,9 +227,9 @@ df <- data.frame(x = 1:5, y = c(10, 20, 30, 40, 50))
 my_filter(df, x > 3)
 ```
 
-`substitute(expr)` captures the caller's expression (`x > 3`) without evaluating it, exactly as a promise holds an unevaluated expression (@sec-promises). `list2env(.data, parent = parent.frame())` creates a new environment whose bindings are the columns of the data frame, with the caller's environment as the parent (so variables not in the data frame are still found). `eval(e, envir = env)` forces the expression in that environment, where `x` resolves to the column, not to anything in the global environment. The entire mechanism rests on the laziness you learned at the start of this chapter: arguments arrive as unevaluated promises, and NSE exploits that window between arrival and evaluation to inspect and redirect them. This is, in essence, what `dplyr::filter()` does, with more machinery for tidy evaluation, error handling, and grouped data frames layered on top.
+`substitute(expr)` captures the caller's expression (`x > 3`) without evaluating it, exactly as a promise holds an unevaluated expression (@sec-promises). `list2env(.data, parent = parent.frame())` creates a new environment whose bindings are the columns of the data frame, with the caller's environment as the parent so that variables not in the data frame are still found. `eval(e, envir = env)` forces the expression in that constructed environment, where `x` resolves to the column rather than to anything in the global environment. The entire mechanism rests on the laziness you studied at the start of this chapter: arguments arrive as unevaluated promises, and NSE exploits the window between arrival and evaluation to intercept and redirect them. This is, in essence, what `dplyr::filter()` does under the hood, with more machinery for tidy evaluation, error handling, and grouped data frames layered on top.
 
-Data masking is optimized for the common case (interactive analysis) at the expense of the less common case (programming). But the moment you wrap a data-masked function inside another function, the column name is trapped in your wrapper's scope, and the caller has no way to pass it through. That's the problem tidy evaluation exists to solve.
+Data masking is optimized for the common case (interactive analysis) at the expense of the less common case (writing reusable functions). The moment you wrap a data-masked function inside another function, the column name is trapped in your wrapper's scope, and the caller has no way to pass it through. That's the problem tidy evaluation exists to solve.
 
 
 ### Exercises {.unnumbered}
@@ -243,7 +241,7 @@ Data masking is optimized for the common case (interactive analysis) at the expe
 
 ## Tidy evaluation basics {#sec-tidy-eval-basics}
 
-The embrace operator `{{ }}` (called "curly-curly") solves the most common programming-with-NSE problem: passing a column name through a function to a dplyr verb.
+The embrace operator `{{ }}` (called "curly-curly") solves the most common programming-with-NSE problem: passing a column name through your function to a dplyr verb without it getting lost along the way.
 
 ```{r}
 #| message: false
@@ -255,16 +253,16 @@ my_summary <- function(data, var) {
 }
 ```
 
-`{{ var }}` says: "take whatever the caller passed as `var`, capture it as a data-masked expression, and inject it here." The caller writes column names unquoted, just like they would with dplyr directly:
+`{{ var }}` says: "take whatever the caller passed as `var`, capture it as a data-masked expression, and inject it here." The caller writes column names unquoted, exactly as they would with dplyr directly:
 
 ```{r}
 #| eval: false
 my_summary(penguins, body_mass_g)
 ```
 
-Without `{{ }}`, you'd have to teach your users a different syntax for your wrapper than they use for dplyr itself. With it, the wrapper is transparent.
+Without `{{ }}`, you'd have to teach your users a different syntax for your wrapper than they use for dplyr itself, which defeats the purpose of wrapping. With it, the wrapper is transparent.
 
-For tidy selection (used in `select()`, `across()`, and similar), `{{ }}` also works:
+For tidy selection (used in `select()`, `across()`, and similar), `{{ }}` works the same way:
 
 ```{r}
 my_select <- function(data, cols) {
@@ -277,13 +275,13 @@ my_select <- function(data, cols) {
 my_select(penguins, starts_with("bill"))
 ```
 
-The caller passes tidy-select expressions the same way they would to `select()` directly. The function just forwards them.
+The caller passes tidy-select expressions exactly as they would to `select()` directly. Your function just forwards them.
 
 When `{{ }}` isn't enough, there are more tools. `.data[["col_name"]]` lets you use string column names inside data-masked functions. `!!` (bang-bang) and `enquo()` give finer control over quoting and unquoting. These are part of the full tidy evaluation framework in the rlang package, and they matter when you're building complex programmatic interfaces. But they belong in @sec-metaprogramming, not here.
 
 ::: callout-tip
 ## Opinion
-For 80% of programming-with-dplyr tasks, `{{ }}` is all you need. Learn it, use it, and don't go deeper until you have to. The full tidy evaluation system (quosures, `enquo()`, `!!`, `!!!`) exists but is rarely needed. Most wrapper functions never need it.
+For 80% of programming-with-dplyr tasks, `{{ }}` is all you need. Learn it, use it, and resist the urge to go deeper until a real problem forces you there. The full tidy evaluation system (quosures, `enquo()`, `!!`, `!!!`) exists for the remaining 20%, but most wrapper functions never touch it.
 :::
 
 
@@ -298,17 +296,17 @@ For 80% of programming-with-dplyr tasks, `{{ }}` is all you need. Learn it, use 
 
 ## The trade-offs of NSE {#sec-nse-tradeoffs}
 
-NSE is a design trade-off, and it's worth being honest about both sides.
+NSE is a design trade-off, and honesty about both sides is more useful than advocacy.
 
-**Convenience vs. predictability.** `filter(df, x > 5)` is concise. But what if there's a variable `x` in your environment *and* a column `x` in your data frame? Data masking means the column wins. That's usually correct, but when it's not, the bug is subtle: no error, just wrong results.
+**Convenience vs. predictability.** `filter(df, x > 5)` is concise and readable. But what if there's a variable `x` in your environment *and* a column `x` in your data frame? Data masking means the column wins, which is usually correct but when it's not, the bug is silent: no error, no warning, just wrong results. You can stare at the code for an hour and not see it.
 
-**Interactive vs. programmatic.** NSE is optimized for the console. You type `select(df, name, age)` and it just works. But writing a function that wraps `select` requires `{{ }}`, which is an extra concept to learn. The interactive user pays nothing; the programmer pays a tax.
+**Interactive vs. programmatic.** NSE is optimized for the console, where you type `select(df, name, age)` and it just works. Writing a function that wraps `select` requires `{{ }}`, an extra concept that sits between you and the dplyr you already know. The interactive user pays nothing; the programmer pays a tax, and the tax scales with the complexity of the interface you're building.
 
-**Debugging.** Errors inside data-masked functions can be cryptic. "Object 'species' not found" might mean you forgot to load the data, misspelled a column name, or called a data-masked function outside its expected context. The error message doesn't distinguish these cases.
+**Debugging.** Errors inside data-masked functions can be opaque. "Object 'species' not found" might mean you forgot to load the data, misspelled a column name, or called a data-masked function in a context it wasn't designed for. The error message doesn't distinguish these cases, so you're left to infer the cause from context.
 
-**This isn't a tidyverse invention.** Base R uses NSE in `subset()`, `with()`, `transform()`, and the formula interface (`lm(y ~ x, data = df)`). The tidyverse uses it more systematically, but the idea is as old as S.
+**This isn't a tidyverse invention.** Base R uses NSE in `subset()`, `with()`, `transform()`, and the formula interface (`lm(y ~ x, data = df)`). The tidyverse applies it more systematically and more pervasively, but the idea is as old as S.
 
 ::: callout-tip
 ## Opinion
-NSE is the right trade-off for data analysis. You type column names hundreds of times a day, and quoting each one would be painful. The cost is paid when programming (writing reusable functions), not when analyzing (exploring data interactively). That's a good trade: most R users spend more time analyzing than programming. Accept the trade-off, learn `{{ }}` for when you cross the line into programming, and move on.
+NSE is the right trade-off for data analysis. You type column names hundreds of times a day, and quoting each one would be painful. The cost falls on the programmer writing reusable functions, not on the analyst exploring data interactively, and that's a reasonable place for the cost to land since most R users spend more time analyzing than abstracting. Accept the trade-off, learn `{{ }}` for when you cross the line into programming, and move on.
 :::

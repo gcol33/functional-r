@@ -5,14 +5,27 @@
 source(here::here("_common.R"))
 ```
 
-A mathematical notation from 1936, no computers, no hardware, nothing but pencil and paper. A statistical programming language used by millions in 2025. Between those two points: four stops, each of which left a permanent mark on R. An AI lab at MIT in the late 1950s, a pair of graduate students at the same lab in the 1970s, a statistics department at Bell Labs, and a classroom in Auckland.
+Run this in your console:
+
+```{r}
+#| eval: false
+add_tax <- function(price, rate) price * (1 + rate)
+
+prices <- c(10, 25, 8, 42)
+with_tax <- sapply(prices, add_tax, rate = 0.2)
+with_tax
+```
+
+Five lines. A function stored in a variable like a number. A vector operation with no loop. One function handed to another function as an argument. A variable looked up based on where the function was written, not where it was called. Each of those behaviors traces back to a different decade, a different lab, a different person with a different problem to solve. R didn't invent any of them; it inherited all of them, and the inheritance explains why R works the way it does, why some things feel natural and others feel strange, and why the patterns in this book are the patterns they are.
+
+Where did they come from?
 
 
 ## Church's lambda calculus becomes a programming language {#sec-lisp}
 
-In 1958, John McCarthy at MIT had a problem. He wanted to write programs for artificial intelligence research, and the only real option was Fortran. John Backus and his team at IBM had released it the year before. Before Fortran, programming meant writing instructions in the machine's own notation, numbers and abbreviations that corresponded directly to hardware operations. Backus wanted scientists to be able to write something closer to mathematical formulas, and Fortran (short for "Formula Translation") was the result. It was the first high-level programming language, and it made numerical computing accessible to people who were not hardware specialists. But Fortran was a Turing-model language through and through: you wrote a program, submitted it to a batch queue on a mainframe, and waited for the answer. It was fast at arithmetic, but McCarthy needed something else: a language that could manipulate symbols, build up complex structures, and treat its own programs as data.
+In 1958, John McCarthy at MIT had a problem. He wanted to write programs for artificial intelligence research, and the only real option was Fortran, which John Backus and his team at IBM had released the year before. Before Fortran, programming meant writing instructions in the machine's own notation: numbers and abbreviations that corresponded directly to hardware operations. Backus wanted scientists to write something closer to mathematical formulas, and Fortran (short for "Formula Translation") was the result, the first high-level programming language, fast at arithmetic and accessible to people who were not hardware specialists. But McCarthy needed something else entirely: a language that could manipulate symbols, build up complex structures, and treat its own programs as data.
 
-McCarthy found his answer in Church's lambda calculus from Chapter 1. He took Church's idea (functions that take arguments and return values, nothing else) and turned it into a real programming language. He called it Lisp, short for "list processing."
+He found his answer in Church's lambda calculus from Chapter 1. He took Church's idea (functions that take arguments and return values, nothing else) and turned it into a real programming language called Lisp, short for "list processing."
 
 Lisp introduced ideas that had never existed in a programming language before:
 
@@ -20,9 +33,9 @@ Lisp introduced ideas that had never existed in a programming language before:
 - **Code as data.** A Lisp program is itself a list, the same kind of data structure the language manipulates. This means a Lisp program can inspect, modify, and generate other Lisp programs.
 - **Garbage collection.** The language manages memory automatically. The programmer never has to say "I'm done with this piece of data; free the memory." Lisp figures it out.
 
-One detail of the story is worth mentioning. McCarthy had written a mathematical description of how Lisp should evaluate expressions (a function called `eval`), intending it as a theoretical exercise. His graduate student Steve Russell read the paper and realized he could translate `eval` directly into machine code for the IBM 704. McCarthy later recalled: "Steve Russell said, look, why don't I program this eval... and I said to him, ho, ho, you're confusing theory with practice, this eval is intended for reading, not for computing. But he went ahead and did it." The result was a working Lisp interpreter, and it was born from the same insight that underpins this whole book: the boundary between mathematical notation and executable code is thinner than it looks.
+One detail of the story deserves its own paragraph. McCarthy had written a mathematical description of how Lisp should evaluate expressions (a function called `eval`), intending it purely as a theoretical exercise. His graduate student Steve Russell read the paper and realized he could translate `eval` directly into machine code for the IBM 704. McCarthy later recalled: "Steve Russell said, look, why don't I program this eval... and I said to him, ho, ho, you're confusing theory with practice, this eval is intended for reading, not for computing. But he went ahead and did it." The result was a working Lisp interpreter, born from the same insight that underpins this whole book: the boundary between mathematical notation and executable code is thinner than it looks.
 
-What does this look like in R? You can store a function in a variable, the same way you'd store a number:
+What does this look like in R?
 
 ```{r}
 #| eval: false
@@ -33,22 +46,20 @@ my_function(5)
 #> [1] 6
 ```
 
-`my_function` is a value. You could put it in a list, pass it to another function, or replace it. That idea came from Lisp. But Lisp itself had a problem.
+`my_function` is a value. You could put it in a list, pass it to another function, or replace it with something else entirely. That idea came straight from Lisp. But Lisp itself had a problem: by the 1970s, it had grown enormous, splintered into competing dialects, and accumulated features nobody could agree on. Two people at MIT decided to strip it back to the bones.
 
 
 ## Scheme strips it down {#sec-scheme}
 
-By the mid-1970s, Lisp had grown large. Different versions had accumulated different features, and the language had splintered into competing dialects. At MIT's AI Lab, two researchers decided to go the other direction.
+Gerald Jay Sussman was a professor at MIT's AI Lab; Guy Lewis Steele Jr. was his graduate student. They had been studying Carl Hewitt's Actor model, a theory of concurrent computation where independent "actors" send messages to each other, and to understand it better they decided to implement a small version in Lisp. So they built their own tiny dialect, stripped down to the essentials, and in the process discovered something unexpected: actors and lambda calculus functions were really the same thing. An actor that receives a message and responds is just a function that takes an argument and returns a value.
 
-Gerald Jay Sussman was a professor; Guy Lewis Steele Jr. was his graduate student. They had been studying Carl Hewitt's Actor model, a new theory of concurrent computation where independent "actors" send messages to each other. To understand it better, they decided to implement a small version in Lisp. They built their own tiny dialect, stripped down to the essentials, and in the process discovered something: actors and lambda calculus functions were really the same thing. An actor that receives a message and responds is just a function that takes an argument and returns a value.
+This realization led them to build Scheme, first described in a 1975 AI Memo at MIT. Between 1975 and 1980, Sussman and Steele published a series of papers now known as "the Lambda Papers," working out the consequences of taking the lambda calculus seriously as a foundation for programming.
 
-This realization led them to build Scheme, which they first described in a 1975 AI Memo at MIT. Between 1975 and 1980, Sussman and Steele published a series of papers now known as "the Lambda Papers," working out the consequences of taking the lambda calculus seriously as a foundation for programming.
+Two of Scheme's decisions would eventually reach R.
 
-Scheme made two decisions that would eventually reach R:
+**Lexical scoping.** When a function refers to a variable, where does it look? Older Lisps used *dynamic scoping*: the function looks at whatever happens to be in scope at the moment it's called, which means the same function can behave differently depending on who calls it. Scheme chose *lexical scoping*: the function looks at what was in scope where it was *defined*. This sounds like a technicality, but it changes everything about how functions compose and how you can use them as building blocks. R uses lexical scoping, inherited through S from Scheme. @sec-closures-and-scope uses this to build function factories and closures.
 
-**Lexical scoping.** When a function refers to a variable, where does it look? Older Lisps used *dynamic scoping*: the function looks at whatever happens to be in scope at the moment it's called. Scheme chose *lexical scoping*: the function looks at what was in scope where it was *defined*. This sounds like a technicality, but it changes everything about how functions compose and how you can use functions as building blocks. R uses lexical scoping, inherited through S from Scheme. @sec-closures-and-scope uses this to build function factories and closures.
-
-**Minimalism.** Scheme showed that you don't need a big language. A small set of well-chosen primitives, all consistent with the lambda calculus, is enough to build anything. This philosophy influenced S and through it R: R's core is surprisingly small, and most of what feels "built in" is actually implemented as ordinary R functions.
+**Minimalism.** Scheme showed that you don't need a big language. A small set of well-chosen primitives, all consistent with the lambda calculus, is enough to build anything. This philosophy shaped S and through it R: R's core is surprisingly small, and most of what feels "built in" is actually implemented as ordinary R functions.
 
 Here is lexical scoping in R. Don't worry about the details yet; just notice that it works:
 
@@ -67,25 +78,23 @@ add_ten(3)
 
 `add_ten` remembers that `n` was 10 when it was created, even though `make_adder` has already finished running. The function looks for `n` where it was *defined* (inside `make_adder`), not where it's *called*. That's lexical scoping, straight from Scheme. @sec-closures-and-scope builds on this to create functions that remember things.
 
-Lisp and Scheme were built by computer scientists for computer scientists. Neither had anything to say about data.
+Lisp and Scheme were built by computer scientists for computer scientists. Neither had anything to say about data, about columns of measurements and rows of observations, about the daily work of someone trying to understand an experiment. That required a different kind of person, in a different kind of lab.
 
 
 ## S makes it practical {#sec-s-language}
 
-That changed at Bell Labs.
+In 1976 at Bell Labs, the computer center had a Honeywell 645 mainframe running an operating system called GCOS. If you wanted to do statistics, you used a Fortran library called SCS (Statistical Computing Subroutines): write a Fortran program, call the library functions, compile it, submit it to the batch queue, wait. Rick Becker, John Chambers, Doug Dunn, and Allan Wilks held a series of meetings in the spring of that year, and the question they asked was simple: could they build something interactive, where a statistician types a command and gets an answer back immediately?
 
-In 1976 at Bell Labs, the computer center had a Honeywell 645 mainframe running an operating system called GCOS. If you wanted to do statistics, you used a Fortran library called SCS (Statistical Computing Subroutines): you wrote a Fortran program that called library functions, compiled it, submitted it to the batch queue, and waited. Rick Becker, John Chambers, Doug Dunn, and Allan Wilks held a series of meetings in the spring of that year. The question was simple: could they build something interactive, where a statistician types a command and gets an answer back immediately?
-
-They could. The first working version of S ran on the Honeywell 645 in 1976. The early system was essentially an interactive front end to the Fortran library, but it grew quickly. By 1988, S had been rewritten in C (version 3), and by 1998 it had become a full programming language (version 4, described in Chambers' book *Programming with Data*). In 1998, S won the ACM Software System Award, the same award given to Unix, TeX, and the World Wide Web.
+They could. The first working version of S ran on the Honeywell 645 that same year. The early system was essentially an interactive front end to the Fortran library, but it grew quickly; by 1988 S had been rewritten in C (version 3), and by 1998 it had become a full programming language (version 4, described in Chambers' book *Programming with Data*). In 1998, S won the ACM Software System Award, the same award given to Unix, TeX, and the World Wide Web.
 
 S made design decisions that R carries to this day:
 
 - **Vectorized operations.** In S, `x * 2` multiplies every element of `x`. There is no loop, no index variable. The operation applies to the whole vector at once. This isn't just convenient; it's a design philosophy. S was built for people who think about columns of data, not individual numbers.
 - **The assignment arrow `<-`.** On the terminals available at Bell Labs in the 1970s, there was a key that typed a left arrow as a single character. Chambers used it for assignment. The `=` sign was reserved for named arguments in function calls. R kept both conventions.
-- **Copy-on-modify.** When you "modify" a value in S (and later R), the language quietly makes a copy. Your original data is never destroyed. This is a functional programming idea (values don't change), made practical for interactive data analysis (you can always go back).
+- **Copy-on-modify.** When you "modify" a value in S (and later R), the language quietly makes a copy. Your original data is never destroyed. This is a functional programming idea (values don't change), made practical for interactive data analysis: you can always go back.
 - **Functions from Scheme.** When Chambers needed to decide how functions should work in S, he looked at Scheme. Functions in S are first-class values with lexical scoping, exactly as in Scheme.
 
-Try this in R:
+Try this:
 
 ```{r}
 #| eval: false
@@ -96,20 +105,20 @@ temperatures - 32
 #> [1] 40 53 29 58 46
 ```
 
-No loop. You subtracted 32 from five numbers in one expression. In Fortran or C you would write a loop, manage an index, and store the result somewhere. S (and R after it) made this the default way of working with data.
+No loop. You subtracted 32 from five numbers in one expression. In Fortran or C you would write a loop, manage an index, and store the result somewhere; S (and R after it) made this the default way of working with data.
 
-S was eventually commercialized as S-PLUS, sold first by StatSci, then by Insightful Corporation, and finally by TIBCO, which acquired Insightful for $25 million in 2008. By then, S had a free competitor that had already overtaken it. It started with a corridor conversation in New Zealand.
+S was eventually commercialized as S-PLUS, sold first by StatSci, then by Insightful Corporation, and finally by TIBCO, which acquired Insightful for $25 million in 2008. By then, S had a free competitor that had already overtaken it, one that started with a corridor conversation in New Zealand.
 
 
 ## R starts in Auckland {#sec-r-auckland}
 
-In 1991, Ross Ihaka and Robert Gentleman were lecturers in the Department of Statistics at the University of Auckland. They wanted to teach their students with S, but S-PLUS was commercial software, expensive for a university department. After a corridor conversation about the clunky programs their students were using for data analysis, they decided to write their own implementation.
+In 1991, Ross Ihaka and Robert Gentleman were lecturers in the Department of Statistics at the University of Auckland. They wanted to teach their students with S, but S-PLUS was commercial software, expensive for a university department, and after a corridor conversation about the clunky programs their students were using for data analysis, they decided to write their own implementation.
 
-Ihaka, of Māori descent (Ngāti Kahungunu and Rangitāne), had studied at Berkeley and knew the S language well. Gentleman, originally from Canada, was a specialist in computational statistics. They named their language R, a play on their first initials and a nod to S. The language was not a port of S; it was a new implementation from scratch, with a different memory model and (eventually) a different package system. But it followed S's design decisions closely, which means it also followed Scheme's, which means it also followed Church's.
+Ihaka, of Māori descent (Ngāti Kahungunu and Rangitāne), had studied at Berkeley and knew the S language well. Gentleman, originally from Canada, was a specialist in computational statistics. They named their language R, a play on their first initials and a nod to S. The language was not a port of S; it was a new implementation from scratch, with a different memory model and (eventually) a different package system, though it followed S's design decisions closely, which means it also followed Scheme's, which means it also followed Church's.
 
-In 1993, Ihaka and Gentleman made R publicly available. In 1995, Martin Mächler at ETH Zurich convinced them to release it under the GNU General Public License, making it free and open-source. The R Core Group formed in 1997. Version 1.0.0 shipped in February 2000. CRAN (the Comprehensive R Archive Network) began growing, and by the mid-2000s R had become the standard tool for statistical computing in academia.
+In 1993, Ihaka and Gentleman made R publicly available. In 1995, Martin Mächler at ETH Zurich convinced them to release it under the GNU General Public License, making it free and open-source. The R Core Group formed in 1997, version 1.0.0 shipped in February 2000, and CRAN (the Comprehensive R Archive Network) began growing. By the mid-2000s, R had become the standard tool for statistical computing in academia.
 
-R looks almost identical to S on the surface, but under the hood it is semantically closer to Scheme. The question is which pieces came from where.
+R looks almost identical to S on the surface, but under the hood it is semantically closer to Scheme. So which pieces came from where?
 
 
 ## What R inherited {#sec-what-r-inherited}
@@ -124,7 +133,7 @@ Here is the chain, and what each link contributed:
 | S | 1976 | Vectorized operations. Interactive data analysis. `<-` assignment. Copy-on-modify. Formula objects. |
 | R | 1991 | Free implementation. Package system (CRAN). Open-source community. |
 
-You don't need to understand the following code yet, but look at how many ancestors show up in five lines:
+Look again at the five lines from the top of this chapter:
 
 ```{r}
 #| eval: false
@@ -135,6 +144,6 @@ with_tax <- sapply(prices, add_tax, rate = 0.2)
 with_tax
 ```
 
-`function(price, rate)` creates a function and stores it in a variable, the way you'd store a number. That's Lisp (1958): functions are data. `prices * (1 + rate)` inside the function operates on the whole vector at once, no loop. That's S (1976): vectorized operations. `sapply(prices, add_tax, rate = 0.2)` passes a function *to* another function. That's Church (1936): functions as arguments. And `add_tax` finds `rate` based on where it was defined, not where it's called. That's Scheme (1975): lexical scoping.
+`function(price, rate)` creates a function and stores it in a variable, the way you'd store a number: Lisp, 1958. `prices * (1 + rate)` inside the function operates on the whole vector at once, no loop: S, 1976. `sapply(prices, add_tax, rate = 0.2)` passes a function *to* another function: Church, 1936. And `add_tax` finds `rate` based on where it was defined, not where it's called: Scheme, 1975.
 
-Five lines, four ancestors. The rest of this book is about what you can do with these features once you understand them. The most fundamental one: in R, everything is an expression, and every expression has a value.
+Five lines, four ancestors, sixty years of decisions compressed into something you can type in under ten seconds. The rest of this book is about what you can do with these features once you understand them, starting with the most fundamental one: in R, everything is an expression, and every expression has a value.
