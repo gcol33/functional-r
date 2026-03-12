@@ -32,7 +32,7 @@ The notation strips away constant factors and lower-order terms, which means an 
 
 **O(n): linear time.** You touch every element once. `sum(x)` walks the entire vector, adding each element: one pass, n additions. `which(x > 0)` also scans every element once, selecting those that match. Linear is often the best you can do, because you need to at least *read* all the input.
 
-**O(n log n): linearithmic time.** The cost of sorting. `sort(x)` for a vector of length n makes O(n log n) comparisons, which is only slightly worse than linear: sorting a million numbers takes about 20x more work than summing them, not 1,000,000x more. Can you do better?
+**O(n log n): linearithmic time.** The cost of sorting. `sort(x)` for a vector of length n makes O(n log n) comparisons, which is only slightly worse than linear: sorting a million numbers takes about 20x more work than summing them, not 1,000,000x more. Can you do better? For comparison-based sorting, no: there is a proof (via decision trees) that any algorithm which sorts by comparing pairs of elements must make at least O(n log n) comparisons in the worst case. Radix sort sidesteps this bound by not comparing elements at all — it distributes them into buckets by digit — but it only works when the keys have bounded range (integers, fixed-length strings).
 
 **O(n²): quadratic time.** Nested loops where both loops run over the input. This is where performance falls apart. The classic R example is growing a vector with `c()`:
 
@@ -52,7 +52,7 @@ for (i in seq_len(n)) {
 
 ### How to tell empirically
 
-The simplest test: double n and see what happens to the time. If the time roughly doubles, you have O(n); if it roughly quadruples, O(n²). Try this with `sum(rnorm(n))` (linear) versus the `c()` growth loop (quadratic) for n = 1000, 2000, 5000, 10000. The ratio test works because Big-O captures the exponent, and doubling the input raises a power-law relationship to the surface. What happens when the ratio is somewhere between 2 and 4?
+The simplest test: double n and see what happens to the time. If the time roughly doubles, you have O(n); if it roughly quadruples, O(n²). Try this with `sum(rnorm(n))` (linear) versus the `c()` growth loop (quadratic) for n = 1000, 2000, 5000, 10000. The ratio test works because Big-O captures the exponent, and doubling the input raises a power-law relationship to the surface. What happens when the ratio is somewhere between 2 and 4? A ratio near 2.8 when you double n suggests O(n^1.5), and in general a ratio of r implies a growth exponent of log2(r). You can also fit a log-log regression — plot log(time) against log(n), and the slope estimates the exponent directly.
 
 ### Exercises {.unnumbered}
 
@@ -153,7 +153,7 @@ e$gamma <- 3
 e$beta
 ```
 
-The constant in O(1) depends on the hash function's speed and the collision rate. Real hash functions (R uses one internally for its environments) are more sophisticated than summing character codes, distributing keys more uniformly and handling edge cases. But the principle is always the same: convert the key to an integer, use it as an index, handle collisions with chaining. What happens when the table fills up?
+The constant in O(1) depends on the hash function's speed and the collision rate. Real hash functions (R uses one internally for its environments) are more sophisticated than summing character codes, distributing keys more uniformly and handling edge cases. But the principle is always the same: convert the key to an integer, use it as an index, handle collisions with chaining. What happens when the table fills up? The chains get longer, and lookup degrades toward O(n). Real hash tables track the *load factor* (number of entries divided by number of slots) and resize — typically doubling the slot count — when it crosses a threshold (often 0.75). Resizing costs O(n) because every key must be rehashed into the new array, but it happens rarely enough that the amortized cost per insertion stays O(1).
 
 ### Exercises {.unnumbered}
 
@@ -310,7 +310,9 @@ Both cases contradict the assumption, and there is no third case (we assumed `ha
 
 The argument is a *diagonal argument*, the same technique Cantor used in 1891 to prove that the real numbers are uncountable, and the same structure Godel used in 1931 for the incompleteness theorems. The trick is always the same: assume a complete listing (or decision procedure) exists, then construct something that disagrees with every entry on the diagonal.
 
-**The proof in lambda calculus.** Church proved the same result independently in 1936, before Turing's paper, using the *lambda calculus* rather than a machine model. The argument has the same shape but uses different language.
+**The proof in lambda calculus.** Seeing the same proof in lambda calculus is worth the detour, because it shows that undecidability is not a quirk of loops or mutable state or any particular language's execution model. The result falls out of self-application alone, which means it holds for any system powerful enough to pass functions to functions — R included.
+
+Church proved the same result independently in 1936, before Turing's paper, using the *lambda calculus* rather than a machine model. The argument has the same shape but uses different language.
 
 In lambda calculus, every value is a function and every computation is function application. There are no loops; non-termination means a term *reduces forever* without reaching a normal form. For instance, the term (λx. x x)(λx. x x) applies itself to itself, producing the same term again, endlessly, never halting. This term is called Ω.
 
@@ -366,6 +368,37 @@ R's functional core (functions as values, closures, recursion) is directly desce
 Some problems are easy to *verify* but (probably) hard to *solve*. Given a proposed solution to the traveling salesman problem, you can check its total distance in O(n), but finding the optimal solution appears to require exponential time.
 
 The class **P** contains problems solvable in polynomial time; the class **NP** contains problems whose solutions can be *verified* in polynomial time. Whether P = NP is the most famous open question in computer science, and most researchers believe P ≠ NP, which would mean some problems are fundamentally harder to solve than to check.
+
+The subset sum problem makes the gap concrete. Given a set of integers, does any subset sum to a target value? Verifying a proposed subset is O(n) — just add the numbers. Finding one by brute force means checking all 2^n subsets:
+
+```{r}
+#| eval: false
+# Brute force: check all 2^n subsets (exponential)
+subset_sum_brute <- function(x, target) {
+  n <- length(x)
+  for (i in seq_len(2^n) - 1) {
+    bits <- as.logical(intToBits(i)[seq_len(n)])
+    if (sum(x[bits]) == target) return(x[bits])
+  }
+  NULL
+}
+
+# A greedy approximation: sort descending, take what fits (polynomial)
+subset_sum_greedy <- function(x, target) {
+  x <- sort(x, decreasing = TRUE)
+  picked <- logical(length(x))
+  remaining <- target
+  for (i in seq_along(x)) {
+    if (x[i] <= remaining) {
+      picked[i] <- TRUE
+      remaining <- remaining - x[i]
+    }
+  }
+  if (remaining == 0) x[picked] else NULL
+}
+```
+
+At n = 20 the brute-force version checks about a million subsets and finishes in under a second. At n = 40 it checks a trillion — you will not wait long enough. The greedy version runs in O(n log n) on either input but is not guaranteed to find a solution that exists. That is the P-vs-NP gap in miniature: polynomial verification, (apparently) exponential search, and a fast heuristic that trades correctness for speed.
 
 In practice, R encounters NP-hard problems in optimization. `optim()` does not guarantee a global optimum for non-convex problems; it uses heuristic methods (Nelder-Mead, simulated annealing) that find good-enough solutions without exhaustive search. This is the pragmatic response to intractability: give up on perfection and settle for "good enough, fast."
 

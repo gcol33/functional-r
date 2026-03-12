@@ -258,3 +258,5 @@ The workspace is simple on the surface: `ls()` shows what's in it, `rm()` remove
 ## Saving your workspace
 When you quit R, it may ask whether to "save your workspace image." This saves all names and values currently in your workspace to a file, so they reappear next time you open R. In the early days, when computations could take hours, this made sense. Today, most computations are fast enough that you're better off keeping your work in a script file (`.R` or `.qmd`) and rerunning it from scratch. That way, every value in your workspace traces back to a line of code you can point to, and you never wonder where a mysterious leftover variable came from.
 :::
+
+Step back and notice what the workspace actually is: a collection of name-to-value bindings, exactly the mechanism this chapter introduced with `x <- 3`. The global environment is itself a value you can inspect (`environment()` returns it, `ls.str()` prints every binding in it), which means the thing that holds all your names is itself an expression that evaluates to a result. Even R's bookkeeping is expressions all the way down.

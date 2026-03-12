@@ -101,22 +101,6 @@ Consider a data frame with mixed column types: some numeric, some character, som
 The problem is not the logic; it is that the logic is tangled with the control flow. If functions are values, you can separate the two: store the logic in a list, keyed by type, and let a single lookup replace the entire chain.
 
 ```{r}
-transforms <- list(
-  double = \(x) x * 2,
-  triple = \(x) x * 3,
-  negate = \(x) -x
-)
-
-transforms$double(5)
-transforms$triple(5)
-transforms$negate(5)
-```
-
-`transforms` is a list of three functions, accessed with `$` like any named list element. A list of functions keyed by name is a *dispatch table*: given a key, it returns the function you need, no conditionals required.
-
-Here is the column-summary problem solved with a dispatch table:
-
-```{r}
 summarizers <- list(
   numeric = \(x) mean(x, na.rm = TRUE),
   character = \(x) length(unique(x)),
@@ -128,7 +112,21 @@ summarizers$character(c("a", "b", "a", "c"))
 summarizers$logical(c(TRUE, FALSE, TRUE, TRUE))
 ```
 
-Adding a new type means adding one entry to the list. No `if`/`else` to restructure, no risk of breaking the branches above or below. Package internals, Shiny applications, and testing frameworks all use this pattern to select behavior at runtime.
+`summarizers` is a list of three functions, accessed with `$` like any named list element. A list of functions keyed by name is a *dispatch table*: given a key, it returns the function you need, no conditionals required. Adding a new type means adding one entry to the list. No `if`/`else` to restructure, no risk of breaking the branches above or below. Package internals, Shiny applications, and testing frameworks all use this pattern to select behavior at runtime.
+
+Here is the same idea in a simpler form:
+
+```{r}
+transforms <- list(
+  double = \(x) x * 2,
+  triple = \(x) x * 3,
+  negate = \(x) -x
+)
+
+transforms$double(5)
+transforms$triple(5)
+transforms$negate(5)
+```
 
 The dispatch table stores functions that already exist. But what if you need to manufacture a function that does not exist yet?
 
