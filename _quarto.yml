@@ -4,7 +4,7 @@ project:
 
 book:
   title: "Thinking in R"
-  date: last-modified
+  date: "2026-03-08"
   date-format: "MMMM D, YYYY"
   reader-mode: true
   site-url: https://gillescolling.com/thinking-in-r/
