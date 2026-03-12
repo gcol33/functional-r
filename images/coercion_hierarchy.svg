@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 460" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <style>
+    .box { fill: none; stroke: #111; stroke-width: 1.3; rx: 4; }
+    .type { font-size: 18px; font-weight: bold; font-family: 'Courier New', monospace; fill: #111; text-anchor: middle; }
+    .ex { font-size: 13px; font-family: 'Courier New', monospace; fill: #666; text-anchor: middle; }
+    .lab { font-size: 13px; fill: #888; font-style: italic; text-anchor: middle; }
+  </style>
+
+  <text x="250" y="24" class="lab">most general</text>
+
+  <!-- character  y=38..98 -->
+  <rect class="box" x="120" y="38" width="260" height="60"/>
+  <text x="250" y="64" class="type">character</text>
+  <text x="250" y="86" class="ex">"hello", "3"</text>
+
+  <!-- arrow UP: stem from y=130 to y=108, head from y=108 to y=98 -->
+  <line x1="250" y1="130" x2="250" y2="108" stroke="#111" stroke-width="1.2"/>
+  <polygon points="250,98 245,108 255,108" fill="#111"/>
+
+  <!-- double  y=130..190 -->
+  <rect class="box" x="120" y="130" width="260" height="60"/>
+  <text x="250" y="156" class="type">double</text>
+  <text x="250" y="178" class="ex">3.14, 1.0, Inf</text>
+
+  <!-- arrow UP -->
+  <line x1="250" y1="222" x2="250" y2="200" stroke="#111" stroke-width="1.2"/>
+  <polygon points="250,190 245,200 255,200" fill="#111"/>
+
+  <!-- integer  y=222..282 -->
+  <rect class="box" x="120" y="222" width="260" height="60"/>
+  <text x="250" y="248" class="type">integer</text>
+  <text x="250" y="270" class="ex">1L, 2L, 100L</text>
+
+  <!-- arrow UP -->
+  <line x1="250" y1="314" x2="250" y2="292" stroke="#111" stroke-width="1.2"/>
+  <polygon points="250,282 245,292 255,292" fill="#111"/>
+
+  <!-- logical  y=314..374 -->
+  <rect class="box" x="120" y="314" width="260" height="60"/>
+  <text x="250" y="340" class="type">logical</text>
+  <text x="250" y="362" class="ex">TRUE, FALSE</text>
+
+  <text x="250" y="410" class="lab">most specific</text>
+
+  <!-- side label -->
+  <text x="410" y="240" font-size="13px" fill="#999" transform="rotate(-90,410,240)" text-anchor="middle" font-style="italic">promotion direction →</text>
+</svg>
