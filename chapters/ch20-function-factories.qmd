@@ -173,7 +173,11 @@ bc1(c(1, 2, 4))
 bc0(c(1, 2, 4))
 ```
 
-Notice something subtle about that `if` statement: it runs once, when the factory is called, not every time the produced function is called. The factory picks the right formula at creation time and returns a function that does no branching at all. This same pattern drives much of ggplot2, where functions like `scale_color_brewer()` and `theme_minimal()` are factories or factory-like: they take parameters and return objects that modify a plot. But what happens when the function you want to specialize already exists, and you want to modify its behavior rather than build from scratch?
+Notice something subtle about that `if` statement: it runs once, when the factory is called, not every time the produced function is called. The factory picks the right formula at creation time and returns a function that does no branching at all.
+
+This is staged computation: you separate the cost of *choosing* behavior from the cost of *running* behavior. The `if` branch evaluates once, during construction; the produced function evaluates many times, during use, and pays nothing for the choice that was already made. The same pattern drives much of ggplot2. When you call `scale_color_brewer(palette = "Set1")`, the factory runs once at plot-build time, baking the palette into a function that maps data values to colors. If it re-evaluated the palette choice every time it colored a point, the plot would slow to a crawl on large datasets. ggplot2 gains its speed from that separation: the decision moves from the data path (runs per point) to the construction path (runs once). Every factory you write makes a version of the same trade. The returned function carries less weight because the decision has already been made, baked into the closure's environment at creation time, and never revisited.
+
+But what happens when the function you want to specialize already exists, and you want to modify its behavior rather than build from scratch?
 
 
 ### Exercises {.unnumbered}

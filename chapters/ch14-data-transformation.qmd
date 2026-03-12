@@ -232,6 +232,8 @@ summarise(penguins_grouped, mean_mass = mean(body_mass_g, na.rm = TRUE))
 
 `summarise()` applied `mean()` within each group and returned one row per species.
 
+Compare the two calls. Without `group_by()`, `summarise()` collapsed everything into a single row — one mean, one answer. With `group_by(species)`, the same verb produced three rows, one per species, without any change to the `summarise()` call itself. The column you group by acts as a partitioning function: it splits the data into subsets, and `summarise()` runs independently inside each one. SQL spells this `GROUP BY`; Spark uses explicit partitioning; in functional programming the same idea appears as `foldByKey`, where a reduce operation runs per partition rather than globally. The underlying pattern — an aggregation function paired with a partitioning structure — is the same across all of them. What makes dplyr's version distinctive is that the partition is invisible metadata attached to the data frame — `group_by()` changes nothing you can see in a printout, but it changes everything `summarise()` does. That silent metadata is powerful, and it is also the source of the most common grouping bugs (@sec-grouping-gotchas).
+
 You can group by multiple variables:
 
 ```{r}

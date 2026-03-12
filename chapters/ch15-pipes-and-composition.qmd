@@ -192,6 +192,8 @@ x %>% { if (nrow(.) > 0) filter(., cond) else . }
 
 The magrittr pipe is not just "composition with a dot"; it is closer to the monadic bind operator `>>=`, which chains computations that carry context along with their result. If this sounds abstract, think of it concretely: `|>` is "apply the next function," while `%>%` is "apply the next function, and here is a name for what you are working with." That extra naming power makes `%>%` more flexible but also more complex, which is precisely why the base pipe chose to omit it.
 
+Either way, pipes make substitution visible. When you write `x |> f() |> g() |> h()`, you are watching data flow through a chain of function applications, each one receiving the previous result. The same computation written as `h(g(f(x)))` hides the substitution order inside nested parentheses — you have to read from the innermost call outward, which reverses the sequence. Lambda calculus is agnostic about direction; `(h ∘ g ∘ f)(x)` and `x |> f |> g |> h` denote the same reduction. But human readers are not agnostic. Left-to-right pipelines follow the order in which things actually happen, and that alignment between notation and execution is why pipes took over R code within a few years of magrittr's release. No new computational power was involved; the same reductions were always available. Pipes made them legible.
+
 ```{r}
 # These are equivalent
 penguins |> nrow()

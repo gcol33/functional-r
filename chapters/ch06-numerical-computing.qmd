@@ -312,6 +312,8 @@ A <- matrix(1:6, nrow = 2, ncol = 3)
 A
 ```
 
+Every matrix operation in R eventually calls LAPACK or BLAS — Fortran libraries that have been tested, tuned, and argued over for decades. When you write `solve(A, b)`, you are asking those routines to find the vector *x* that satisfies *Ax = b* exactly, using numbers that are not exact. LAPACK promises *backward stability*: the *x* it hands back is the exact solution to a slightly perturbed version of your problem, *A + δA*. For well-conditioned matrices, *δA* is negligible — a few ulps, invisible in any application. The Hilbert matrix from the previous section is a different story; there, *δA* is large enough to drown the answer in noise, because the matrix itself amplifies every perturbation and no amount of algorithmic care can undo that. The condition number you computed is the magnification factor, and it is the single number that determines whether `solve()` gives you a trustworthy answer or an expensive random number. This is the abstraction-implementation gap from the start of the chapter, now sitting inside a function you will actually call.
+
 The key operations:
 
 **Matrix multiplication** uses `%*%`, not `*` (which is element-wise):

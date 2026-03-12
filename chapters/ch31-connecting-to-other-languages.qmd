@@ -363,7 +363,11 @@ Real-world packages show how these interfaces work at scale, and each of the fol
 - `tensorflow` and `keras3`: use reticulate to call TensorFlow/Keras. The R API mirrors the Python API closely.
 - `spacyr`: wraps spaCy for natural language processing.
 
-The pattern across all of these is the same: R provides the user-facing API (function names, argument handling, documentation, S3/S4 dispatch), while the compiled backend provides the computation. The interface layer is thin. A high-level language for expressiveness orchestrating a low-level language for speed: that is the architecture R was built for. What happens when you apply the same principle not to a single function but to an entire project?
+The pattern across all of these is the same: R provides the user-facing API (function names, argument handling, documentation, S3/S4 dispatch), while the compiled backend provides the computation. The interface layer is thin. A high-level language for expressiveness orchestrating a low-level language for speed: that is the architecture R was built for.
+
+In @sec-two-models, this book described two traditions: Church's lambda calculus (expressions and functions) and Turing's machine (instructions and state). R descends from Church, but it calls into Turing's world every time it invokes C, Fortran, or Rust. The foreign function interfaces in this chapter are the bridge between those two models. You write the logic in R — composing functions, passing closures, piping transformations — and the performance-critical inner loops run in a language that manipulates memory directly. Church's model gives you the expressiveness and composability to think clearly about what the code should do. Turing's model gives you the control over memory layout and instruction scheduling to make it fast. R's foreign function interfaces sit at the boundary, translating between a world of expressions and a world of addresses. The `.Call()` interface is where Church's abstractions meet Turing's machine, and the fact that R was designed with that boundary in mind is what makes the translation practical rather than painful.
+
+What happens when you apply the same principle not to a single function but to an entire project?
 
 
 ## References and sources

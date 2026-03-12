@@ -25,7 +25,7 @@ When you call `print(x)`, R sees that `class(x)` is `"Date"`, looks for a functi
 head(methods(print), 10)
 ```
 
-This is *functional OOP*: methods belong to generics, not to classes. You call `print(x)`, not `x.print()`. Most languages (Java, Python, C++) do the opposite: methods belong to objects, and you write `object.method()`. R dispatches on the first argument. Anyone can add a method for any class to any generic without modifying the class, which is why R's ecosystem composes so well: package A defines a class, package B defines a method for it, and neither needs to know the other exists.
+This is *functional OOP*: methods belong to generics, not to classes. You call `print(x)`, not `x.print()`. In Java, Python, or C++, methods belong to objects and you write `object.method()`. R dispatches on the first argument. Anyone can add a method for any class to any generic without modifying the class, which is why R's ecosystem composes so well: package A defines a class, package B defines a method for it, and neither needs to know the other exists.
 
 Dispatch is just R picking *which* function to call, the same principle as "everything that happens is a function call" (@sec-operators-are-functions).
 
@@ -37,6 +37,7 @@ In type theory, the type of an expression determines which reduction rules apply
 S3 dispatch also connects to sum types. When you give an object a class, you are tagging it as one variant of a type. `class(x) = "penguin"` says "this object is a penguin, not a dog, not a book." The generic function then *pattern matches* on the tag, dispatching to the method for that variant, exactly how sum types work in Haskell (`case x of`) or Rust (`match x`): inspect the tag, run the corresponding branch. R's mechanism is informal (a string attribute instead of a compiler-checked type), but the algebraic structure is the same sum type you saw with `TRUE | FALSE` (@sec-logical-vectors) and factor levels (@sec-why-factors). The class vector is the tag; `UseMethod()` is the match.
 :::
 
+When you call `print(x)` and R inspects `class(x)` to choose a method, the class attribute is playing the same role that a type annotation plays in a statically typed language: it determines which code runs. In Haskell, the compiler verifies at compile time that every case is handled. In R, you find out at runtime that no method exists for your class, and `print.default` picks up the slack. That informality gives you freedom — attaching a class string to any object without declaring a type hierarchy first is useful in interactive work, where data structures evolve faster than formal definitions. But the freedom costs you exhaustiveness. Every missing method is a bug that only surfaces when someone passes an object you did not anticipate. Recognizing S3 as informal type theory helps you feel where the boundary sits: when the informality serves you (exploratory analysis, rapid prototyping) and when you need something stricter (production code, packages with many users).
 
 ## S3 basics {#sec-s3-basics}
 

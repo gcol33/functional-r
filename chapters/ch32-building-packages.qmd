@@ -378,7 +378,9 @@ usethis::use_github_action("check-standard")
 
 This adds a GitHub Actions workflow that runs `R CMD check` on Linux, macOS, and Windows every time you push. If the check fails, GitHub shows a red X next to the commit; if it passes, you get a green checkmark and a badge for your README. The real value is catching platform-specific bugs you would never find on your own machine: path separators (Windows uses `\`, everything else uses `/`), case-sensitive file systems (Linux is case-sensitive, macOS and Windows are not), and system library availability.
 
-Remember the colleague who couldn't run your script? A package with CI, documentation, and a one-line install command turns that two-day email chain into a single `pak::pak()` call. The structure that remains is reproducibility, and that problem has its own tools.
+Remember the colleague who couldn't run your script? A package with CI, documentation, and a one-line install command turns that two-day email chain into a single `pak::pak()` call.
+
+A package is a closure at the module level. A closure captures variables in its enclosing environment and exposes only the returned function (@sec-closures-and-scope). A package does the same thing at a larger scale: it captures internal functions, data, and dependencies in a namespace and exposes only the functions listed in NAMESPACE. The `@export` tag in roxygen draws the same boundary that a lambda abstraction draws: it declares which names are visible to the outside world and which are private. `devtools`, `usethis`, and roxygen automate the mechanics, but the underlying principle is functional abstraction — hiding implementation, exposing interface — applied at the scale of a project instead of a single function. The structure that remains is reproducibility, and that problem has its own tools.
 
 ### Exercises {.unnumbered}
 

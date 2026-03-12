@@ -262,6 +262,8 @@ Use `<<-` inside closures, never in top-level scripts. If you find yourself usin
 
 Inside a closure, `<<-` is safe precisely because the variable it modifies lives in the closure's private environment, not in the global environment. Nobody outside the closure can see it or change it (unless they deliberately reach into the environment with `environment(f)$n`, which is an explicit, conscious choice, not an accident).
 
+But safe is not the same as free. When you use `<<-`, the function gains memory — each call can depend on every previous call — and every reader of that function must now track two things: what happens inside the function body, and what state the enclosing environment carries from prior calls. Lambda calculus never had this problem because substitution is the only operation: `(λn. λx. x + n)(5)` reduces to `λx. x + 5`, and the `5` is baked in permanently, not stored in a mutable cell that some future call might overwrite. R's closures give you the substitution *and* the mutable cell. That combination is what makes the counter work — each call to `count()` modifies `n` in the enclosing environment, and the next call sees the updated value. It is also what makes `<<-` bugs invisible from the call site. If someone writes `n <- n + 1` instead of `n <<- n + 1` inside `make_counter`, the counter returns 1 on every call, silently, with no error message, because `<-` creates a local `n` that shadows the captured one. The bug is one character wide and produces no warning.
+
 ```{r}
 rm(oops, envir = globalenv())
 ```

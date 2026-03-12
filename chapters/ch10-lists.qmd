@@ -285,6 +285,8 @@ This structure is a direct translation of Church encoding. In lambda calculus, a
 
 So why doesn't R use linked lists for everyday work? Because R needs contiguous memory. Functions like `sum()` and the BLAS routines behind matrix algebra expect a single block of doubles that a C function can walk with a pointer, and a linked list scatters its elements across the heap; you would have to copy them into a contiguous buffer before any vectorized operation could touch them. R's built-in lists (VECSXP) solve this with arrays of pointers: O(1) random access, contiguous pointer storage. Linked lists are good at something else entirely: prepending (O(1), just `cons` a new head) and recursive processing where you peel off the first element and pass the rest along. Lisp was built on that kind of processing; R was built on vectorized computation over contiguous arrays.
 
+Both descend from the same lambda calculus, but the engineering decisions diverged early. Lisp committed to recursive decomposition: peel from the head, recur on the tail, build up an answer one `cons` at a time. R went the other way — contiguous arrays, vectorized operations, the C runtime walking a flat block of memory at speed. That fork propagated through every design decision that followed. R has `sapply` where Lisp has `mapcar`. R's `[` extracts by position; Lisp peels from the front. The entire language favors breadth over depth, and the linked list section you just read shows what depth-first design looks like from the inside. Seeing it clarifies why R's built-in lists use arrays of pointers rather than recursive pairs: not because cons cells are wrong, but because R's commitment to vectorized computation made a different structure necessary.
+
 
 ### Exercises {.unnumbered}
 

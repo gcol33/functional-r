@@ -114,6 +114,8 @@ summarizers$logical(c(TRUE, FALSE, TRUE, TRUE))
 
 `summarizers` is a list of three functions, accessed with `$` like any named list element. A list of functions keyed by name is a *dispatch table*: given a key, it returns the function you need, no conditionals required. Adding a new type means adding one entry to the list. No `if`/`else` to restructure, no risk of breaking the branches above or below. Package internals, Shiny applications, and testing frameworks all use this pattern to select behavior at runtime.
 
+Notice what moved. In the `if`/`else` version, control flow is in charge: it interrogates the type, then calls the right function as a subordinate. In the dispatch table, the functions exist independently as values in a list, and the control flow shrinks to a single lookup. The operations no longer live inside the conditional; the conditional lives inside the data structure. That rearrangement changes who owns the decision. An `if`/`else` chain is closed — extending it means opening the chain and editing its guts, hoping you do not break the branches above and below. A dispatch table you extend by dropping a new entry into a list; the entries that already work never see the change. In Church's model, the closed chain was always the detour. Functions were values from the start, and packaging them inside control structures was a habit inherited from imperative languages, not a necessity. The dispatch table recovers the default.
+
 Here is the same idea in a simpler form:
 
 ```{r}

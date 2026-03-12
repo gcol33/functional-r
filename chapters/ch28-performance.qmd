@@ -161,7 +161,11 @@ row_totals <- rowSums(mat)
 
 Not everything yields to vectorization. Iterations where each step depends on the previous result (Markov chains, recursive algorithms, some simulations) genuinely need loops, and for those @sec-compiled-code offers an escape hatch. But before reaching for compiled code, make sure you are not confusing convenience wrappers with the real thing.
 
-`sapply()` and `lapply()` look like vectorization. They are not. They are convenient wrappers around loops that still call your R function once per element, no faster than a well-written `for` loop. True vectorization means the loop runs in C: `sum()`, `cumsum()`, `ifelse()`, `pmin()`, `rowSums()`. If the loop is still in R, the speed is still in R. So what happens when you have a loop that genuinely cannot be vectorized, but it still needs to be fast?
+`sapply()` and `lapply()` look like vectorization. They are not. They are convenient wrappers around loops that still call your R function once per element, no faster than a well-written `for` loop. True vectorization means the loop runs in C: `sum()`, `cumsum()`, `ifelse()`, `pmin()`, `rowSums()`. If the loop is still in R, the speed is still in R.
+
+The distinction traces back to R's inheritance. S was designed for interactive data analysis, not for writing loops. When John Chambers built S at Bell Labs, and when R's creators reimplemented it at Auckland, the assumption was that heavy computation would happen in compiled Fortran or C routines, and the user-facing language would orchestrate those routines at a high level. Functions like `sum()` and `rowSums()` exist because they *are* the compiled routines, exposed directly. When you call `sum(x)`, a single trip into C walks the memory block in a tight loop and returns the result. `sapply(x, f)` never leaves the interpreter; it calls your R function once per element, paying the full cost of argument matching, environment creation, and promise evaluation on every iteration. The speed gap between these two paths reflects a design choice that predates R itself: the language was built to orchestrate compiled routines, and code that stays in the interpreter is working against that architecture rather than with it.
+
+So what happens when you have a loop that genuinely cannot be vectorized, but it still needs to be fast?
 
 ### Exercises {.unnumbered}
 

@@ -22,7 +22,7 @@ Reduce(`+`, 1:5)
 
 That computes `((((1 + 2) + 3) + 4) + 5)`. The first call is `f(1, 2)`, which gives 3; then `f(3, 3)`, giving 6; then `f(6, 4)`, giving 10; then `f(10, 5)`, giving 15. Each intermediate result becomes the left argument of the next call, which is why this is called a *left fold*: the parentheses nest to the left.
 
-The name comes from Haskell's `foldl`. APL had the same thing in 1962, spelled `+/1 2 3 4 5`. Most languages took decades longer to give the operation a name.
+The name comes from Haskell's `foldl`. APL had the same thing in 1962, spelled `+/1 2 3 4 5`. Other languages took decades longer to give the operation a name.
 
 With a named function the folding structure becomes visible:
 
@@ -51,6 +51,8 @@ Reduce(`+`, list(), init = 0)
 With `init`, the fold starts by calling `f(init, x[[1]])` instead of `f(x[[1]], x[[2]])`, which means the fold always has something to work with, even when the list is empty. The value you pass as `init` should be the identity element for the operation: 0 for addition, 1 for multiplication, `""` for `paste0`, `NULL` for `c()`. For `intersect` you would want the universal set, though R has no such thing, so you typically peel off the first element yourself.
 
 This connection between an operation, its identity element, and associativity has a name in algebra: a *monoid*. Integers under addition with identity 0 form a monoid. Strings under concatenation with identity `""` form a monoid. Lists under `c()` with identity `NULL` form a monoid. The pattern shows up everywhere, and recognizing it tells you something immediately practical: if your operation is associative, the fold can be split across chunks, parallelized, and recombined without changing the result. Google's MapReduce (Dean and Ghemawat, 2004) is literally `map()` followed by a monoid fold, scaled to warehouses full of machines.
+
+`Reduce()` is the operation that collapses a monoid. Given a list and an associative binary function, it produces a single value. That description sounds specific to lists, but the same structure appears whenever you compose things sequentially: piping functions is folding over a list of functions with composition as the binary operation and the identity function as `init`; building a ggplot layer by layer is folding over a list of layers with `+` as the operation and `ggplot()` as `init`. Once you see fold as the general mechanism behind sequential collapse, the same shape starts appearing in unexpected places: tallying, concatenating, composing, intersecting. All of them are folds over a monoid, whether or not you name them as such.
 
 ::: callout-tip
 ## Opinion

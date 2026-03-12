@@ -43,7 +43,11 @@ str(df)
 
 Two columns, two rows, and nothing more than a list wearing a label.
 
-Type theory calls this a *product type*. A data frame with columns `name` (character) and `mass` (double) has type `character × double`: each row pairs one character value with one double value. Add a third column and the type grows: `character × double × integer`. So what goes into those columns when you build one from scratch?
+Type theory calls this a *product type*. A data frame with columns `name` (character) and `mass` (double) has type `character × double`: each row pairs one character value with one double value. Add a third column and the type grows: `character × double × integer`.
+
+The equal-length constraint is doing more work than it appears. A plain list lets you pair a five-element vector with a three-element vector and says nothing about the mismatch. A data frame refuses. Why? Because the constraint *is* the guarantee: row *i* across all columns describes the same observation. Break the rectangle — one column longer than another — and that guarantee disappears, and every function that touches the data must re-verify alignment on its own. Codd's 1970 relational model imposed the same rule: every tuple in a relation has the same attributes. SQL inherited it, pandas and Arrow enforce it today, and R's data frame sits in that same lineage. The trade is flexibility for a promise: if the data is rectangular, row alignment is automatic and every subsetting operation preserves it. Logical indexing, `merge()`, and `rbind()` all depend on that promise holding.
+
+So what goes into those columns when you build one from scratch?
 
 
 ### Exercises {.unnumbered}

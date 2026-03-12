@@ -16,7 +16,7 @@ That `[1]` has been there since Chapter 1, quietly announcing something you prob
 
 ## There are no scalars {#sec-no-scalars}
 
-Most languages draw a hard line between a single number and a collection of numbers, treating them as fundamentally different creatures that live in different boxes and obey different rules. R refuses. Every value in R is a vector: `42` is a numeric vector of length 1, `"hello"` is a character vector of length 1, and `TRUE` is a logical vector of length 1.
+In C or Python, a single number and a collection of numbers are fundamentally different types: one is a scalar, the other is an array or list. R erases that distinction. Every value in R is a vector: `42` is a numeric vector of length 1, `"hello"` is a character vector of length 1, and `TRUE` is a logical vector of length 1.
 
 ```{r}
 length(42)
@@ -199,6 +199,8 @@ R distributes the function over the vector automatically; you write one applicat
 ## For the curious
 This pattern has a name: a *functor*. A functor maps a function over a structure while preserving the structure's shape. `sqrt` applied to a five-element vector returns a five-element vector; the function changes the contents, but the container stays intact. Vectors are functors, lists are functors (via `lapply`), and data frame columns are functors (via `mutate`). The word comes from category theory, but the idea is concrete: apply inside, preserve outside. You will see it everywhere in this book, and by the end it will feel as natural as vectorization itself.
 :::
+
+Consider what `temperatures * 9/5 + 32` actually did. A function was applied to a structure and produced a structure of the same shape — a functor operation, driven by the same term-replacement mechanism that @sec-church introduced as lambda calculus. And when you wrote `c(morning, afternoon)`, the names were substituted for their values and the expression reduced to a single vector; that is Church's beta reduction. The theoretical machinery from Chapter 1 has been running under every line of code in this chapter, not as background context but as the engine. By the time you typed `42` into the console and got `42` back, you were already doing functional programming — you just did not have a name for it yet.
 
 
 ### Recycling {#sec-recycling}
