@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-`sqrt(9)`, `c(1, 2, 3)`, `sum(x > 70)`: every piece of R code so far has relied on functions that someone else wrote. The obvious next question is what it takes to write one yourself.
+`sqrt(9)`, `c(1, 2, 3)`, `sum(x > 70)`: every piece of R code so far has relied on functions that someone else wrote. This chapter shows you how to write your own.
 
 
 ## Anatomy of a function {#sec-anatomy-function}
@@ -380,6 +380,8 @@ factorial(5)
 ```
 
 This is *recursion*: a function defined in terms of itself. Look at the unfolding carefully. Each line replaces a function call with its value, the same term replacement from @sec-atomic-vectors, and no variable is being updated, no counter is ticking. The answer was implicit in the original expression `factorial(5)`; evaluation simply made it explicit.
+
+![Recursive call stack for `factorial(5)`: each frame waits for the one below it. No variable changes — each frame holds its own `n`.](../images/factorial_stack.png){#fig-factorial-stack width=100%}
 
 In lambda calculus notation, factorial looks like this:
 

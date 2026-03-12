@@ -16,8 +16,9 @@ with_tax <- sapply(prices, add_tax, rate = 0.2)
 with_tax
 ```
 
-That code used four ideas R did not invent: first-class functions, vectorized operations, higher-order functions, and lexical scope. They arrived from different languages and different decades, each one a solution to a problem that had nothing to do with statistics.
+That code used four ideas R did not invent: first-class functions, vectorized operations, higher-order functions, and lexical scope. They arrived from different languages and different decades.
 
+![R's lineage: each language passed a core idea to the next.](../images/language_family_tree.png){#fig-family-tree width=100%}
 
 ## Church's lambda calculus becomes a programming language {#sec-lisp}
 
@@ -55,7 +56,7 @@ Out of that realization came Scheme, first described in a 1975 AI Memo at MIT. B
 
 **Lexical scoping.** When a function refers to a variable, where does it look? Older Lisps used *dynamic scoping*, where the meaning of a variable depends on whatever happens to be in scope at the moment the function is called. The same function could behave differently depending on who called it. Scheme chose *lexical scoping*: a variable means what it meant where the function was *defined*, regardless of where it runs. This sounds like a technicality, but it determines whether you can use functions as building blocks at all. R uses lexical scoping, inherited through S from Scheme. @sec-closures-and-scope uses this to build function factories and closures.
 
-**Minimalism.** Scheme showed that you don't need a big language. A small set of well-chosen primitives, all consistent with the lambda calculus, is enough to build anything. This philosophy shaped S and through it R: R's core is surprisingly small, and most of what feels "built in" is actually implemented as ordinary R functions.
+**Minimalism.** Scheme showed that you don't need a big language. A small set of well-chosen primitives, all consistent with the lambda calculus, is enough to build anything. This philosophy shaped S and through it R: R's core is surprisingly small, and most of what feels "built in" is actually implemented as ordinary R functions. Even `+` is a function you can call as `` `+`(1, 2) ``, override, or pass to `Reduce`. That uniformity comes from Scheme.
 
 Here is lexical scoping in R. Don't worry about the details yet; just notice that it works:
 
@@ -72,9 +73,9 @@ add_ten(3)
 #> [1] 13
 ```
 
-`add_ten` remembers that `n` was 10 when it was created, even though `make_adder` has already finished running. The function looks for `n` where it was *defined* (inside `make_adder`), not where it's *called*. That's lexical scoping, straight from Scheme. @sec-closures-and-scope builds on this to create functions that remember things.
+`add_ten` remembers that `n` was 10 when it was created, even though `make_adder` has already finished running. The function looks for `n` where it was *defined* (inside `make_adder`), not where it's *called*. That's lexical scoping. @sec-closures-and-scope builds on this to create functions that remember things.
 
-Lisp and Scheme were built by computer scientists for computer scientists. Neither had anything to say about data, about columns of measurements and rows of observations, about the daily work of someone trying to understand an experiment. That required a different kind of person, in a different kind of lab.
+Lisp and Scheme were built by computer scientists for computer scientists. Neither had anything to say about data, about columns of measurements and rows of observations, about the daily work of someone trying to understand an experiment. What neither language had was anything to say about data.
 
 
 ## S makes it practical {#sec-s-language}
@@ -140,4 +141,4 @@ with_tax
 
 `function(price, rate)` creates a function and stores it in a variable, the way you'd store a number: Lisp, 1958. `prices * (1 + rate)` inside the function operates on the whole vector at once, no loop: S, 1976. `sapply(prices, add_tax, rate = 0.2)` passes a function *to* another function: Church, 1936. And `add_tax` finds `rate` based on where it was defined, not where it's called: Scheme, 1975.
 
-Five lines, four ancestors, sixty years of decisions compressed into something you can type in under ten seconds. The rest of this book is about what you can do with these features once you understand them, starting with the most fundamental one: in R, everything is an expression, and every expression has a value.
+The rest of this book is about what you can do with these features once you understand them, starting with the most fundamental one: in R, everything is an expression, and every expression has a value.

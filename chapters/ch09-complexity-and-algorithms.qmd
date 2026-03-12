@@ -1,5 +1,4 @@
-
-Remember the loop from the opening, the one that took five minutes instead of thirty seconds? You now have the vocabulary to diagnose it: somewhere in that loop, an O(n²) operation was hiding inside what looked like O(n) code, and the 10x increase in data exposed the quadratic scaling that small test sets had concealed. The shape of growth was always there, waiting in the math, indifferent to how fast your machine is.# Complexity and algorithms {#sec-complexity}
+# Complexity and algorithms {#sec-complexity}
 
 ```{r}
 #| include: false
@@ -49,6 +48,8 @@ for (i in seq_len(n)) {
 @sec-performance revisits this bottleneck in detail. The quadratic cost is not inevitable for append-style operations: if R used a doubling strategy (as Python's `list.append` does), each individual append would be O(1) *amortized*. The idea is to allocate double the space when the array fills up; most appends just write to the next slot (O(1)), and the occasional O(n) resize happens rarely enough that the average cost per operation is constant. R does not do this for `c()`, which is why pre-allocation matters. A naive distance matrix computation is also O(n²): for n points, you compute n(n-1)/2 pairwise distances.
 
 **O(2^n): exponential time.** Brute-force enumeration of all subsets. A set of n elements has 2^n subsets: at n = 20 that is about a million, at n = 30 a billion, at n = 50 over a quadrillion. Exponential algorithms are effectively unusable for large inputs, and no clever constant-factor tricks will save you.
+
+![Common complexity classes: how operations scale with input size.](../images/bigo_curves.png){#fig-bigo-curves width=100%}
 
 ### How to tell empirically
 
@@ -405,6 +406,8 @@ subset_sum_greedy <- function(x, target) {
 At n = 20 the brute-force version checks about a million subsets and finishes in under a second. At n = 40 it checks a trillion — you will not wait long enough. The greedy version runs in O(n log n) on either input but is not guaranteed to find a solution that exists. That is the P-vs-NP gap in miniature: polynomial verification, (apparently) exponential search, and a fast heuristic that trades correctness for speed.
 
 In practice, R encounters NP-hard problems in optimization. `optim()` does not guarantee a global optimum for non-convex problems; it uses heuristic methods (Nelder-Mead, simulated annealing) that find good-enough solutions without exhaustive search. This is the pragmatic response to intractability: give up on perfection and settle for "good enough, fast."
+
+Remember the loop from the opening, the one that took five minutes instead of thirty seconds? You now have the vocabulary to diagnose it: somewhere in that loop, an O(n²) operation was hiding inside what looked like O(n) code, and the 10x increase in data exposed the quadratic scaling that small test sets had concealed. The growth rate was there from the start; faster hardware only postpones when you hit it.
 
 ### Exercises {.unnumbered}
 

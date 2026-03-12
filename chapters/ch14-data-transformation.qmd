@@ -232,7 +232,7 @@ summarise(penguins_grouped, mean_mass = mean(body_mass_g, na.rm = TRUE))
 
 `summarise()` applied `mean()` within each group and returned one row per species.
 
-Compare the two calls. Without `group_by()`, `summarise()` collapsed everything into a single row — one mean, one answer. With `group_by(species)`, the same verb produced three rows, one per species, without any change to the `summarise()` call itself. The column you group by acts as a partitioning function: it splits the data into subsets, and `summarise()` runs independently inside each one. SQL spells this `GROUP BY`; Spark uses explicit partitioning; in functional programming the same idea appears as `foldByKey`, where a reduce operation runs per partition rather than globally. The underlying pattern — an aggregation function paired with a partitioning structure — is the same across all of them. What makes dplyr's version distinctive is that the partition is invisible metadata attached to the data frame — `group_by()` changes nothing you can see in a printout, but it changes everything `summarise()` does. That silent metadata is powerful, and it is also the source of the most common grouping bugs (@sec-grouping-gotchas).
+Compare the two calls. Without `group_by()`, `summarise()` collapsed everything into a single row — one mean, one answer. With `group_by(species)`, the same verb produced three rows, one per species, without any change to the `summarise()` call itself. The column you group by acts as a partitioning function: it splits the data into subsets, and `summarise()` runs independently inside each one. SQL spells this `GROUP BY`; Spark uses explicit partitioning; in functional programming the same idea appears as `foldByKey`, where a reduce operation runs per partition rather than globally. The underlying pattern — an aggregation function paired with a partitioning structure — is the same across all of them. What makes dplyr's version distinctive is that the partition is invisible metadata attached to the data frame — `group_by()` changes nothing you can see in a printout, but it changes everything `summarise()` does. That silent metadata is powerful, and it is also the source of the most common grouping bugs.
 
 You can group by multiple variables:
 
@@ -341,7 +341,14 @@ Finally, `across()` applies a function to multiple columns at once. Summarise al
 summarise(penguins, across(where(is.numeric), \(x) mean(x, na.rm = TRUE)))
 ```
 
-`across()` pairs naturally with `where()`, `starts_with()`, and the other selection helpers from @sec-select. The same pattern, "apply a function to many things," reappears in a broader context in @sec-iteration-without-loops. But before you build elaborate pipelines out of these verbs, it is worth seeing what they look like without dplyr at all.
+`across()` works inside `mutate()` too. Round every numeric column to one decimal place:
+
+```{r}
+#| results: hide
+mutate(penguins, across(where(is.numeric), \(x) round(x, 1)))
+```
+
+`across()` pairs naturally with `where()`, `starts_with()`, and the other selection helpers from @sec-select. @sec-iteration-without-loops generalizes the same idea (apply a function to each element of a collection) beyond data frames. But before you build elaborate pipelines out of these verbs, it is worth seeing what they look like without dplyr at all.
 
 
 ### Exercises {.unnumbered}

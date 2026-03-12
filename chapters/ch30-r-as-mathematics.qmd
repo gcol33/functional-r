@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-Here is an experiment. Take R and remove everything except `function()` and the ability to call functions. No numbers. No booleans. No `if`. No `list()`. No `<-` for naming recursive calls. Starting from that barren landscape, try to build integers, conditionals, pairs, lists, and recursion.
+Take R and remove everything except `function()` and the ability to call functions. No numbers. No booleans. No `if`. No `list()`. No `<-` for naming recursive calls. Starting from that barren landscape, try to build integers, conditionals, pairs, lists, and recursion.
 
 Surprisingly, it works. Every one of those things can be reconstructed from `function()` alone. R's `function()` keyword is Church's λ, its function application is beta reduction, and its closures are the scoping discipline that Scheme borrowed from lambda calculus and passed on to R (@sec-family-tree). The `double <- function(x) x * 2` from @sec-first-function, the recursive descents in @sec-recursion, the closures that captured variables and carried them somewhere new -- all of them are expressions in a formal system that predates computers by decades.
 

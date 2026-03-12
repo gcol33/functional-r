@@ -26,6 +26,8 @@ Always 1. The counter never advances, because every call starts from scratch: ev
 
 An environment maps names to values. Each environment has a parent, forming a chain: when R encounters a name, it checks the current environment first, then walks up the chain until it finds a binding or hits the empty environment at the top. Functions remember things by holding a reference to the environment where they were created, which is why scope matters here.
 
+![The environment chain: `f` finds `x = 10` in the global environment where it was defined, not `x = 20` in `g`'s execution environment.](../images/environment_chain.png){#fig-env-chain width=100%}
+
 You can inspect the current environment with `environment()`, list its contents with `ls()`, and find its parent with `parent.env()`:
 
 ```{r}
@@ -384,7 +386,7 @@ For a richer view, `rlang::env_print()` shows the environment's contents, parent
 rlang::env_print(environment(count))
 ```
 
-These tools are not for production code (reaching into a closure's environment breaks its encapsulation), but for learning they are the fastest way to see what a closure actually holds. Make one, inspect its environment, call it, inspect again. A closure that holds state and a list of closures that share an environment start to look a lot like an object with methods, which is exactly the connection @sec-oop-in-r explores.
+These tools are not for production code (reaching into a closure's environment breaks its encapsulation), but for learning they are the fastest way to see what a closure actually holds. Make one, inspect its environment, call it, inspect again. A closure that holds state and a list of closures that share an environment start to look a lot like an object with methods, which is exactly the connection @sec-s3-basics explores.
 
 
 ### Exercises {.unnumbered}

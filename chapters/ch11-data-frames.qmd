@@ -212,7 +212,7 @@ df2 <- within(penguins, {
 head(df2[, c("mass_kg", "bill_ratio")])
 ```
 
-`within()` evaluates the expressions inside the data frame's environment, so you can refer to columns by name without the `df$` prefix, and the result is a new data frame. `dplyr::mutate()` (@sec-data-transformation) does this more cleanly, but `within()` has been in base R since 2001.
+`within()` evaluates the expressions inside the data frame's environment, so you can refer to columns by name without the `df$` prefix, and the result is a new data frame. `dplyr::mutate()` (@sec-data-transformation) has almost entirely replaced `within()` in modern R. You will still see it in older scripts.
 
 ```{r}
 #| include: false

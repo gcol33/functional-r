@@ -8,7 +8,7 @@ library(purrr)
 library(dplyr)
 ```
 
-You have a list of three data frames and you want to compute the mean of a column in each one. Six lines of `for` loop, or one line of `map()`. The difference is not cosmetic.
+You have a list of three data frames and you want to compute the mean of a column in each one. Six lines of `for` loop, or one line of `map()`. The `map()` version is shorter, but the real difference is structural.
 
 Functions are values (@sec-functions-are-values-chapter) and you can pass them to other functions (@sec-passing-functions). A *functional* builds on that idea: it is a higher-order function that handles the iteration for you. You give it a function and a collection; it applies the function to each element, manages the indexing and pre-allocation, and returns the results.
 
@@ -147,10 +147,10 @@ Third, you may encounter the formula shorthand in older code: `~ mean(.x$body_ma
 ::: callout-note
 ## Functors and the shape of iteration
 
-`map()` embodies a pattern from category theory: the *functor*. `map(xs, f)` applies `f` to each element of `xs`, preserving the container structure (a list of three elements in, a list of three elements out). A functor lifts a function between values (`f :: A -> B`) to a function between containers (`map(f) :: List(A) -> List(B)`). You do not need the theory to use `map()`, but recognizing the pattern explains why `map()` feels the same whether you apply it to a list, a vector, or a set of data frame columns with `across()`: it is the same structural idea in different containers. There is a deeper connection to lambda calculus here: in Church encoding, the number 3 is defined as "apply a function three times," so iteration *is* the number. When you write `map(1:3, f)`, the list carries the iteration; in Church's system, the number itself carries it. Different representations, same core idea: repetition defined by structure, not by an explicit counting mechanism.
+`map()` embodies a pattern from category theory: the *functor*. `map(xs, f)` applies `f` to each element of `xs`, preserving the container structure (a list of three elements in, a list of three elements out). A functor lifts a function between values (`f :: A -> B`) to a function between containers (`map(f) :: List(A) -> List(B)`). You do not need the theory to use `map()`, but recognizing the pattern explains why `map()` feels the same whether you apply it to a list, a vector, or a set of data frame columns with `across()`: it is the same structural idea in different containers.
 :::
 
-That last point deserves a second look. A `for` loop iterates by maintaining a counter variable: `i` goes from 1 to `n`, and the body runs once per increment. You declare the counter, increment it, read it. With `map()`, the counter disappears. The list has three elements, so the function runs three times; the structure itself determines how many applications occur. Church's lambda calculus pushes the idea further still: the number 3 is `λf. λx. f(f(f(x)))`, a function that applies another function three times. The number does not *describe* iteration; it *is* iteration. `map()` sits between the explicit counter and the Church numeral, which is part of why it feels like a natural step away from loops. You stop managing the iteration and let the data's shape manage it for you.
+A `for` loop iterates by maintaining a counter variable: `i` goes from 1 to `n`, and the body runs once per increment. You declare the counter, increment it, read it. With `map()`, the counter disappears. The list has three elements, so the function runs three times; the structure itself determines how many applications occur. You stop managing the iteration and let the data's shape manage it for you.
 
 The typed variants enforce something even stricter.
 
@@ -358,7 +358,7 @@ penguins |>
 
 `across()` replaces the older `summarise_at()`, `summarise_if()`, and `summarise_all()`, which are now superseded. If you encounter them in older code, they do the same thing with less flexible syntax.
 
-Under the hood, `across()` iterates over the selected columns, applies the function to each one, and assembles the results. That is the same thing `map()` does over list entries and `sapply()` does over vector values. The `for` loop at the start of this chapter, `lapply()`, `map_dbl()`, `across()`: each separates *what to do* from *how to iterate*, and each walks a different container with the same logic. The loop at the start of this chapter and the `across()` at the end look nothing alike, but they are the same act: applying a function to each element of a collection. In a loop, you write the iteration. In a functional, the language handles it.
+Under the hood, `across()` iterates over the selected columns, applies the function to each one, and assembles the results. That is the same thing `map()` does over list entries and `sapply()` does over vector values. The `for` loop at the start of this chapter, `lapply()`, `map_dbl()`, `across()`: each separates *what to do* from *how to iterate*, and each walks a different container with the same logic. The `for` loop, `lapply()`, `map_dbl()`, and `across()` all apply a function to each element of a collection; they differ only in which container they walk and what they return.
 
 ### Exercises {.unnumbered}
 

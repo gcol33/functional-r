@@ -34,6 +34,8 @@ pop_wide
 
 What is the variable here? Year. But "year" doesn't appear as a column; it's buried inside the names `pop_2020`, `pop_2021`, `pop_2022`, three columns where there should be one. Not tidy.
 
+![Wide and long formats contain the same information — the pivot is an isomorphism.](../images/wide_vs_long.png){#fig-wide-vs-long width=100%}
+
 The tidy version has three columns: `country`, `year`, and `population`. One variable per column, one observation per row, nine values arranged so that every tool you've learned can reach them.
 
 ```{r}

@@ -62,6 +62,8 @@ Think of a list as a train where each carriage holds its own cargo, and your cho
 - `x[[1]]` opens the first carriage and pulls out what's inside. The result is the element itself.
 - `x$name` is shorthand for `x[["name"]]`.
 
+![`x[1]` returns the carriage (still a list); `x[[1]]` pulls out the cargo (the element itself).](../images/list_train.png){#fig-list-train width=100%}
+
 ```{r}
 x <- list(a = 10, b = c(1, 2, 3), c = "hello")
 ```
@@ -281,11 +283,15 @@ ll_to_vector <- function(lst) {
 ll_to_vector(ll)
 ```
 
-This structure is a direct translation of Church encoding. In lambda calculus, a pair is `λh.λt.λf. f h t`: a function that captures two values and waits for a selector. `car` passes a selector that returns the first value; `cdr` passes one that returns the second. A linked list is a chain of such pairs, terminated by a special "nil" value. Lisp was built on exactly this encoding, and `cons`/`car`/`cdr` remain the standard names for these operations across functional languages.
+So why doesn't R use linked lists for everyday work? Because R needs contiguous memory. Functions like `sum()` and the BLAS routines behind matrix algebra expect a single block of doubles that a C function can walk with a pointer, and a linked list scatters its elements across the heap (the region of memory where R allocates objects; @sec-stack-and-heap explains the distinction). R's built-in lists (VECSXP) are arrays of pointers: O(1) random access, contiguous pointer storage. Linked lists trade that for O(1) prepend and natural recursive processing — peel off the head, recur on the tail. Lisp was built on that kind of processing; R was built on vectorized computation over contiguous arrays.
 
-So why doesn't R use linked lists for everyday work? Because R needs contiguous memory. Functions like `sum()` and the BLAS routines behind matrix algebra expect a single block of doubles that a C function can walk with a pointer, and a linked list scatters its elements across the heap (the region of memory where R allocates objects; @sec-stack-and-heap explains the distinction); you would have to copy them into a contiguous buffer before any vectorized operation could touch them. R's built-in lists (VECSXP) solve this with arrays of pointers: O(1) random access, contiguous pointer storage. Linked lists are good at something else entirely: prepending (O(1), just `cons` a new head) and recursive processing where you peel off the first element and pass the rest along. Lisp was built on that kind of processing; R was built on vectorized computation over contiguous arrays.
+::: {.callout-note collapse="true"}
+## From Church encoding to cons cells
 
-Both descend from the same lambda calculus, but the engineering decisions diverged early. Lisp committed to recursive decomposition: peel from the head, recur on the tail, build up an answer one `cons` at a time. R went the other way — contiguous arrays, vectorized operations, the C runtime walking a flat block of memory at speed. That fork propagated through every design decision that followed. R has `sapply` where Lisp has `mapcar`. R's `[` extracts by position; Lisp peels from the front. The entire language favors breadth over depth, and the linked list section you just read shows what depth-first design looks like from the inside. Seeing it clarifies why R's built-in lists use arrays of pointers rather than recursive pairs: not because cons cells are wrong, but because R's commitment to vectorized computation made a different structure necessary.
+The `cons`/`car`/`cdr` structure is a direct translation of Church encoding. In lambda calculus, a pair is `λh.λt.λf. f h t`: a function that captures two values and waits for a selector. `car` passes a selector that returns the first value; `cdr` passes one that returns the second. A linked list is a chain of such pairs, terminated by a special "nil" value. Lisp was built on exactly this encoding, and `cons`/`car`/`cdr` remain the standard names for these operations across functional languages.
+
+Both R and Lisp descend from the same lambda calculus, but the engineering decisions diverged early. Lisp committed to recursive decomposition: peel from the head, recur on the tail, build up an answer one `cons` at a time. R went the other way — contiguous arrays, vectorized operations, the C runtime walking a flat block of memory at speed. That fork propagated through every design decision that followed. R has `sapply` where Lisp has `mapcar`. R's `[` extracts by position; Lisp peels from the front. The entire language favors breadth over depth, and the linked list code above shows what depth-first design looks like from the inside.
+:::
 
 
 ### Exercises {.unnumbered}

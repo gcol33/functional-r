@@ -87,7 +87,17 @@ Aesthetics placed in `ggplot()` are inherited by every layer; aesthetics placed 
 
 ## Geoms: shapes for data {#sec-geoms}
 
-Each geom renders data differently. Same aesthetics, different geom, different plot. Here are the ones you will reach for most often.
+Each geom renders data differently. Same aesthetics, different geom, different plot. The question is which geom fits the question you are asking. A rough guide:
+
+| Question | Geom | Data shape |
+|---|---|---|
+| How are two continuous variables related? | `geom_point()`, `geom_smooth()` | x continuous, y continuous |
+| How is one variable distributed? | `geom_histogram()`, `geom_density()` | x continuous |
+| How do distributions compare across groups? | `geom_boxplot()`, `geom_violin()` | x categorical, y continuous |
+| How does a quantity change over time? | `geom_line()` | x ordered (time), y continuous |
+| How do counts or totals compare across categories? | `geom_bar()` (counts rows), `geom_col()` (uses a y value) | x categorical |
+
+Start from the question, pick the geom, then refine. The rest of this section shows each one in turn.
 
 `geom_point()` draws a scatterplot, the natural choice for two continuous variables:
 

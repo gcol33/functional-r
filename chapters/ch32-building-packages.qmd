@@ -33,7 +33,7 @@ The complete reference for everything in this chapter is *R Packages* (2nd editi
 
 ## The anatomy of a package {#sec-package-anatomy}
 
-The minimum viable package has three components: `DESCRIPTION`, `NAMESPACE`, and an `R/` directory. A standard layout looks like this:
+The minimum viable package has three components: `DESCRIPTION`, `NAMESPACE`, and an `R/` directory. At its core, a package is a namespace of functions: the `R/` directory holds function definitions, `NAMESPACE` controls which ones are visible, and `DESCRIPTION` records metadata. A standard layout looks like this:
 
 ```
 mypackage/
@@ -67,7 +67,7 @@ RoxygenNote: 7.3.1
 
 **NAMESPACE** controls what is visible to users (exports) and what you borrow from other packages (imports). Never edit it by hand; let roxygen2 generate it. Two hooks let you run code when the package loads: `.onLoad()` fires when the namespace is loaded (even by `::` access), while `.onAttach()` fires only when someone calls `library()`. Use `.onLoad()` for setup that must happen before any function runs (registering S3 methods, setting default options, initializing connections) and `.onAttach()` only for startup messages. Both go in `R/zzz.R` by convention. For full details, see R Packages (2e), chapter 10.
 
-The namespace is an environment (the concept from @sec-functions-returning-functions), and `NAMESPACE` defines what names are visible in that environment. When you call `dplyr::filter()`, R looks in dplyr's namespace environment; when you call just `filter()`, R searches the environment chain, and which `filter` it finds depends on what is attached. In lambda calculus terms, a package namespace is a closure at the module level: functions inside can reference each other because they share the namespace environment, but the outside world only sees what is explicitly exported. The `NAMESPACE` file draws the same boundary that a lambda abstraction draws between bound and free variables. ML's module system (1980s), Haskell's module system, and OCaml's functors all solve the same problem of controlling visibility and preventing conflicts; R's approach is simpler, but the underlying idea is identical.
+The namespace is an environment (the concept from @sec-functions-returning-functions), and `NAMESPACE` defines what names are visible in that environment. When you call `dplyr::filter()`, R looks in dplyr's namespace environment; when you call just `filter()`, R searches the environment chain, and which `filter` it finds depends on what is attached. In lambda calculus terms, a package namespace is a closure at the module level: functions inside can reference each other because they share the namespace environment, but the outside world only sees what is explicitly exported. The `NAMESPACE` file marks the same boundary that a lambda abstraction marks between bound and free variables.
 
 
 ## Creating a package {#sec-creating-package}
@@ -91,7 +91,7 @@ devtools::test()        # run all tests (Ctrl+Shift+T)
 devtools::check()       # run R CMD check (Ctrl+Shift+E)
 ```
 
-`load_all()` is the key to fast iteration. It sources all files in `R/`, makes exports available, and simulates a fresh install without actually installing, so the cycle becomes: edit a function, hit `Ctrl+Shift+L`, test immediately, repeat. Without it, you'd have to rebuild and reinstall the entire package after every change, which is the kind of friction that kills momentum.
+`load_all()` is the key to fast iteration. It sources all files in `R/`, makes exports available, and simulates a fresh install without actually installing, so the cycle becomes: edit a function, hit `Ctrl+Shift+L`, test immediately, repeat. An installed package is immutable: once built, its functions cannot be edited in place. `load_all()` gives you a mutable development loop on top of that immutable target, so you iterate freely and then freeze the result when you install. Without it, you'd have to rebuild and reinstall the entire package after every change, which is the kind of friction that kills momentum.
 
 The `usethis::use_*()` functions handle setup tasks:
 
@@ -119,6 +119,8 @@ Never create package files by hand. `usethis` knows the right boilerplate. You f
 
 
 ## Writing documentation with roxygen2 {#sec-roxygen2}
+
+Pure functions are the easiest to document: their contract is fully specified by inputs and outputs, so `@param` and `@return` capture everything a caller needs to know. Functions with side effects need additional prose explaining what state they modify and when.
 
 Documentation lives above your function as special comments (`#'`):
 
@@ -262,6 +264,8 @@ Key expectations:
 
 `devtools::test()` runs all tests. `devtools::test_active_file()` runs just the file you are editing.
 
+Pure functions are also the easiest to test: same inputs always produce the same output, so each `expect_equal()` call is a complete specification of behavior with no setup or teardown required.
+
 How many tests should you write? Enough to cover the normal case, the edge cases, and the error cases. For a function like `bmi()`, that means correct output for typical input, correct output for vectorized input, correct behavior for zero or negative values, and an error for non-numeric input. Four or five tests per function is a reasonable starting point, and writing them forces you to think about your function's contract more carefully than any amount of staring at the implementation would.
 
 ::: callout-tip
@@ -380,7 +384,7 @@ This adds a GitHub Actions workflow that runs `R CMD check` on Linux, macOS, and
 
 Remember the colleague who couldn't run your script? A package with CI, documentation, and a one-line install command turns that two-day email chain into a single `pak::pak()` call.
 
-A package is a closure at the module level. A closure captures variables in its enclosing environment and exposes only the returned function (@sec-closures-and-scope). A package does the same thing at a larger scale: it captures internal functions, data, and dependencies in a namespace and exposes only the functions listed in NAMESPACE. The `@export` tag in roxygen draws the same boundary that a lambda abstraction draws: it declares which names are visible to the outside world and which are private. `devtools`, `usethis`, and roxygen automate the mechanics, but the underlying principle is functional abstraction — hiding implementation, exposing interface — applied at the scale of a project instead of a single function. The structure that remains is reproducibility, and that problem has its own tools.
+A closure captures variables in its enclosing environment and exposes only the returned function (@sec-closures-and-scope). A package does the same thing at a larger scale: internal functions, data, and dependencies live in the namespace; only the functions listed in `NAMESPACE` are visible outside. `devtools`, `usethis`, and roxygen automate the mechanics.
 
 ### Exercises {.unnumbered}
 

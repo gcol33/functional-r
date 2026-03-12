@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-You have a column of dates in three different formats, a species column that plots in the wrong order, and a free-text field full of trailing whitespace and inconsistent capitalization. Numbers behave; text, categories, and time do not. This chapter covers the three types that derail an afternoon: strings, factors, and dates. Each has a dedicated tidyverse package (`stringr`, `forcats`, `lubridate`), each comes with traps that catch beginners, and none of them will feel fully tamed by the end of a single chapter. The goal here is enough to be productive, not exhaustive.
+You have a column of dates in three different formats, a species column that plots in the wrong order, and a free-text field full of trailing whitespace and inconsistent capitalization. Numbers behave; text, categories, and time do not. This chapter covers the three types that derail an afternoon: strings, factors, and dates. Each has a dedicated tidyverse package (`stringr`, `forcats`, `lubridate`), each comes with traps that catch beginners, and none of them will feel fully tamed by the end of a single chapter. The three topics are independent; skip to whichever one is causing you trouble right now.
 
 We will use the `palmerpenguins` dataset throughout. Load it now:
 
@@ -194,6 +194,8 @@ You do not need to memorize regex. Know that it exists, know the basics from the
 
 ## Why factors exist {#sec-why-factors}
 
+Strings handle free text. But many columns are not free text: species, island, treatment group. These columns have a fixed set of values, and the order of those values matters for plots and models. That is where factors come in.
+
 Try plotting penguin species as a bar chart. The bars come out in alphabetical order: Adelie, Chinstrap, Gentoo. You want them ordered by count, or by body mass, or by some logic that makes sense for your story. Character vectors do not carry ordering information, so you cannot tell the plot "put Gentoo first" without something more.
 
 A factor is that something more: a vector of integers with labels. When R stores `c("male", "female", "female")` as a factor, it is really storing `c(1, 2, 2)` with a mapping (1 = "female", 2 = "male", alphabetical by default).
@@ -289,6 +291,8 @@ Without `fct_reorder()`, species appear alphabetically: Adelie, Chinstrap, Gento
 
 
 ## Dates and times {#sec-dates-times}
+
+Strings are irregular text; factors are constrained categories. Dates look like strings but behave like numbers, and that dual nature is the source of most of the trouble.
 
 Add one month to January 31. What do you get? February 28? February 31 (which does not exist)? An error? The answer depends on your tool, and the fact that reasonable tools disagree tells you something about why date arithmetic is harder than it looks. Time zones, leap years, daylight saving transitions, and varying month lengths conspire to make even simple calculations surprisingly tricky.
 

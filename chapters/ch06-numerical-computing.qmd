@@ -42,7 +42,12 @@ R also has three special floating-point values:
 
 `Inf` and `-Inf` result from overflow and division by zero, while `NaN` ("Not a Number") results from undefined operations like `log(-1)`. These values propagate: any arithmetic involving `NaN` returns `NaN`, and any comparison with `NaN` returns `NA`.
 
-So R's numbers are approximations, and for most work the approximation is excellent. But "excellent" is not "exact." There is a deep idea here: lambda calculus and mathematical logic operate on exact symbolic terms, but physical computers operate on finite approximations. The gap between `0.1` (the mathematical real number) and `0.1` (the closest IEEE 754 double) is the gap between the abstract model of computation and the physical machine running it.
+So R's numbers are approximations, and for most work the approximation is excellent. But "excellent" is not "exact."
+
+::: {.callout-note collapse="true"}
+## The lambda calculus connection
+Lambda calculus and mathematical logic operate on exact symbolic terms. Physical computers operate on finite approximations. The gap between `0.1` (the mathematical real number) and `0.1` (the closest IEEE 754 double) is where the two diverge.
+:::
 
 How big is that gap? You can see the stored representation with `sprintf()`:
 
@@ -312,7 +317,7 @@ A <- matrix(1:6, nrow = 2, ncol = 3)
 A
 ```
 
-Every matrix operation in R eventually calls LAPACK or BLAS — Fortran libraries that have been tested, tuned, and argued over for decades. When you write `solve(A, b)`, you are asking those routines to find the vector *x* that satisfies *Ax = b* exactly, using numbers that are not exact. LAPACK promises *backward stability*: the *x* it hands back is the exact solution to a slightly perturbed version of your problem, *A + δA*. For well-conditioned matrices, *δA* is negligible — a few ulps, invisible in any application. The Hilbert matrix from the previous section is a different story; there, *δA* is large enough to drown the answer in noise, because the matrix itself amplifies every perturbation and no amount of algorithmic care can undo that. The condition number you computed is the magnification factor, and it is the single number that determines whether `solve()` gives you a trustworthy answer or an expensive random number. This is the abstraction-implementation gap from the start of the chapter, now sitting inside a function you will actually call.
+Every matrix operation in R eventually calls LAPACK or BLAS — Fortran libraries that have been tested, tuned, and argued over for decades. When you write `solve(A, b)`, you are asking those routines to find the vector *x* that satisfies *Ax = b* exactly, using numbers that are not exact. LAPACK promises *backward stability*: the *x* it hands back is the exact solution to a slightly perturbed version of your problem, *A + δA*. For well-conditioned matrices, *δA* is negligible — a few ulps, invisible in any application. The Hilbert matrix from the previous section is a different story; there, *δA* is large enough to drown the answer in noise, because the matrix itself amplifies every perturbation and no amount of algorithmic care can undo that. The condition number you computed is the magnification factor, and it is the single number that determines whether `solve()` gives you a trustworthy answer or an expensive random number.
 
 The key operations:
 
@@ -400,6 +405,11 @@ b <- 1001
 log_sum_exp(a, b)
 ```
 
-Most data analysis is safe. The traps bite in numerical algorithms, simulation, and optimization. Be aware of them, but don't be paranoid. One principled approach to tracking error is interval arithmetic: instead of storing a single float, you track `[lower, upper]` bounds, and every operation propagates the interval so that the result is a proof that the true answer lies within the bounds. R has no built-in interval arithmetic, but the concept connects to dependent types in type theory, where a value is annotated with its error bound, turning "how wrong could this be?" from a question into a quantity the computation tracks automatically.
+Most data analysis is safe. The traps bite in numerical algorithms, simulation, and optimization. Be aware of them, but don't be paranoid. One principled approach to tracking error is interval arithmetic: instead of storing a single float, you track `[lower, upper]` bounds, and every operation propagates the interval so that the result is a proof that the true answer lies within the bounds. R has no built-in interval arithmetic, but the idea is worth knowing about when precision is critical.
+
+::: {.callout-note collapse="true"}
+## The lambda calculus connection
+Interval arithmetic connects to dependent types in type theory, where a value is annotated with its error bound, turning "how wrong could this be?" from a question into a quantity the computation tracks automatically.
+:::
 
 Remember `0.1 + 0.2 == 0.3`? The answer is still `FALSE`. What changed is that now you know why, and, more usefully, when it matters.

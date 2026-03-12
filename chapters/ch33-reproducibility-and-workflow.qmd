@@ -7,7 +7,7 @@ source(here::here("_common.R"))
 
 You finished an analysis six months ago, and now a reviewer wants you to re-run it with one variable removed. You open the project, hit "Source," and nothing works: a package updated, a file path points to a folder that no longer exists, and you cannot remember whether you were supposed to run the cleaning script before or after the imputation script. The analysis produced correct results once. It will never produce them again.
 
-This chapter walks through five tools (`here`, `renv`, Quarto, `targets`, Git) that prevent exactly this situation, giving each one enough coverage to start using it today while pointing to deeper references when you need them. The goal is not to replace their documentation but to show how they fit together into a stack, where each layer eliminates a specific way that analyses break.
+This chapter walks through five tools (`here`, `renv`, Quarto, `targets`, Git) that prevent exactly this situation, giving each one enough coverage to start using it today while pointing to deeper references when you need them. Each layer eliminates a specific way that analyses break.
 
 
 ## What reproducibility means {#sec-what-reproducibility-means}
@@ -139,7 +139,16 @@ penguins |>
 ```
 ```
 
-No separate script that makes the figures, no separate Word document that describes them. If the data changes, re-render and everything updates.
+No separate script that makes the figures, no separate Word document that describes them. If the data changes, re-render and everything updates. To render the document, run from the terminal:
+
+```{r}
+#| eval: false
+quarto render analysis.qmd           # defaults to the format in the YAML header
+quarto render analysis.qmd --to pdf  # override the output format
+quarto render analysis.qmd --to docx
+```
+
+The `format` field in the YAML header sets the default (html, pdf, docx, revealjs for slides), and the `--to` flag overrides it. HTML needs no extra software. PDF requires a LaTeX installation; `quarto install tinytex` handles that. Word output produces a `.docx` that collaborators who do not use R can read and comment on. In RStudio, the "Render" button (Ctrl+Shift+K) does the same thing without the terminal.
 
 Quarto is the successor to R Markdown, and the core idea (literate programming) dates back to Donald Knuth in 1984: write programs as documents where the prose explains the code, not the other way around. The lineage runs from WEB (Pascal/TeX) through Sweave (2002), knitr (2012), R Markdown, and finally Quarto (2022), each generation bringing better tooling and broader language support. If you know R Markdown, you already know Quarto. The main differences: Quarto uses `#|` for chunk options instead of the chunk header, supports Python, Julia, and Observable in addition to R, and has better defaults for academic output (cross-references, citations, callouts).
 
@@ -287,7 +296,7 @@ git checkout main            # switch back
 git merge try-new-model      # incorporate the branch's changes
 ```
 
-If the experiment works, merge it. If it does not, delete the branch. The main branch is untouched either way, which is the functional programming principle applied to project management: branches are like closures that capture a state and let you explore without side effects on the original.
+If the experiment works, merge it. If it does not, delete the branch. The main branch is untouched either way, your code stays the same regardless of which experiment succeeded.
 
 ### What belongs in Git {.unnumbered}
 
@@ -382,7 +391,7 @@ A decision guide:
 
 Each layer solves one failure mode. Together, they make "works on my machine" a non-issue.
 
-The common thread across all of them is automation: `here` automates path construction, `renv` automates dependency tracking, Quarto automates the link between code and output, `targets` automates pipeline execution, and Git automates change tracking. None require heroic discipline. They require a one-time setup cost, and then they work silently in the background, preventing the mistakes you would otherwise make by hand. But what happens when even renv is not enough, when the problem is not an R package but the operating system itself?
+The common thread across all of them is automation: `here` automates path construction, `renv` automates dependency tracking, Quarto automates the link between code and output, `targets` automates pipeline execution, and Git automates change tracking. Each requires a one-time setup cost and then runs automatically.
 
 
 ## Beyond renv: full-stack reproducibility {#sec-nix-docker}
@@ -402,7 +411,7 @@ CMD ["Rscript", "analysis/main.R"]
 
 A Dockerfile is a recipe that always produces the same environment. Build once, run anywhere. The trade-off is complexity: Docker adds a layer of tooling (images, containers, registries) that takes time to learn.
 
-**Nix** takes a different approach. Where Docker isolates by containerization, Nix isolates by functional purity: the Nix package manager treats every package as a pure function from its inputs (source code, dependencies, compiler flags) to its output (the built artifact). Fix all inputs, get a deterministic output. This is referential transparency applied to software builds, the same principle you saw in @sec-referential-transparency applied to R expressions.
+**Nix** takes a different approach. Where Docker isolates by containerization, Nix isolates by functional purity: the Nix package manager treats every package as a pure function from its inputs (source code, dependencies, compiler flags) to its output (the built artifact). Fix all inputs, get a deterministic output. This is referential transparency applied to software builds, the same principle that makes pure functions predictable in R: same inputs, same output, no hidden state.
 
 The `rix` R package makes Nix accessible from R:
 
@@ -423,4 +432,4 @@ This generates a `default.nix` file that pins everything: R version, package ver
 
 The practical trade-off: Nix has a steep learning curve and limited Windows support (it runs natively on Linux and macOS, or via WSL on Windows), while Docker is more widely adopted and better supported across platforms. Both achieve full-stack reproducibility; they differ in mechanism and philosophy. Docker says "ship the whole machine." Nix says "describe the machine as a function and let anyone rebuild it."
 
-For most R users, `renv` is sufficient. Add Docker or Nix when your results depend on system-level components, when you need to guarantee reproducibility across operating systems, or when a collaborator reports "it doesn't work on my machine" and the problem turns out to be something no R package can fix. The question, then, is not whether your analysis will break on someone else's machine, but which layer of the stack you are willing to bet on.
+For most R users, `renv` is sufficient. Add Docker or Nix when your results depend on system-level components, when you need to guarantee reproducibility across operating systems, or when a collaborator reports "it doesn't work on my machine" and the problem turns out to be something no R package can fix. Which layer you pin depends on how far the reproducibility guarantee needs to reach.

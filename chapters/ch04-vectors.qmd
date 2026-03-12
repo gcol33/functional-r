@@ -129,6 +129,8 @@ sum(x > 70)
 R will never warn you about coercion. `c(1, 2, "3")` quietly becomes all character, and your arithmetic breaks ten lines later with an error message that points nowhere near the real problem. Memorize the hierarchy: logical < integer < double < character. It will save you hours.
 :::
 
+![R's coercion hierarchy: mixing types promotes everything to the most general type.](../images/coercion_hierarchy.png){#fig-coercion width=100%}
+
 
 ### Exercises {.unnumbered}
 

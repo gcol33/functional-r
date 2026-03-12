@@ -147,7 +147,7 @@ xor(TRUE, FALSE)
 xor(TRUE, TRUE)
 ```
 
-You won't need `xor()` often, but it exists. And it turns out that these four operations, `&`, `|`, `!`, and `xor()`, are not just software conventions.
+You won't need `xor()` often, but it exists. These four operations, `&`, `|`, `!`, and `xor()`, are not just software conventions; they correspond directly to the logic gates wired into every processor, described by the same truth tables George Boole formalized in 1854.
 
 
 ### Exercises {.unnumbered}
@@ -157,9 +157,10 @@ You won't need `xor()` often, but it exists. And it turns out that these four op
 3. Write a logical expression that tests whether `x` is between 10 and 20 (inclusive).
 
 
-## Logic gates: where code meets hardware {#sec-logic-gates}
+::: {.callout-note collapse="true"}
+## From logic gates to circuits
 
-The `&` you typed a moment ago to combine filter conditions is the same AND operation that electrical engineers wire into silicon, described by the same truth tables George Boole formalized in 1854. In his 1937 master's thesis, Claude Shannon showed that these truth tables could be implemented with electrical switches, and that insight bridged the gap between abstract algebra and physical circuitry. The connection runs straight from the R code you write to the transistors that execute it: Boolean algebra is not a convenience but the foundation on which all digital computation rests.
+The `&` you typed a moment ago to combine filter conditions is the same AND operation that electrical engineers wire into silicon, described by the same truth tables George Boole formalized in 1854. In his 1937 master's thesis, Claude Shannon showed that these truth tables could be implemented with electrical switches, and that insight bridged the gap between abstract algebra and physical circuitry. Every digital circuit is built from these operations.
 
 The `&`, `|`, `!`, and `xor()` you use in R correspond to physical circuits called *logic gates* inside every processor.
 
@@ -174,9 +175,9 @@ A  B  out        A  B  out        A  B  out        A  out
 1  1   1         1  1   1         1  1   0
 ```
 
-These are the same truth tables as R's `&`, `|`, `xor()`, and `!`. When you write `TRUE & FALSE` in R, the CPU evaluates it using an AND gate (or a chain of them, for vectors). The logic you write and the logic etched into silicon are the same logic, described by the same truth tables, separated only by layers of translation.
+These are the same truth tables as R's `&`, `|`, `xor()`, and `!`. When you write `TRUE & FALSE` in R, the CPU evaluates it using an AND gate (or a chain of them, for vectors). When you write `TRUE & FALSE` in R, the CPU evaluates the same Boolean operation using an AND gate.
 
-Everything a computer does, from adding numbers to rendering video, is built from combinations of these four gates. To see how, we can design a circuit the way electrical engineers do: start with inputs and outputs, build a truth table, find the minimal Boolean expression, then wire the gates.
+Everything a computer does, from adding numbers to rendering video, is built from combinations of these four gates. We can design a circuit the way electrical engineers do: start with inputs and outputs, build a truth table, find the minimal Boolean expression, then wire the gates.
 
 
 ### Designing a half adder {#sec-half-adder}
@@ -301,17 +302,12 @@ full_adder(TRUE, TRUE, TRUE)   # 1+1+1 = 11 binary
 
 1 + 1 + 0 = 2 (binary 10: Sum=0, Carry=1). 1 + 1 + 1 = 3 (binary 11: Sum=1, Carry=1).
 
-Chain four full adders together, each one's Cout feeding the next one's Cin, and you have a 4-bit adder. Chain 64 of them and you can add two 64-bit numbers. A CPU is billions of these gates arranged to perform arithmetic, comparisons, and memory access. The boolean algebra you use in R to filter data (`penguins$body_mass_g > 4000 & penguins$species == "Gentoo"`) is the same boolean algebra running in the silicon beneath it.
+Chain four full adders together, each one's Cout feeding the next one's Cin, and you have a 4-bit adder. Chain 64 of them and you can add two 64-bit numbers. A CPU is billions of these gates arranged to perform arithmetic, comparisons, and memory access. The `&` you use to filter penguins (`body_mass_g > 4000 & species == "Gentoo"`) runs on these same gates.
 
 The workflow we followed (truth table, canonical form, minimize, circuit) is called *Boolean function minimization*. K-maps work for up to four or five inputs; for larger circuits, algorithms like Quine-McCluskey or Espresso take over. The principle, though, is always the same: specify what you want as a truth table, then find the smallest set of gates that produces it.
 
-
-::: callout-note
-## From gates to computation
-A logic gate on its own computes one result and stops, frozen in time. Add a clock (an electrical signal that alternates between 0 and 1 at a fixed rate, say three billion times per second) and flip-flops (gates that remember their output until the next clock tick), and the circuit can feed its result back into itself as the next input. That single step, from static logic to feedback, is the step from logic to computation. The calculator from @sec-turing that added `3 + 5 + 2 + 8` by keeping a running total? It is an adder circuit driven by a clock, reading one number per tick, feeding the output back into the input. Every processor is this idea, scaled up.
+A logic gate on its own computes one result and stops, frozen in time. Add a clock (an electrical signal that alternates between 0 and 1 at a fixed rate, say three billion times per second) and flip-flops (gates that remember their output until the next clock tick), and the circuit can feed its result back into itself as the next input. With feedback, static logic becomes computation. The calculator from @sec-turing that added `3 + 5 + 2 + 8` by keeping a running total? It is an adder circuit driven by a clock, reading one number per tick, feeding the output back into the input. Every processor is this idea, scaled up.
 :::
-
-
 
 
 ## How numbers are stored {#sec-numbers-stored}

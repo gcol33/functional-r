@@ -237,7 +237,7 @@ When only one name references an object, R modifies it in place, which is why pr
 
 ## data.table {#sec-data-table}
 
-You have vectorized your operations, pre-allocated your loops, and the code is still too slow. The bottleneck is no longer your logic; it is the data frame engine itself. `dplyr` is readable and expressive, but on millions of rows its abstractions carry a cost: intermediate copies, grouped operations that could be fused, filters that scan more data than necessary.
+You have vectorized your operations, pre-allocated your loops, and the code is still too slow. The bottleneck is the data frame engine itself. `dplyr` is readable and expressive, but on millions of rows its abstractions carry a cost: intermediate copies, grouped operations that could be fused, filters that scan more data than necessary.
 
 `data.table` strips away those abstractions:
 
@@ -251,9 +251,9 @@ dt <- fread("large_file.csv")  # much faster than read.csv()
 dt[age > 30, .(mean_income = mean(income)), by = region]
 ```
 
-The `dt[i, j, by]` syntax puts row filtering (`i`), column operations (`j`), and grouping (`by`) in a single expression, which lets data.table optimize the entire operation as one unit rather than executing three separate steps. It modifies columns in place (no copy-on-modify overhead), automatically parallelizes grouped operations, uses less memory than equivalent dplyr pipelines, and its `fread()` reads CSV files much faster than `read.csv()` and often faster than `readr::read_csv()`.
+The `dt[i, j, by]` syntax puts row filtering (`i`), column operations (`j`), and grouping (`by`) in a single expression, which lets data.table optimize the entire operation as a single pass. It modifies columns in place (no copy-on-modify overhead), automatically parallelizes grouped operations, uses less memory than equivalent dplyr pipelines, and its `fread()` reads CSV files much faster than `read.csv()` and often faster than `readr::read_csv()`.
 
-The trade-off is a steeper learning curve and a different philosophy from the tidyverse. If you do not want to learn the syntax, `dtplyr` bridges the gap: write dplyr verbs, get data.table speed. It translates your pipeline behind the scenes.
+The trade-off is a steeper learning curve; the `dt[i, j, by]` idiom reads differently from dplyr pipes. If you do not want to learn the syntax, `dtplyr` bridges the gap: write dplyr verbs, get data.table speed. It translates your pipeline behind the scenes.
 
 A quick comparison:
 
@@ -272,7 +272,29 @@ dt <- as.data.table(sales)
 dt[year == 2024, .(total = sum(revenue)), by = region]
 ```
 
-Both produce the same result. The data.table version is more compact and typically faster on large data; the dplyr version is more readable if you think in pipes. Neither is wrong. But both share a limitation that matters once your ambitions outgrow your RAM: they operate entirely in memory. However fast data.table is, it still loads the entire dataset into RAM before it touches a single row.
+On small data, the difference is negligible. On millions of rows with many groups, the gap opens up:
+
+```{r}
+#| eval: false
+n <- 5e6
+sales <- data.frame(
+  region = sample(letters, n, replace = TRUE),
+  revenue = rnorm(n, 1000, 200)
+)
+dt <- data.table::as.data.table(sales)
+
+bench::mark(
+  dplyr = sales |>
+    dplyr::group_by(region) |>
+    dplyr::summarise(total = sum(revenue)),
+  data.table = dt[, .(total = sum(revenue)), by = region],
+  check = FALSE
+)
+# data.table is typically 3-10x faster on grouped aggregations at this scale.
+# The gap widens with more groups and more rows.
+```
+
+Reach for data.table when your data has millions of rows, when you are grouping over many categories, or when the same pipeline runs repeatedly in a loop or a Shiny app. If your data fits comfortably in memory and dplyr finishes in seconds, switching buys you nothing but a syntax change. Both dplyr and data.table operate entirely in memory. data.table still loads the entire dataset into RAM before it touches a single row.
 
 ### Exercises {.unnumbered}
 

@@ -11,7 +11,7 @@ The answer begins with something R does not do. When you pass an argument to a f
 
 The idea has a lineage. Early programming languages split over a simple question: when should arguments be evaluated? Fortran and C chose eagerness, computing each argument before handing it to the function (call-by-value). Algol 60 tried the opposite, passing the raw expression and re-evaluating it every time the function touched it (call-by-name). If the expression had side effects, they fired on every access; if the expression was expensive, the cost multiplied by the number of times the function touched the argument. The compromise came in 1976: pass the expression unevaluated, but cache the result after the first evaluation. Evaluate at most once. The technique was called *lazy evaluation*. Haskell made laziness the default for everything when it launched in 1990; R took a narrower path, inheriting through Scheme and S a design where function arguments are lazy but everything else is eager. That middle ground gives you expression capture without pervasive laziness, but it also means that every function argument in R carries a hidden payload most programmers never notice.
 
-The mechanism behind all of this is promises. Once you see how they work, non-standard evaluation, data masking, and `{{ }}` follow as consequences rather than mysteries. Full metaprogramming lives in @sec-metaprogramming; here, the goal is understanding the machinery well enough to use it, and well enough to know when it's working against you.
+The mechanism behind all of this is promises. Once you see how they work, non-standard evaluation, data masking, and `{{ }}` follow as consequences. Full metaprogramming lives in @sec-metaprogramming; here, the goal is understanding the machinery well enough to use it, and well enough to know when it's working against you.
 
 
 ## Promises {#sec-promises}
@@ -149,6 +149,8 @@ What is `force(x)` actually doing? Nothing clever. Its definition is just `x`, w
 
 ## What is non-standard evaluation? {#sec-nse}
 
+The previous section ended with a question: if laziness can cause subtle bugs, why does R bother with it? Because arguments travel as unevaluated promises, a function can intercept the expression before R reduces it to a value, and that capability is the foundation of non-standard evaluation.
+
 Standard evaluation is straightforward: R evaluates an expression, produces a value, and hands the value to a function. When you write `mean(c(1, 2, 3))`, R computes the vector `[1] 1 2 3` first, then passes it to `mean`, and `mean` never sees the expression `c(1, 2, 3)` at all.
 
 Now try `subset(df, x > 3)`. If R evaluated `x > 3` in your environment before passing it to `subset`, the call would fail: there is no `x` in your workspace. Something different is happening here, something that depends on the laziness you've been studying. Instead of evaluating the argument, `subset` reaches into the promise, extracts the *expression* before evaluation, and then decides for itself where that expression should run:
@@ -243,6 +245,8 @@ Data masking is optimized for the common case (interactive analysis) at the expe
 
 ## Tidy evaluation basics {#sec-tidy-eval-basics}
 
+Data masking works because `substitute()` captures the promise from the immediate caller. But when you wrap a data-masked function inside your own function, `substitute()` captures your wrapper's argument name, not the expression the original caller wrote. Tidy evaluation exists to thread promises through that extra layer.
+
 The embrace operator `{{ }}` (called "curly-curly") solves the most common programming-with-NSE problem: passing a column name through your function to a dplyr verb without it getting lost along the way.
 
 ```{r}
@@ -298,7 +302,7 @@ For 80% of programming-with-dplyr tasks, `{{ }}` is all you need. Learn it, use 
 
 ## The trade-offs of NSE {#sec-nse-tradeoffs}
 
-NSE buys you something and costs you something.
+Promises enable NSE, NSE enables data masking, and `{{ }}` makes data masking programmable. Each link adds a layer of indirection.
 
 **Convenience vs. predictability.** `filter(df, x > 5)` is concise and readable, but if a variable `x` exists in your environment *and* a column `x` exists in your data frame, the column wins silently. When that's wrong, nothing tells you.
 

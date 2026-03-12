@@ -9,12 +9,7 @@ source(here::here("_common.R"))
 >
 > --- John Horton Conway
 
-When people teach you R, they usually hand you a list of commands. Load this file, make that plot, run this test. The language disappears behind the commands, the way a piano disappears behind scales, and after a while you can do many things correctly without understanding any of them. You learn that `TRUE + TRUE` equals `2`, and it works, so you stop asking why.
+`TRUE + TRUE` equals `2` in R. Type it into the console and there it is. But R is not doing arithmetic on the word "true"; it is converting a logical value to the number `1`, twice, and adding. That conversion follows a rule, and the rule follows from a design decision, and the design decision follows from a paper written in 1936 by a mathematician named Alonzo Church, who was not thinking about programming at all.
 
-This book asks why.
+Church wanted to formalize computation using nothing but functions: functions that take other functions as arguments and return new functions as results. No variables to store things in, no steps to execute in order; just substitution, all the way down. John McCarthy built a programming language from it in 1958 and called it Lisp. Guy Steele and Gerald Sussman distilled it into Scheme in 1975. John Chambers designed S at Bell Labs in the 1980s with Scheme's ideas in his head, and two statisticians in Auckland built R from S in the 1990s. Ninety years after Church's paper, the fingerprints are on everything you type into an R console.
 
-Because the simple things get simpler when you see what holds them up. R has a logic underneath it, quiet and surprisingly consistent, and once you see that logic, the things that seemed arbitrary become inevitable. Functions are values you can pass around like numbers; operators are functions wearing a disguise; expressions have types, and types decide what makes sense. These are ideas from the lambda calculus, a notation a mathematician named Alonzo Church invented in the 1930s, before computers existed, carried through Lisp, through Scheme, through S, and into the language sitting on your screen right now. Waiting.
-
-I wrote this book for people who have never programmed before. But I refused, from the first page, to separate the *how* from the *why*, because they are the same thing. Understanding why R works the way it does is what makes you fast, in R and in any language you pick up next. The ideas here (closures, immutability, composition, lazy evaluation) are older than R, older than computers, and they show up everywhere.
-
-R is where I first met them. I think you will like it here.

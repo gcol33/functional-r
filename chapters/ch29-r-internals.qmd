@@ -30,6 +30,8 @@ The `SEXPREC` struct has two parts. The header is the same for every object, and
 
 The payload varies by type. For a numeric vector, it is a contiguous block of C `double` values. For a closure, it is three pointers (formals, body, environment). For an environment, it is a hash table plus a pointer to the parent environment. So every R object, from a humble integer to a deeply nested list of data frames, wears the same uniform; only the payload inside differs.
 
+![The SEXPREC struct: a fixed-size header followed by a contiguous data array. `x + y` walks two arrays in lockstep with no pointer chasing.](../images/sexprec_layout.png){#fig-sexprec width=100%}
+
 You can see the type tag from R with `typeof()`:
 
 ```{r}
