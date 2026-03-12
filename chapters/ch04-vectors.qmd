@@ -139,7 +139,7 @@ R will never warn you about coercion. `c(1, 2, "3")` quietly becomes all charact
 
 ## Vectorized operations {#sec-vectorized-ops}
 
-Suppose you need to convert five temperatures from Fahrenheit to Celsius. In most languages, you write a loop: go through each element, apply the formula, store the result. In R:
+Say you have five temperatures in Fahrenheit and want Celsius. In most languages, you write a loop: go through each element, apply the formula, store the result. In R:
 
 ```{r}
 temperatures <- c(72, 85, 61, 90, 78)
@@ -200,7 +200,7 @@ R distributes the function over the vector automatically; you write one applicat
 This pattern has a name: a *functor*. A functor maps a function over a structure while preserving the structure's shape. `sqrt` applied to a five-element vector returns a five-element vector; the function changes the contents, but the container stays intact. Vectors are functors, lists are functors (via `lapply`), and data frame columns are functors (via `mutate`). The word comes from category theory, but the idea is concrete: apply inside, preserve outside. You will see it everywhere in this book, and by the end it will feel as natural as vectorization itself.
 :::
 
-Consider what `temperatures * 9/5 + 32` actually did. A function was applied to a structure and produced a structure of the same shape — a functor operation, driven by the same term-replacement mechanism that @sec-church introduced as lambda calculus. And when you wrote `c(morning, afternoon)`, the names were substituted for their values and the expression reduced to a single vector; that is Church's beta reduction. The theoretical machinery from Chapter 1 has been running under every line of code in this chapter, not as background context but as the engine. By the time you typed `42` into the console and got `42` back, you were already doing functional programming — you just did not have a name for it yet.
+Consider what `temperatures * 9/5 + 32` actually did. A function was applied to a structure and produced a structure of the same shape — a functor operation, driven by the same term-replacement mechanism that @sec-church introduced as lambda calculus. And when you wrote `c(morning, afternoon)`, the names were substituted for their values and the expression reduced to a single vector. That is *beta reduction*: replacing a name with its value and simplifying (@sec-church covers the formal version). The theoretical machinery from Chapter 1 has been running under every line of code in this chapter, not as background context but as the engine. By the time you typed `42` into the console and got `42` back, you were already doing functional programming — you just did not have a name for it yet.
 
 
 ### Recycling {#sec-recycling}
@@ -281,7 +281,7 @@ x[2] <- 99
 x
 ```
 
-This looks like it's changing the vector in place, but R is actually making a copy with the new value and pointing the name `x` at the copy. The old vector (with 20 in position 2) is gone. This is copy-on-modify, the same idea from @sec-names-binding: values in R don't change; names get moved to point at new values. So far, every element in our vectors has been present and accounted for. Real data is not so tidy.
+This looks like it's changing the vector in place, but R is actually making a copy with the new value and pointing the name `x` at the copy. The old vector (with 20 in position 2) is gone. This is copy-on-modify, the same idea from @sec-names-binding: values in R don't change; names get moved to point at new values. So far, every element in our vectors has been present and accounted for, but real data has gaps.
 
 
 ### Exercises {.unnumbered}

@@ -7,9 +7,9 @@ source(here::here("_common.R"))
 
 Here is an experiment. Take R and remove everything except `function()` and the ability to call functions. No numbers. No booleans. No `if`. No `list()`. No `<-` for naming recursive calls. Starting from that barren landscape, try to build integers, conditionals, pairs, lists, and recursion.
 
-It works. Every one of those things can be reconstructed from `function()` alone. R's `function()` keyword is Church's λ, its function application is beta reduction, and its closures are the scoping discipline that Scheme borrowed from lambda calculus and passed on to R (@sec-family-tree). The `double <- function(x) x * 2` from @sec-first-function, the recursive descents in @sec-recursion, the closures that captured variables and carried them somewhere new -- all of them are expressions in a formal system that predates computers by decades.
+Surprisingly, it works. Every one of those things can be reconstructed from `function()` alone. R's `function()` keyword is Church's λ, its function application is beta reduction, and its closures are the scoping discipline that Scheme borrowed from lambda calculus and passed on to R (@sec-family-tree). The `double <- function(x) x * 2` from @sec-first-function, the recursive descents in @sec-recursion, the closures that captured variables and carried them somewhere new -- all of them are expressions in a formal system that predates computers by decades.
 
-This chapter runs the experiment. By the end, the question is not whether R can do it, but what it means that R can.
+This chapter runs the experiment.
 
 
 ## Lambda calculus in one page {#sec-lambda-calculus}
@@ -411,11 +411,67 @@ The Curry-Howard correspondence (named for Haskell Curry, who noticed the connec
 
 Three patterns have appeared repeatedly in this book, and they all have names that sound intimidating. The names are beside the point. What matters is that these patterns are not coincidences. Category theory provides a vocabulary for patterns that recur across different mathematical structures, and once you see the vocabulary, you start noticing that R's functional design has been using these structures all along.
 
-**Functors.** A functor is a mapping between categories that preserves structure. In programming terms: if you have a container and a function, a functor lets you apply the function to the contents without changing the container's shape. `map(my_list, sqrt)` applies `sqrt` inside the list, preserving the list structure. `mutate(df, x = sqrt(x))` applies a function inside a data frame, preserving the data frame structure. `lapply()` from @sec-lapply-sapply is a functor. So is `map()`. What makes them trustworthy is that they all obey the same two laws (identity and composition). A function that mapped elements but scrambled their relationships would be useless for pipelines. Functors preserve structure, and that constraint is exactly why `map |> map |> map` chains work reliably.
+**Functors.** A functor is a mapping between categories that preserves structure. In programming terms: if you have a container and a function, a functor lets you apply the function to the contents without changing the container's shape.
 
-**Monoids.** A monoid is a set with an associative binary operation and an identity element. Addition on numbers: `(a + b) + c = a + (b + c)`, identity is 0. Multiplication: identity is 1. String concatenation: identity is `""`. `Reduce()` works on any monoid (@sec-reduce-and-accumulate), and that is not an accident; `Reduce()` *is* the monoid pattern. It needs associativity so the folding direction doesn't matter, and it needs an identity element to handle the empty case. But not every binary operation qualifies. Subtraction does not, because `(5 - 3) - 1` is not `5 - (3 - 1)`. The operations that fold cleanly are precisely the monoids, and the operations `Reduce()` fails on are the ones that violate the monoid laws.
+```{r}
+x <- list(1, 4, 9, 16)
+lapply(x, sqrt)
+```
 
-**Natural transformations.** A natural transformation converts one functor into another while preserving the relationships between elements. `pivot_longer()` and `pivot_wider()` (@sec-pivot-longer, @sec-pivot-wider) transform the shape of a data frame without losing information: the data can be recovered by applying the inverse transformation. That reversibility is precisely what makes them natural transformations rather than arbitrary reshaping operations. If pivoting destroyed information, you would not be able to pivot back.
+`lapply()` applied `sqrt` to each element and gave back a list of the same length. The container's shape did not change; only the values inside it did. Strictly, the functor is the list construction itself -- it sends a type `T` to "list of `T`" and sends a function `f` to "apply `f` to each element." `lapply()` (and purrr's `map()`) are the *fmap* of that functor: the part that lifts a function into the container.
+
+What makes a functor trustworthy is that it obeys two laws. The *identity law* says mapping a do-nothing function changes nothing:
+
+```{r}
+identical(lapply(x, identity), x)
+```
+
+The *composition law* says mapping two functions in sequence gives the same result as mapping their composition in one step:
+
+```{r}
+identical(
+  lapply(lapply(x, sqrt), log),    # map sqrt, then map log
+  lapply(x, \(v) log(sqrt(v)))     # map the composition directly
+)
+```
+
+A function that mapped elements but scrambled their relationships would break pipelines. `lapply |> lapply |> lapply` chains work reliably because both laws hold. `mutate()` looks similar on the surface, but it does not satisfy these laws in general -- column expressions can reference other columns, introduce side effects, and break composition. It is a useful tool, not a functor.
+
+**Monoids.** A monoid is a set with an associative binary operation and an identity element. Addition on numbers: `(a + b) + c = a + (b + c)`, identity is 0. String concatenation: identity is `""`. `Reduce()` works on any monoid (@sec-reduce-and-accumulate), and that is not an accident; `Reduce()` *is* the monoid pattern.
+
+```{r}
+Reduce(paste0, c("a", "b", "c"))
+Reduce(`+`, 1:5)
+```
+
+It needs associativity so the result is the same regardless of how intermediate computations are grouped, and it needs an identity element to handle the empty case. But not every binary operation qualifies. Subtraction is not associative:
+
+```{r}
+(5 - 3) - 1
+5 - (3 - 1)
+```
+
+Different answers. The operations that fold cleanly are precisely the monoids, and the operations `Reduce()` fails on are the ones that violate the monoid laws. If you find yourself fighting with `Reduce()`, check whether your operation is actually a monoid. If it is not, the folding direction will matter and the results will surprise you.
+
+**Natural transformations.** A natural transformation converts one functor into another while preserving the relationships between elements. The defining property is the *naturality condition*: if you apply a function to the contents and then transform the container, you get the same result as transforming the container first and then applying the function. The transformation commutes with the functor's action.
+
+`as.list()` on an atomic vector is a natural transformation from the vector functor to the list functor:
+
+```{r}
+x <- c(1, 4, 9)
+
+# map then convert
+a <- as.list(sqrt(x))
+
+# convert then map
+b <- lapply(as.list(x), sqrt)
+
+identical(a, b)
+```
+
+The order does not matter. That commutativity is the naturality condition, and it is what makes `as.list()` well-behaved: it changes the container without disturbing the relationship between the function and the data inside.
+
+`pivot_longer()` and `pivot_wider()` (@sec-pivot-longer, @sec-pivot-wider) go further: they are invertible, which makes them natural *isomorphisms*. Reversibility is a stronger property than naturality alone; it means no information is lost in the reshaping. You can pivot long and then pivot wide and arrive back where you started, because the transformation preserves everything.
 
 None of this requires learning category theory. But these patterns keep showing up because they reflect mathematical structure, and R's functional design makes them visible. Church encodings prove this at the foundational level. For day-to-day work, R has practical tools that put mathematical computation within reach.
 
@@ -424,7 +480,7 @@ None of this requires learning category theory. But these patterns keep showing 
 
 1. `paste0` with `Reduce`: `Reduce(paste0, c("a", "b", "c"))` gives `"abc"`. What is the identity element for `paste0` as a monoid? Verify by adding it as the `init` argument: `Reduce(paste0, character(0), accumulate = FALSE)`.
 2. Why is subtraction not a monoid? (Hint: check associativity.) What does this imply about using `Reduce` with `-`?
-3. `map(list(1:3, 4:6, 7:9), rev)` applies `rev` inside each list element. Why is this a functor? What structure is preserved?
+3. `lapply(list(1:3, 4:6, 7:9), rev)` applies `rev` inside each list element. Verify both functor laws (identity and composition) for this example.
 
 
 ## Practical mathematics in R {#sec-practical-math}
@@ -499,25 +555,13 @@ Both solutions are one-liners because R's vectorized operations (@sec-two-models
 
 ## The historical thread {#sec-math-history}
 
-Each idea in this chapter passed through specific hands. The chain is worth tracing because each link made the same idea more concrete, more executable, closer to running code.
+Each idea in this chapter passed through specific hands. The chain is worth tracing because each link solved a problem that the previous link could not.
 
-**Gottfried Wilhelm Leibniz (1679)** dreamed of a *calculus ratiocinator*, a formal system that could reduce all reasoning to calculation. The dream was premature by two and a half centuries. The ambition was right.
+Could you reduce all of reasoning to calculation? In 1679, a man who had already co-invented calculus thought you could. Gottfried Wilhelm Leibniz imagined a *calculus ratiocinator*, a formal system that would make thinking mechanical. The dream was premature by two and a half centuries. By the 1870s, mathematicians had spent decades making their own foundations rigorous — formalizing limits, infinity, the number line. A German mathematician named Gottlob Frege saw that logic could be next. His *Begriffsschrift* (1879) introduced quantifiers, variables, and functions as logical primitives, the first formal notation for logic itself. Modern mathematical logic begins here, but Frege's system was too heavy. Church stripped it to three constructs (variable, abstraction, application) and showed in 1936 that everything could be built back from those alone. The Church numerals and Church booleans in this chapter are his constructions.
 
-**Gottlob Frege (1879)** made the first serious attempt with his *Begriffsschrift*, a formal notation for logic that introduced quantifiers, variables, and functions as logical primitives. Modern mathematical logic begins here.
+That was the theory. The question was whether anyone could make it run. McCarthy answered it in 1960 with LISP, the first programming language where `(lambda (x) (+ x 1))` was a direct encoding of Church's `λx. x + 1`. But LISP had dynamic scoping, which meant closures did not work the way the theory said they should. Steele and Sussman fixed that in 1975 with Scheme: lexical scoping, first-class closures, and the "Lambda the Ultimate" papers that showed lambda expressions could replace `goto`, assignment, and most control structures.
 
-**Alonzo Church (1936)** stripped Frege's system down to its essence and produced the lambda calculus: three constructs (variable, abstraction, application), no types, no numbers, no booleans. Then he showed that everything could be built back from those three constructs alone. The Church numerals and Church booleans in this chapter are his constructions.
-
-**Haskell Curry (1934 onward)** developed combinatory logic, a related system that eliminates variables entirely. The Curry-Howard correspondence is half his; the programming language Haskell is named after him; so is the concept of currying (though Schoenfinkel had the idea first).
-
-**John McCarthy (1960)** implemented Church's ideas in a programming language: LISP. For the first time, lambda calculus was not just notation on paper; it was something you could run. McCarthy's `(lambda (x) (+ x 1))` is a direct encoding of `λx. x + 1`.
-
-**Guy Steele and Gerald Jay Sussman (1975)** created Scheme, a dialect of LISP with lexical scoping and first-class closures. Scheme was the first language to take lambda calculus fully seriously as a *design principle* rather than just a feature, and the "Lambda the Ultimate" papers showed that lambda expressions could replace `goto`, assignment, and most control structures.
-
-**John Chambers (1976 onward)** designed S at Bell Labs, a language for statistical computing that had functions and expressions at its core but drew from Fortran as much as from functional programming. The statistical vocabulary (data frames, formulas, vectorized operations) was new.
-
-**Ross Ihaka and Robert Gentleman (1993)** created R at the University of Auckland, reimplementing S but replacing S's scoping rules with Scheme's lexical scoping. That single decision is why closures work in R, why function factories work, why this entire chapter is possible. Without Scheme's influence, R would be a scripting language for statistics. With it, R is a programming language rooted in lambda calculus that happens to be good at statistics.
-
-The line runs: Leibniz, Frege, Church, Curry, McCarthy, Steele and Sussman, Chambers, Ihaka and Gentleman. Each step made the ideas more concrete, more executable, closer to something you could type into a console and watch run. `function(x) x + 1` carries an ancestry that stretches to 1936 and aspirations that stretch to 1679.
+In the 1970s, a statistician at Bell Labs who wanted to run a regression still had to write a Fortran program, compile it, and wait for output. Chambers designed S (1976) to change that: a language for statistical computing where you could type an expression and see the result immediately. It had functions and expressions at its core but borrowed its computational style from Fortran. The statistical vocabulary (data frames, formulas, vectorized operations) was new. When Ihaka and Gentleman reimplemented S at the University of Auckland in 1993, they made one decision that changed everything: they replaced S's scoping rules with Scheme's lexical scoping. That single choice is why closures work in R, why function factories work, why every Church encoding in this chapter runs without modification.
 
 
 ## References and sources

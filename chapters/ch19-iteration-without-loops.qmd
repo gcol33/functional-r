@@ -10,7 +10,7 @@ library(dplyr)
 
 You have a list of three data frames and you want to compute the mean of a column in each one. Six lines of `for` loop, or one line of `map()`. The difference is not cosmetic.
 
-Functions are values (@sec-functions-are-values-chapter) and you can pass them to other functions (@sec-passing-functions). A *functional* takes that one step further: it is a higher-order function that handles the iteration for you. You give it a function and a collection; it applies the function to each element, manages the indexing and pre-allocation, and returns the results.
+Functions are values (@sec-functions-are-values-chapter) and you can pass them to other functions (@sec-passing-functions). A *functional* builds on that idea: it is a higher-order function that handles the iteration for you. You give it a function and a collection; it applies the function to each element, manages the indexing and pre-allocation, and returns the results.
 
 This chapter uses three packages. Load them now if you are following along:
 
@@ -44,7 +44,7 @@ names(results) <- names(penguins_split)
 results
 ```
 
-Six lines to say "compute the mean mass for each group." Look at how much of that is bookkeeping: pre-allocate a container, set up an index, store results at the right position, copy names over at the end. The actual computation, `mean(df$body_mass_g, na.rm = TRUE)`, sits buried in the middle, surrounded by ceremony that has nothing to do with the question you asked.
+Six lines to say "compute the mean mass for each group." Look at how much of that is bookkeeping: pre-allocate a container, set up an index, store results at the right position, copy names over at the end. The actual computation, `mean(df$body_mass_g, na.rm = TRUE)`, sits buried in the middle, surrounded by scaffolding that has nothing to do with the question you asked.
 
 A functional says the same thing in one line:
 
@@ -83,7 +83,7 @@ lapply(penguins_split, \(df) mean(df$body_mass_g, na.rm = TRUE))
 sapply(penguins_split, \(df) mean(df$body_mass_g, na.rm = TRUE))
 ```
 
-When every call to `f` returns a single value, `sapply()` hands you a named vector. Convenient. But what if `f` returns different lengths for different elements? Then `sapply()` falls back to a list, silently, and you cannot predict the return type without knowing the output of `f` for every element of `x`. In interactive use this is fine; in code that other code depends on, it is a trap waiting to spring.
+When every call to `f` returns a single value, `sapply()` hands you a named vector. But if `f` returns different lengths for different elements, `sapply()` falls back to a list, silently. You cannot predict the return type without knowing the output of `f` for every element of `x`. Fine at the console; unreliable inside a function that other code depends on.
 
 `vapply()` solves this by making you declare the expected type:
 
@@ -152,7 +152,7 @@ Third, you may encounter the formula shorthand in older code: `~ mean(.x$body_ma
 
 That last point deserves a second look. A `for` loop iterates by maintaining a counter variable: `i` goes from 1 to `n`, and the body runs once per increment. You declare the counter, increment it, read it. With `map()`, the counter disappears. The list has three elements, so the function runs three times; the structure itself determines how many applications occur. Church's lambda calculus pushes the idea further still: the number 3 is `λf. λx. f(f(f(x)))`, a function that applies another function three times. The number does not *describe* iteration; it *is* iteration. `map()` sits between the explicit counter and the Church numeral, which is part of why it feels like a natural step away from loops. You stop managing the iteration and let the data's shape manage it for you.
 
-But type stability is only half the story. The typed variants enforce something even stricter.
+The typed variants enforce something even stricter.
 
 ### Exercises {.unnumbered}
 
@@ -185,7 +185,7 @@ If `.f` returns the wrong type or a vector of length other than one, you get an 
 map_dbl(penguins_split, \(df) df$body_mass_g)
 ```
 
-This is the payoff of declaring your types up front. When the output does not match your expectation, you find out immediately, not three functions downstream when something produces `NULL` instead of a number and you spend twenty minutes tracing back through the pipeline to figure out where it went wrong.
+When the output does not match your expectation, you find out immediately, not three functions downstream when something produces `NULL` instead of a number.
 
 For results that are data frames, the older `map_dfr()` is deprecated. The current pattern is `map()` followed by `list_rbind()`:
 

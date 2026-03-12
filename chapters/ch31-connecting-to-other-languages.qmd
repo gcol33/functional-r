@@ -267,7 +267,7 @@ reticulate::use_virtualenv("myproject")
 reticulate::use_condaenv("myenv")
 ```
 
-Set this early, before calling `import()`. Once the Python interpreter starts, you cannot switch to a different one within the same R session. Get this wrong, and you will spend an hour debugging import errors that have nothing to do with your code and everything to do with which Python binary got loaded first.
+Call this before `import()`. Once the Python interpreter starts, you cannot switch to a different one within the same R session.
 
 ### Exercises {.unnumbered}
 

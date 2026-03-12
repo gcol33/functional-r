@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-Suppose you need twelve formatting functions: one for dollars, one for euros, one for percentages, one for each of nine other currencies your client cares about. You could write twelve functions by hand, each identical except for a prefix string. Or you could write one function that manufactures the other twelve. In @sec-functions-returning-functions, you saw `make_adder`, a function that returns a function; in @sec-closures-and-scope, you learned why it works, because the returned function is a closure that captures its creation environment. This chapter puts both ideas to serious use, building entire families of functions from a single template, and it will change how you think about the relationship between parameters and behavior.
+Suppose you need twelve formatting functions: one for dollars, one for euros, one for percentages, one for each of nine other currencies your client cares about. You could write twelve functions by hand, each identical except for a prefix string. Or you could write one function that manufactures the other twelve. In @sec-functions-returning-functions, you saw `make_adder`, a function that returns a function; in @sec-closures-and-scope, you learned why it works, because the returned function is a closure that captures its creation environment. This chapter puts both ideas to serious use, building entire families of functions from a single template.
 
 
 ## The pattern {#sec-factory-pattern}
@@ -30,7 +30,7 @@ When you call `power(2)`, R creates an execution environment where `exponent` is
 
 This is exactly `make_adder` from @sec-functions-returning-functions, with exponentiation instead of addition. That section introduced the idea without naming it. The name is *function factory*, and the functions it produces are *closures*.
 
-Function factories are *partial application* made explicit: `power(2)` fixes one argument of a two-argument operation and returns a function of the remaining argument. In lambda calculus, `power` is `λe. λx. x^e`; applying it to 2 gives `λx. x^2`. This decomposition of multi-argument functions into chains of single-argument functions is called *currying* (Schonfinkel 1924, Curry 1958). In Haskell, all functions are curried by default: `add 5 3` is really `(add 5) 3`, where `add 5` returns a function. R's function factories are manual currying. In combinatory logic, the simplest factory is the K combinator (`K = λx.λy. x`): it takes a value and returns a function that always produces that value, ignoring its argument. `make_formatter("$")` is K at work: it captures `"$"` and returns a function whose behavior is fixed regardless of how it was called.
+Function factories are *partial application* made explicit: `power(2)` fixes one argument of a two-argument operation and returns a function of the remaining argument. In lambda calculus, `power` is `λe. λx. x^e`; applying it to 2 gives `λx. x^2`. This decomposition of multi-argument functions into chains of single-argument functions is called *currying* (Schonfinkel 1924, Curry 1958). In Haskell, all functions are curried by default: `add 5 3` is really `(add 5) 3`, where `add 5` returns a function. R's function factories are manual currying. In combinatory logic, the simplest factory is the K combinator (`K = λx.λy. x`): it takes a value and returns a function that always produces that value, ignoring its argument. `make_formatter("$")` is K applied: it captures `"$"` and returns a function that ignores everything except its argument.
 
 
 ### Exercises {.unnumbered}
@@ -122,7 +122,7 @@ Every factory should `force()` every argument that the manufactured function use
 
 ## Practical factories {#sec-practical-factories}
 
-So far the examples have been small, almost toy-like, and you might reasonably wonder whether factories earn their keep in real code. They do, and the pattern shows up wherever you find yourself repeating the same logic with different parameters: formatting, filtering, statistical transformations, anywhere a family of behaviors differs by a handful of constants.
+The pattern shows up wherever you find yourself repeating the same logic with different parameters: formatting, filtering, statistical transformations, anywhere a family of behaviors differs by a handful of constants.
 
 **Parameterized formatters.** A factory can bake a prefix and suffix into a formatting function:
 
@@ -177,7 +177,7 @@ Notice something subtle about that `if` statement: it runs once, when the factor
 
 This is staged computation: you separate the cost of *choosing* behavior from the cost of *running* behavior. The `if` branch evaluates once, during construction; the produced function evaluates many times, during use, and pays nothing for the choice that was already made. The same pattern drives much of ggplot2. When you call `scale_color_brewer(palette = "Set1")`, the factory runs once at plot-build time, baking the palette into a function that maps data values to colors. If it re-evaluated the palette choice every time it colored a point, the plot would slow to a crawl on large datasets. ggplot2 gains its speed from that separation: the decision moves from the data path (runs per point) to the construction path (runs once). Every factory you write makes a version of the same trade. The returned function carries less weight because the decision has already been made, baked into the closure's environment at creation time, and never revisited.
 
-But what happens when the function you want to specialize already exists, and you want to modify its behavior rather than build from scratch?
+The next section starts from the other direction: instead of building a function from parameters, you take a function that already exists and modify its behavior.
 
 
 ### Exercises {.unnumbered}
@@ -188,7 +188,7 @@ But what happens when the function you want to specialize already exists, and yo
 
 ## Memoization {#sec-memoization}
 
-Sometimes you do not need a new function; you need the same function, only faster. Memoization wraps a function so it caches its results: the first call computes normally, but subsequent calls with the same arguments return the cached value instantly, skipping the computation entirely.
+Sometimes you already have the right function, and the only problem is speed. Memoization wraps a function so it caches its results: the first call computes normally, but subsequent calls with the same arguments return the cached value instantly, skipping the computation entirely.
 
 ```{r}
 #| message: false
@@ -302,9 +302,9 @@ safe_logged_log(10)
 safe_logged_log("a")
 ```
 
-The inner operator (`safely`) handles errors; the outer one (`with_logging`) adds logging. Each layer does one thing, and you combine them to get the behavior you want, like stacking lenses on a camera.
+The inner operator (`safely`) handles errors; the outer one (`with_logging`) adds logging. Each layer does one thing, and you combine them to get the behavior you want.
 
-This is the payoff of thinking functionally. A factory builds specialized functions, an operator modifies them, and `map()` applies them across inputs; each piece is simple on its own, yet together they handle workflows that would otherwise require pages of boilerplate.
+A factory builds specialized functions, an operator modifies them, and `map()` applies them across inputs.
 
 ```{r}
 formatters <- map(c("$", "EUR ", "GBP "), make_formatter)
@@ -312,4 +312,4 @@ formatters <- map(c("$", "EUR ", "GBP "), make_formatter)
 map(formatters, \(f) f(100))
 ```
 
-`map()` over a vector of prefixes produces a list of formatters, then `map()` over the formatters applies each one. No loops, no intermediate variables. And if you squint at this pattern long enough, you start to see something: the boundary between data and code has gotten very thin. A list of functions is data you can iterate over, filter, compose, and pass around just like a list of numbers. That idea, that functions are values, has been running quietly beneath every chapter so far. The next chapter picks it up and runs with it.
+`map()` over a vector of prefixes produces a list of formatters, then `map()` over the formatters applies each one. A list of functions is data you can iterate over, filter, compose, and pass around just like a list of numbers. @sec-reduce-and-accumulate uses that idea to collapse entire sequences into single values.

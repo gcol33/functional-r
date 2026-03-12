@@ -344,7 +344,7 @@ safe_divide <- function(x, y) {
 safe_divide(10, 0)
 ```
 
-This is a small habit with a large payoff. A function that fails immediately with a clear message is worth ten that silently produce garbage. @sec-contracts-and-defensive-code covers input validation in depth; for now, `stopifnot()` at the top of your functions is enough. But validation only protects against bad inputs. What about the structure of the computation itself?
+A function that fails immediately with a clear message saves you from chasing wrong outputs later. @sec-contracts-and-defensive-code covers input validation in depth; for now, `stopifnot()` at the top of your functions is enough. But validation only protects against bad inputs. What about the structure of the computation itself?
 
 
 ### Exercises {.unnumbered}
@@ -386,6 +386,8 @@ In lambda calculus notation, factorial looks like this:
 ```
 fact = λn. if n = 0 then 1 else n * fact(n - 1)
 ```
+
+(This self-reference is informal shorthand; pure lambda calculus has no names, so `fact` cannot refer to itself directly. @sec-z-combinator shows how recursion works without them.)
 
 Wait. In @sec-church, the lambda calculus had only three things: variables, functions, and application. Where did `if/then/else` come from? Church showed that you can encode true, false, and conditional branching as pure lambda functions:
 
@@ -478,7 +480,7 @@ In the 1930s and 1940s, the logician Haskell Curry (after whom the Haskell progr
 
 Writing `factorial` constructs a proof by induction that the product `1 * 2 * ... * n` exists for every non-negative integer. The transformation from double-recursive `fibonacci` to tail-recursive `fibonacci_fast` is the same move a logician makes when they strengthen an inductive hypothesis to make a proof go through: the extra arguments (`a` and `b`) *are* the stronger hypothesis. Double induction reduces to simple induction with stronger invariants, which is why the same trick turns a slow recursive function into a fast one.
 
-Computation, proof, and mathematics are three perspectives on one subject. The logicians who discovered this (Church, Godel, Curry, Turing) were all working in the 1930s, before computers existed; they were studying what could be *proved*, and they found that the answer was identical to what could be *computed*.
+This was the landscape of the 1930s: Church, Godel, Curry, and Turing were all studying what could be *proved*, before computers existed, and they found that the answer was identical to what could be *computed*.
 
 Today, the Curry-Howard correspondence is the foundation of *formal verification*: software that proves other software is correct.
 

@@ -338,7 +338,7 @@ Three levels of feedback:
 - **WARNING**: something is wrong. Must fix for CRAN; should fix regardless.
 - **NOTE**: something is unusual. Fix if you can; explain if you can't.
 
-The goal: 0 errors, 0 warnings, 0 notes. Each of those roughly 50 tests exists because someone, somewhere, shipped a broken package, and the strictness reflects the cost of breakage on CRAN, where 20,000+ packages depend on each other. When the check says NOTE, it is not being pedantic; it is remembering a bug someone else already found.
+The goal: 0 errors, 0 warnings, 0 notes. Each of those roughly 50 tests exists because someone, somewhere, shipped a broken package, and the strictness reflects the cost of breakage on CRAN, where 20,000+ packages depend on each other. Every NOTE exists because someone shipped that exact mistake to CRAN and broke something downstream.
 
 Common issues and how to fix them:
 

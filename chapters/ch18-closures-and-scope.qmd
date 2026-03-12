@@ -225,11 +225,11 @@ b()
 
 `a` has counted to 3; `b` has counted to 1. They share no state; each factory call minted a private universe. But the mechanism that keeps these universes alive is the same one that can leak state into the global environment if `<<-` is used carelessly.
 
-Connection to @sec-functions-returning-functions: `make_adder` was a preview. Now you understand *why* the returned function remembers `n`. the mechanism is an environment that stays alive because something still points to it.
+Connection to @sec-functions-returning-functions: `make_adder` was a preview. Now you understand *why* the returned function remembers `n`: an environment stays alive because something still points to it.
 
-This is also exactly what happens in lambda calculus. In `make_adder(5)`, the returned function `\(x) x + n` has `n` as a *free variable*: a name that is used but not defined inside the function. The closure captures `n = 5`, binding that free variable. In lambda notation, `make_adder` is `(λn. λx. x + n)`. Applying it to 5 gives `λx. x + 5` by substitution (beta reduction). The free variable `n` gets replaced by a concrete value. Closures are the runtime mechanism that makes this substitution real. The name itself comes from this idea: a closure *closes over* its free variables, turning an open term (one with unresolved names) into a closed one (where every variable is accounted for).
+In lambda calculus, the same thing happens through substitution. In `make_adder(5)`, the returned function `\(x) x + n` has `n` as a *free variable*: a name that is used but not defined inside the function. The closure captures `n = 5`, binding that free variable. In lambda notation, `make_adder` is `(λn. λx. x + n)`. Applying it to 5 gives `λx. x + 5` by substitution (beta reduction). The free variable `n` gets replaced by a concrete value. Closures are the runtime mechanism that makes this substitution real. The name itself comes from this idea: a closure *closes over* its free variables, turning an open term (one with unresolved names) into a closed one (where every variable is accounted for).
 
-Every closure you create in R is a beta reduction frozen mid-step. `make_adder(5)` reduces `(λn. λx. x + n)` to `λx. x + 5`, but the returned function doesn't evaluate further until you give it an `x`. The closure holds the partially reduced term, waiting. When you finally call `add5(3)`, another beta reduction fires: `(λx. x + 5)(3)` becomes `3 + 5`, and R evaluates it to `8`. Two reductions, two calls, one answer. This is not a metaphor; it is what R does internally when it resolves the captured binding `n = 5` in the enclosing environment. But `<<-` gave the closure something lambda calculus never had to worry about: the ability to mutate its captured bindings. That power needs guardrails.
+Every closure you create in R is a beta reduction frozen mid-step. `make_adder(5)` reduces `(λn. λx. x + n)` to `λx. x + 5`, but the returned function doesn't evaluate further until you give it an `x`. The closure holds the partially reduced term, waiting. When you finally call `add5(3)`, another beta reduction fires: `(λx. x + 5)(3)` becomes `3 + 5`, and R evaluates it to `8`. Two reductions, two calls, one answer. R does exactly this internally when it resolves the captured binding `n = 5` in the enclosing environment. But `<<-` gave the closure something lambda calculus never had to worry about: the ability to mutate its captured bindings. That power needs guardrails.
 
 
 ### Exercises {.unnumbered}
@@ -344,7 +344,7 @@ acct$withdraw(30)
 acct$check()
 ```
 
-Three closures share a single environment containing one private variable, `balance`. From the outside, `acct` behaves like an object with methods; from the inside, it is just functions closing over a shared environment. Peter Norvig observed that "closures are poor man's objects, and objects are poor man's closures." R6 works this way internally: each R6 object is an environment, and its methods are functions whose enclosing environment is that same environment. So when does the line between closures and objects actually disappear?
+Three closures share a single environment containing one private variable, `balance`. From the outside, `acct` behaves like an object with methods; from the inside, it is just functions closing over a shared environment. Peter Norvig observed that "closures are poor man's objects, and objects are poor man's closures." R6 works this way internally: each R6 object is an environment, and its methods are functions whose enclosing environment is that same environment. @sec-oop-in-r explores where that equivalence leads.
 
 
 ### Exercises {.unnumbered}

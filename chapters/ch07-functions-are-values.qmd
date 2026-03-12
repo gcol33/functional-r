@@ -28,8 +28,14 @@ sapply(c(-3, 0, 4, -1, 7), abs)
 sapply(c("hello", "world"), nchar)
 ```
 
-Any function that takes a single argument works here: `abs` computes absolute values, `nchar` counts characters, and you can pass either to `sapply` with the same syntax. But what exactly is `sapply` doing with the function you give it?
+Any function that takes a single argument works here: `abs` computes absolute values, `nchar` counts characters, and you can pass either to `sapply` with the same syntax.
 
+`sapply` takes each element of the input, applies your function, and tries to simplify the results into a vector. When all the results have the same length (as they do here, since `sqrt` returns one number per input), you get a numeric vector back. When results differ in length or type, `sapply` returns a list instead. (@sec-iteration-without-loops covers the distinction in detail; for now, the simple cases are enough.)
+
+A function that takes another function as an argument is called a *higher-order function*. `sapply` is one; most of R's power comes from others. The pattern is the same one from @sec-vectorized-ops: apply a function to each element of a container, get back a container of the same shape. In @sec-vectorized-ops, R did this implicitly with vectorization (`sqrt(c(1,4,9))`). Here, `sapply` does it explicitly: you pick the function, `sapply` handles the iteration.
+
+::: {.callout-note collapse="true"}
+## The lambda calculus connection
 In lambda calculus notation (@sec-church), passing a function to another function is just application:
 
 ```
@@ -37,9 +43,8 @@ sapply = λxs. λf. [f(xs₁), f(xs₂), ..., f(xsₙ)]
 sapply([1,2,3,4,5])(sqrt) = [sqrt(1), sqrt(2), sqrt(3), sqrt(4), sqrt(5)]
 ```
 
-The function `sapply` takes a list and a function, and produces a new list by applying the function to each element. This is the same term replacement from @sec-atomic-vectors: replace each `f(xsᵢ)` with its value, and the expression reduces to a vector of results. A function that takes another function as an argument is called a *higher-order function*. `sapply` is one; most of R's power comes from others.
-
-The structure of `sapply` is the functor pattern from @sec-vectorized-ops: take a container (a vector or list), apply a function to each element, return a container of the same shape with transformed contents. In @sec-vectorized-ops, R did this implicitly with vectorization (`sqrt(c(1,4,9))`). Here, `sapply` does it explicitly: you choose the function, and `sapply` handles the mapping.
+Replace each `f(xsᵢ)` with its value, and the expression reduces to the result vector. This is the same term replacement from @sec-atomic-vectors.
+:::
 
 
 ### Exercises {.unnumbered}
@@ -67,7 +72,7 @@ R 4.1 introduced a shorter syntax:
 sapply(1:5, \(x) x^2)
 ```
 
-`\(x)` is shorthand for `function(x)`, and the backslash is meant to evoke the Greek letter lambda (λ), which is where the whole idea comes from (@sec-church). In lambda calculus, this function is written `λx. x²`; in R before 4.1, it is `function(x) x^2`; in R 4.1+, it is `\(x) x^2`. Three notations for the same thing.
+`\(x)` is shorthand for `function(x)`, and the backslash is meant to evoke the Greek letter lambda (λ), which is where the whole idea comes from (@sec-church). In lambda calculus, this function is written `λx. x²`; in R before 4.1, it is `function(x) x^2`; in R 4.1+, it is `\(x) x^2`.
 
 Anonymous functions shine when the operation is short and you only need it once:
 
@@ -98,7 +103,7 @@ If you use a function twice, name it. Anonymous functions belong inside `sapply`
 
 Consider a data frame with mixed column types: some numeric, some character, some logical. You want a one-number summary of each column, but `mean` is meaningless for character data and `length(unique(...))` is meaningless for logicals. The brute-force solution is a chain of `if`/`else if` blocks that checks each column's type and calls the right function. It works for three types. It gets ugly at six. At twelve, it is unreadable, and every new type means hunting through the chain to find the right insertion point.
 
-The problem is not the logic; it is that the logic is tangled with the control flow. If functions are values, you can separate the two: store the logic in a list, keyed by type, and let a single lookup replace the entire chain.
+The logic is fine. The problem is that it's tangled with the control flow. If functions are values, you can separate the two: store the logic in a list, keyed by type, and let a single lookup replace the entire chain.
 
 ```{r}
 summarizers <- list(
@@ -114,7 +119,14 @@ summarizers$logical(c(TRUE, FALSE, TRUE, TRUE))
 
 `summarizers` is a list of three functions, accessed with `$` like any named list element. A list of functions keyed by name is a *dispatch table*: given a key, it returns the function you need, no conditionals required. Adding a new type means adding one entry to the list. No `if`/`else` to restructure, no risk of breaking the branches above or below. Package internals, Shiny applications, and testing frameworks all use this pattern to select behavior at runtime.
 
-Notice what moved. In the `if`/`else` version, control flow is in charge: it interrogates the type, then calls the right function as a subordinate. In the dispatch table, the functions exist independently as values in a list, and the control flow shrinks to a single lookup. The operations no longer live inside the conditional; the conditional lives inside the data structure. That rearrangement changes who owns the decision. An `if`/`else` chain is closed — extending it means opening the chain and editing its guts, hoping you do not break the branches above and below. A dispatch table you extend by dropping a new entry into a list; the entries that already work never see the change. In Church's model, the closed chain was always the detour. Functions were values from the start, and packaging them inside control structures was a habit inherited from imperative languages, not a necessity. The dispatch table recovers the default.
+Notice what moved. In the `if`/`else` version, control flow is in charge: it interrogates the type, then calls the right function as a subordinate. In the dispatch table, the functions exist independently as values in a list, and the control flow shrinks to a single lookup. The operations no longer live inside the conditional; the conditional lives inside the data structure.
+
+An `if`/`else` chain is closed: extending it means opening the chain and editing its guts, hoping you do not break the branches above and below. A dispatch table you extend by dropping a new entry into a list; the entries that already work never see the change.
+
+::: {.callout-note collapse="true"}
+## Why dispatch tables feel natural in R
+In Church's lambda calculus, functions were values from the start. Packaging them inside control structures was a habit inherited from imperative languages, not a necessity. The dispatch table recovers the default: data holds the operations, and a lookup replaces the branching.
+:::
 
 Here is the same idea in a simpler form:
 
@@ -168,6 +180,8 @@ When `make_adder(5)` runs, it creates a local environment where `n = 5`. The ret
 
 A function that travels with its creation environment is called a *closure*. Every function in R is technically a closure, but the term earns its weight when a function returned by another function captures variables from the enclosing scope. Closures are powerful enough to deserve their own chapter (@sec-closures-and-scope); the mechanism that makes `make_adder` work has consequences far beyond adding numbers.
 
+::: {.callout-note collapse="true"}
+## The lambda calculus connection
 In lambda calculus notation:
 
 ```
@@ -175,7 +189,8 @@ make_adder = λn. λx. x + n
 make_adder(5) = (λn. λx. x + n)(5) = λx. x + 5
 ```
 
-Replacing `n` with `5` gives a new function, `λx. x + 5`, which is `add5`. The returned function is a partially applied version of the original, with one argument already filled in. This is currying: fixing one argument to produce a simpler function. Every call to a function factory is a beta reduction; the returned function is the reduced term.
+Replacing `n` with `5` gives a new function, `λx. x + 5`, which is `add5`. The returned function has one argument already filled in. This is *currying*: fixing one argument to produce a simpler function. Each call to a function factory is a beta reduction (@sec-church); the returned function is the reduced term.
+:::
 
 ```{r}
 make_multiplier <- function(factor) {
@@ -230,7 +245,7 @@ John Chambers, the creator of S (@sec-s-language), summarized R's design with tw
 
 > "Everything that exists is an object. Everything that happens is a function call."
 
-Numbers, strings, vectors, functions, even `NULL` are all objects. Addition, comparison, indexing, assignment, and control flow are all function calls. And since functions are values, they are objects too, which closes the loop: R is functional because everything reduces to objects and function calls on those objects.
+Numbers, strings, vectors, functions, even `NULL` are all objects. Addition, comparison, indexing, assignment, and control flow are all function calls. Since functions are themselves objects, the two principles fold into each other.
 
 You can even override built-in operators. (This is a demonstration, not a recommendation.)
 

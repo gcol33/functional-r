@@ -1,19 +1,17 @@
 # Contracts and defensive code {#sec-contracts-and-defensive-code}
 
-The next question is what happens when your functions need to talk to the outside world, to files, APIs, databases, where errors are not bugs but facts of life.
-
 ```{r}
 #| include: false
 source(here::here("_common.R"))
 ```
 
-Your function returns a number. The number is wrong. Nobody notices for three weeks, because nothing crashed, no error was raised, and the pipeline kept running, quietly poisoning every downstream result with garbage. A function that crashes is annoying; a function that lies to you is dangerous.
+You have written a function that computes a rate from two columns of a data frame. Someone passes it a data frame where one column is character instead of numeric. R does not crash; `mean()` on a character vector returns `NA` with a warning, and your function divides `NA` by a number and returns `NA`. The warning scrolls past in a long pipeline. The `NA` propagates through `mutate()`, `summarise()`, `left_join()`, and into a CSV that feeds a report. Three weeks later a collaborator asks why half the rates in the report are missing. You trace it back to a column that was read as character because one cell contained the string `"N/A"`.
 
-In 1986, Bertrand Meyer was designing a programming language called Eiffel, and he wanted a way to make functions honest about what they expected and what they promised in return. He called the idea *Design by Contract*: every function has a precondition (what must be true before it runs), a postcondition (what it guarantees after it runs), and an invariant (what stays true throughout). If the precondition fails, the caller broke the contract; if the postcondition fails, the function broke it. Either way, execution stops immediately with a clear explanation of which obligation was violated and by whom.
+Every line of code between the bad input and the discovery was wasted work. The function that produced the `NA` could have stopped the pipeline in the first line, with a message that said exactly what went wrong. It didn't, because nobody wrote that check. This was the problem a young man faced in the 1980s while working at Électricité de France, where a wrong number in a pipeline could mean a miscalculated load on a reactor.
 
-R has no built-in contract system. But the principle translates directly: a `stop()` at the top of a function that checks its inputs is a precondition, a `stopifnot()` before the return value is a postcondition, and the validator in a constructor/validator/helper pattern (@sec-s3-classes-properly) is a class invariant. You write these by hand where Eiffel provides them as syntax, but the discipline is the same. State your assumptions explicitly, halt the moment one is violated, and let the resulting error message tell the caller exactly what went wrong and where.
+After nine years of watching functions accept garbage and hand it downstream, he left and decided to build a programming language where that could not happen. His name was Bertrand Meyer; the language he was building was called Eiffel, which was defined by one central idea he called *Design by Contract*. It was simple: every function states a precondition (what must be true before it runs), a postcondition (what it guarantees after it runs), and an invariant (what stays true throughout). If a precondition fails, the caller broke the deal. If a postcondition fails, the function broke it. Either way, execution stops with a message that names the broken obligation.
 
-What does that discipline look like in practice?
+R has no contract syntax. But `stop()` at the top of a function is a precondition. `stopifnot()` before the return value is a postcondition. The validator in a constructor/validator/helper pattern (@sec-s3-classes-properly) is a class invariant. The tools are manual; the discipline is the same. State your assumptions, halt the moment one is violated, and make the error message say what went wrong.
 
 
 ## The case for validation {#sec-case-for-validation}
@@ -45,11 +43,16 @@ add_tax <- function(price, rate) {
 add_tax("42", 0.2)
 ```
 
-Check inputs at the boundary, where data enters your function, not in the guts where it is consumed. This is *fail fast, fail loud, fail clear*. There is a deep connection to type theory here: a `stop()` that fires when input has the wrong type is a proof by contradiction. "If this value inhabited the type Numeric, execution would continue; it doesn't, so we halt." The type check is a proposition, and the program's continued execution past the check is the proof that the proposition holds. This is the Curry-Howard correspondence in miniature: types are propositions, programs are proofs. A function with signature `A -> B` is a proof that "if A then B." Dependently typed languages like Idris and Agda push this further, encoding preconditions in the type system itself and making runtime `stop()` calls unnecessary.
+Check inputs at the boundary, where data enters your function, not in the guts where it is consumed. The principle is short: *fail fast, fail loud, fail clear*.
 
-R sits at the opposite end of that spectrum: no static types, no compiler, no ahead-of-time guarantees. Every precondition you want enforced must be enforced by code you write yourself. That is a burden, but it has an unexpected upside. A dependently typed language lets you declare preconditions in type signatures, and the compiler checks them automatically. R gives you no such machinery; the only way to enforce a precondition is to write `if (bad) stop("why")` yourself. The question behind both approaches is the same — "what must hold for this computation to be sound?" — but R makes you spell out every assumption in code, which means every assumption is visible when you revisit the function six months later. A type signature encodes constraints concisely; an `if`/`stop()` block encodes them verbosely but legibly. The verbose version has its own value when debugging, because the precondition is right there in the function body, not hidden in a type annotation you have to decode.
+R has no static types, no compiler, no ahead-of-time guarantees. Every precondition you want enforced must be enforced by code you write. That sounds like a burden, but it has an upside: every assumption is visible in the function body when you revisit it six months later. `if (!is.numeric(price)) stop(...)` is verbose, but it is also impossible to miss.
 
-A 2003 NASA study found that 40% of aerospace software failures came from *missing* code: situations the programmers simply didn't anticipate. The Ariane 5 rocket (1996) self-destructed 37 seconds after launch because a 64-bit float was silently converted to a 16-bit integer, overflowing without a check; a single `stop()` equivalent would have saved a $370 million rocket. When your function returns `NA` instead of erroring on bad input, you have created the same category of silent failure that brought down that rocket. `stop()` with a clear message is the safe choice, because it forces the caller to deal with the problem immediately, before the bad value propagates through fifty lines of downstream code.
+The Ariane 5 rocket self-destructed 37 seconds after launch in 1996 because a 64-bit float was silently converted to a 16-bit integer, overflowing without a check. A single `stop()` equivalent would have saved a $370 million rocket. A 2003 NASA study found that 40% of aerospace software failures came from *missing* code: checks the programmers never wrote. When your function returns `NA` instead of erroring on bad input, you are in the same category of silent failure. `stop()` with a clear message forces the caller to deal with the problem immediately, before the bad value propagates through fifty lines of downstream code.
+
+::: {.callout-note collapse="true"}
+## The type theory connection
+A `stop()` that fires on wrong input is a runtime proof by contradiction: "if this value were numeric, execution would continue; it isn't, so we halt." The Curry-Howard correspondence formalizes this: types are propositions, programs are proofs, and a function with signature `A -> B` is a proof that "if A then B." Dependently typed languages (Idris, Agda) encode preconditions in the type system itself, making runtime `stop()` calls unnecessary. R sits at the opposite end of that spectrum. The question both approaches answer is the same: "what must hold for this computation to be sound?"
+:::
 
 (This is about functions you write for yourself and for others, not about validating user input in a Shiny app.)
 
@@ -153,8 +156,7 @@ Named `stopifnot()` gives you the conciseness of assertions with messages you co
 
 1. The following function has a bad error message. Rewrite it so the error says what was expected and what was received.
 
-    ```{r}
-    #| eval: false
+    ```r
     compute_bmi <- function(weight_kg, height_m) {
       if (!is.numeric(weight_kg) || !is.numeric(height_m)) {
         stop("bad input")
@@ -225,8 +227,7 @@ The error message from `match.arg()` is clear and lists the valid options, which
 
 2. Add validation to the following function using `stopifnot()` or `if`/`stop()`. Check that `data` is a data frame, `n` is a single positive integer, and `col` is a string that exists as a column name.
 
-    ```{r}
-    #| eval: false
+    ```r
     top_rows <- function(data, col, n = 5) {
       data[order(data[[col]], decreasing = TRUE), ][seq_len(n), ]
     }

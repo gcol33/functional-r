@@ -311,7 +311,7 @@ dbGetQuery(con, "SELECT region, SUM(revenue) FROM sales GROUP BY region")
 dbDisconnect(con)
 ```
 
-**duckplyr** goes one step further: a drop-in replacement for dplyr that routes computation through DuckDB's engine. Same syntax, faster execution, near-zero transition cost.
+**duckplyr** removes the SQL entirely: it is a drop-in replacement for dplyr that routes computation through DuckDB's engine. Same syntax, faster execution, near-zero transition cost.
 
 The stack looks like this: Parquet files on disk, Arrow or DuckDB as the engine, dplyr verbs as the interface, results collected into R. You write the same code you already know; the machinery underneath is faster. Much of that speed comes from *query fusion*, combining multiple operations into a single pass over the data and eliminating intermediate allocations. In functional programming, this technique is called *deforestation* (Wadler, 1988): `map f . map g` creates an intermediate list, but fusion rewrites it as `map (f . g)`, traversing the data once. data.table and Arrow apply the same principle at scale.
 

@@ -7,9 +7,14 @@ source(here::here("_common.R"))
 
 What, exactly, is a vector?
 
-You have written thousands of them by now, filtered them, mapped functions over them, watched them copy themselves at surprising moments. But the object itself, the thing sitting in memory when you type `x <- c(1, 2, 3)`, has remained invisible. This chapter opens it up. We are going to look at the C structs that R allocates on the heap, the pointer arithmetic that makes vectorized operations fast, the reference counter that decides when copies happen, and the garbage collector that reclaims everything you abandon. None of this is necessary for writing good R; all of it changes how you *think* about R, and it makes the design choices you have seen throughout this book (copy-on-modify, lazy evaluation, lexical scoping) feel less like arbitrary rules and more like consequences of a single engineering blueprint.
+You have written thousands of them by now, filtered them, mapped functions over them, watched them copy themselves at surprising moments. But the object itself, the thing sitting in memory when you type `x <- c(1, 2, 3)`, has remained invisible. This chapter opens it up. We are going to look at the C structs that R allocates on the heap, the pointer arithmetic that makes vectorized operations fast, the reference counter that decides when copies happen, and the garbage collector that reclaims everything you abandon. None of this is necessary for writing good R. But it makes the design choices you have seen throughout this book (copy-on-modify, lazy evaluation, lexical scoping) feel less like arbitrary rules and more like consequences of a single engineering blueprint.
 
-R's C implementation descends from S, the language John Chambers created at Bell Labs in the 1970s. When Ross Ihaka and Robert Gentleman reimplemented it from scratch at the University of Auckland in the early 1990s, they made a choice that still echoes through every line of R code you write: they borrowed the evaluation model from Scheme, a Lisp dialect, and dressed it in S-compatible syntax. The linked-list environments come from Lisp; the vectorized operations come from S; the garbage collector is a textbook generational mark-and-sweep. What holds all of it together is a single data structure.
+R's C implementation descends from S, which John Chambers created at Bell Labs in the 1970s. When Ross Ihaka and Robert Gentleman reimplemented it at the University of Auckland in the early 1990s, they borrowed the evaluation model from Scheme and dressed it in S-compatible syntax. The linked-list environments come from Lisp; the vectorized operations come from S; the garbage collector is a textbook generational mark-and-sweep. What holds all of it together is a single data structure.
+
+
+## Stack and heap {#sec-stack-and-heap}
+
+A running program has two regions of memory. The *stack* is small, fast, and automatic: when you call a function, its local variables go on the stack, and when the function returns, they vanish. The *heap* is large, slow, and manual: objects allocated on the heap survive until something explicitly frees them (in C) or until a garbage collector determines that nothing points to them anymore (in R, Python, Java). Every R object lives on the heap. When you write `x <- c(1, 2, 3)`, R allocates a block of memory on the heap, fills it with your three numbers, and stores a pointer to that block in the binding for `x`. When `x` goes out of scope and nothing else references it, R's garbage collector reclaims the memory. The stack holds the bookkeeping (which function called which, where to return); the heap holds the data.
 
 
 ## Every object is a SEXP {#sec-sexp}
@@ -312,7 +317,7 @@ This three-field structure explains several behaviors you have seen:
 - **`substitute()` can extract the unevaluated expression** because it reads `PRCODE` without forcing the promise.
 - **The lazy evaluation trap in function factories** (@sec-lazy-eval-trap) happens because the promise captures the expression and the environment at call time, but evaluates them later, when the environment may have changed.
 
-You cannot inspect promises from R without forcing them, and this is not an oversight; it is a fundamental property of the design:
+You cannot inspect promises from R without forcing them — a fundamental property of the design, not an oversight:
 
 ```{r}
 f <- function(x) {

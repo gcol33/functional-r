@@ -32,7 +32,7 @@ The notation strips away constant factors and lower-order terms, which means an 
 
 **O(n): linear time.** You touch every element once. `sum(x)` walks the entire vector, adding each element: one pass, n additions. `which(x > 0)` also scans every element once, selecting those that match. Linear is often the best you can do, because you need to at least *read* all the input.
 
-**O(n log n): linearithmic time.** The cost of sorting. `sort(x)` for a vector of length n makes O(n log n) comparisons, which is only slightly worse than linear: sorting a million numbers takes about 20x more work than summing them, not 1,000,000x more. Can you do better? For comparison-based sorting, no: there is a proof (via decision trees) that any algorithm which sorts by comparing pairs of elements must make at least O(n log n) comparisons in the worst case. Radix sort sidesteps this bound by not comparing elements at all — it distributes them into buckets by digit — but it only works when the keys have bounded range (integers, fixed-length strings).
+**O(n log n): linearithmic time.** The cost of sorting. `sort(x)` for a vector of length n makes O(n log n) comparisons, which is only slightly worse than linear: sorting a million numbers takes about 20x more work than summing them, not 1,000,000x more. Can you do better? For comparison-based sorting, no: there is a proof (via decision trees) that any algorithm which sorts by comparing pairs of elements must make at least O(n log n) comparisons in the worst case. Radix sort sidesteps this bound by not comparing elements at all (it distributes them into buckets by digit) but it only works when the keys have bounded range (integers, fixed-length strings).
 
 **O(n²): quadratic time.** Nested loops where both loops run over the input. This is where performance falls apart. The classic R example is growing a vector with `c()`:
 
@@ -52,7 +52,7 @@ for (i in seq_len(n)) {
 
 ### How to tell empirically
 
-The simplest test: double n and see what happens to the time. If the time roughly doubles, you have O(n); if it roughly quadruples, O(n²). Try this with `sum(rnorm(n))` (linear) versus the `c()` growth loop (quadratic) for n = 1000, 2000, 5000, 10000. The ratio test works because Big-O captures the exponent, and doubling the input raises a power-law relationship to the surface. What happens when the ratio is somewhere between 2 and 4? A ratio near 2.8 when you double n suggests O(n^1.5), and in general a ratio of r implies a growth exponent of log2(r). You can also fit a log-log regression — plot log(time) against log(n), and the slope estimates the exponent directly.
+The simplest test: double n and see what happens to the time. If the time roughly doubles, you have O(n); if it roughly quadruples, O(n²). Try this with `sum(rnorm(n))` (linear) versus the `c()` growth loop (quadratic) for n = 1000, 2000, 5000, 10000. The ratio test works because Big-O captures the exponent, and doubling the input raises a power-law relationship to the surface. What happens when the ratio is somewhere between 2 and 4? A ratio near 2.8 when you double n suggests O(n^1.5), and in general a ratio of r implies a growth exponent of log2(r). You can also fit a log-log regression: plot log(time) against log(n), and the slope estimates the exponent directly.
 
 ### Exercises {.unnumbered}
 
@@ -137,7 +137,7 @@ lookup_chain(slots2, "beta", 10)
 lookup_chain(slots2, "missing", 10)
 ```
 
-In the worst case, every key hashes to the same slot, the chain has n entries, and lookup degrades to O(n). But a good hash function distributes keys evenly across slots, keeping each chain short. With n keys and n slots, the average chain length is 1, and lookup is O(1) on average.
+In the worst case, every key hashes to the same slot, the chain has n entries, and lookup degrades to O(n). But a good hash function distributes keys evenly across slots, keeping each chain short: with n keys and n slots, the average chain length is 1, and lookup is O(1) on average.
 
 R uses exactly this mechanism for environments. Every environment is a hash table mapping names to values, so when you write `e$beta`, R hashes the string `"beta"`, jumps to the right slot, and returns the value. This is also why `match()`, `duplicated()`, `%in%`, `unique()`, and `table()` are fast: they build a temporary hash table internally, making membership tests O(1) per query instead of O(n).
 
@@ -153,7 +153,7 @@ e$gamma <- 3
 e$beta
 ```
 
-The constant in O(1) depends on the hash function's speed and the collision rate. Real hash functions (R uses one internally for its environments) are more sophisticated than summing character codes, distributing keys more uniformly and handling edge cases. But the principle is always the same: convert the key to an integer, use it as an index, handle collisions with chaining. What happens when the table fills up? The chains get longer, and lookup degrades toward O(n). Real hash tables track the *load factor* (number of entries divided by number of slots) and resize — typically doubling the slot count — when it crosses a threshold (often 0.75). Resizing costs O(n) because every key must be rehashed into the new array, but it happens rarely enough that the amortized cost per insertion stays O(1).
+The constant in O(1) depends on the hash function's speed and the collision rate. Real hash functions (R uses one internally for its environments) are more sophisticated than summing character codes, distributing keys more uniformly and handling edge cases. But the principle is always the same: convert the key to an integer, use it as an index, handle collisions with chaining. What happens when the table fills up? The chains get longer, and lookup degrades toward O(n). Real hash tables track the *load factor* (number of entries divided by number of slots) and resize, typically doubling the slot count, when it crosses a threshold (often 0.75). Resizing costs O(n) because every key must be rehashed into the new array, but it happens rarely enough that the amortized cost per insertion stays O(1).
 
 ### Exercises {.unnumbered}
 
@@ -195,7 +195,7 @@ Copy-on-modify is why passing large objects to functions is cheap in R: the func
 
 ### Pre-allocation vs. growing
 
-The `c()` loop from the quadratic example above is not just slow in time; it is also wasteful in memory. Each iteration allocates a new vector of size i, copies the old data, and discards the old allocation, so the total memory allocated across all iterations is 1 + 2 + 3 + ... + n = O(n²), even though the final result uses only O(n) space.
+The `c()` loop from the quadratic example above is slow in time and wasteful in memory. Each iteration allocates a new vector of size i, copies the old data, and discards the old allocation, so the total memory allocated across all iterations is 1 + 2 + 3 + ... + n = O(n²), even though the final result uses only O(n) space.
 
 Pre-allocation fixes both problems:
 
@@ -283,7 +283,9 @@ Everything above assumes the problem *can* be solved, that some algorithm exists
 
 ### The halting problem {#sec-halting-problem}
 
-In 1936, Alan Turing proved that no algorithm can decide, for an arbitrary program and input, whether that program will eventually halt or run forever. This is the *halting problem*, and it is undecidable. The proof is one of the most beautiful arguments in mathematics, it fits in half a page, and it works by turning the assumption against itself. We give it in full, twice: once in R and once in lambda calculus.
+By the early twentieth century, mathematicians had been on a winning streak that stretched back decades. Cantor had tamed infinity. Frege had formalized logic. Peano had reduced arithmetic to five axioms. Every time someone asked "can we make this rigorous?" the answer had been yes. David Hilbert had watched this happen for thirty years, and in 1928 he posed the question that felt like the natural finish line: the *Entscheidungsproblem*, the decision problem. Could you build a mechanical procedure that takes any mathematical statement and tells you whether it is true or false? If such a procedure existed, mathematical truth would be computable. Every conjecture decidable, every proof checkable by turning a crank, but then in 1936 a twenty-three-year-old graduate student would shock the whole mathematical worldview.
+
+He proved that no algorithm can decide, for an arbitrary program and input, whether that program will eventually halt or run forever. It was Alan Turing, the same graduate student whose tape machine we met in @sec-turing, now proving that his own machine had a boundary it could never cross. The specific question he settled is called the *halting problem*. The proof is one of the most beautiful arguments in mathematics, it fits in half a page, and it works by turning the assumption against itself. We give it in full, twice: once in R and once in lambda calculus.
 
 **The proof by contradiction (in R).** Assume, for the sake of contradiction, that a function `halts(f, x)` exists. It takes any function `f` and any input `x`, and returns `TRUE` if `f(x)` terminates, `FALSE` if `f(x)` runs forever. It always returns one or the other; it never crashes or loops itself. That is the assumption we will break.
 
@@ -331,7 +333,7 @@ where Ω is the non-terminating term from above and I = λx. x is the identity (
 
 Same diagonal structure, same conclusion: H cannot exist. No lambda term can decide whether an arbitrary term has a normal form.
 
-The mechanism that breaks H is self-application: a term applied to itself. That mechanism is not exotic. When you write `function(f) f(f)` in R, you are writing self-application. When you pass a function to `sapply`, you are handing a value to a function that will call it — one step from the same recursive knot. R has the same capability: functions are values, values can be passed to functions, and nothing prevents a function from receiving itself. Closures, recursion, and higher-order functions all depend on that freedom. The halting problem is the price. Any language expressive enough to let functions consume themselves is expressive enough to construct the diagonal argument, and that includes every language in this book's lineage from Lisp onward. When a linter warns you about unreachable code or an optimizer tries to eliminate dead branches, it is working inside the limits Church proved in 1936 — necessarily incomplete, always capable of missing something.
+The mechanism that breaks H is self-application: a term applied to itself. That mechanism is not exotic. When you write `function(f) f(f)` in R, you are writing self-application. When you pass a function to `sapply`, you are handing a value to a function that will call it, one step from the same recursive knot. R has the same capability: functions are values, values can be passed to functions, and nothing prevents a function from receiving itself. Closures, recursion, and higher-order functions all depend on that freedom. The halting problem is the price. Any language expressive enough to let functions consume themselves is expressive enough to construct the diagonal argument, and that includes every language in this book's lineage from Lisp onward. When a linter warns you about unreachable code or an optimizer tries to eliminate dead branches, it is working inside the limits Church proved in 1936: necessarily incomplete, always capable of missing something.
 
 Church published this in April 1936 ("An Unsolvable Problem of Elementary Number Theory"); Turing published his version in November 1936 ("On Computable Numbers"). They later proved that their two formalisms, lambda calculus and Turing machines, compute exactly the same class of functions. The halting problem is not an artifact of one model. It is a boundary.
 
@@ -359,11 +361,11 @@ The R package `R.utils` provides `withTimeout()` for a cleaner interface. These 
 
 ### The Church-Turing thesis
 
-Alonzo Church (working with lambda calculus) and Alan Turing (working with his abstract machine) independently showed in 1936 that their models of computation are equivalent. The *Church-Turing thesis* states that any function computable by an effective procedure can be computed by a Turing machine, or equivalently, expressed as a lambda calculus term.
+In 1936, Alonzo Church proved that the *Entscheidungsproblem* (the decision problem for first-order logic) is unsolvable, using lambda calculus as his model of computation. Alan Turing, working independently, proved the same result using his abstract machine. Turing then went further: in an appendix added after learning of Church's work, he proved that the two formalisms compute exactly the same class of functions. The *Church-Turing thesis* states that any function computable by an effective procedure can be computed by a Turing machine, or equivalently, expressed as a lambda calculus term.
 
 This has a concrete consequence: R, Python, C, Haskell, and every other general-purpose language can compute exactly the same set of functions. No language can solve the halting problem; no language can compute a function that another general-purpose language cannot. The differences between languages are speed, expressiveness, and safety, not computational power.
 
-R's functional core (functions as values, closures, recursion) is directly descended from lambda calculus, so when you write `function(x) x + 1`, you are writing a lambda term. The equivalence between lambda calculus and Turing machines means that R's functional style and C's imperative loops are two notations for the same mathematics. Different grammars, same expressive reach.
+R's functional core (functions as values, closures, recursion) is directly descended from lambda calculus, so when you write `function(x) x + 1`, you are writing a lambda term. The equivalence means R's functional style and C's imperative loops are two notations for the same mathematics.
 
 ### P vs NP
 
@@ -371,7 +373,7 @@ Some problems are easy to *verify* but (probably) hard to *solve*. Given a propo
 
 The class **P** contains problems solvable in polynomial time; the class **NP** contains problems whose solutions can be *verified* in polynomial time. Whether P = NP is the most famous open question in computer science, and most researchers believe P ≠ NP, which would mean some problems are fundamentally harder to solve than to check.
 
-The subset sum problem makes the gap concrete. Given a set of integers, does any subset sum to a target value? Verifying a proposed subset is O(n) — just add the numbers. Finding one by brute force means checking all 2^n subsets:
+The subset sum problem makes the gap concrete. Given a set of integers, does any subset sum to a target value? Verifying a proposed subset is O(n), just add the numbers. Finding one by brute force means checking all 2^n subsets:
 
 ```{r}
 #| eval: false

@@ -18,7 +18,7 @@ Every tool in this chapter addresses one category of hidden state. `here` makes 
 
 This is not replicability, which asks a bigger question: same research question, new data, similar conclusions. Reproducibility is the lower bar. Most analyses fail it anyway.
 
-A 2016 Nature survey found that 70% of researchers had tried and failed to reproduce another scientist's experiment, and a 2019 study found that only 26% of published R-based analyses could be independently reproduced from the provided code. The problem is not malice or incompetence; it is that reproducing work requires infrastructure, and most analysts do not build infrastructure until something has already gone wrong.
+A 2016 Nature survey found that 70% of researchers had tried and failed to reproduce another scientist's experiment, and a 2019 study found that only 26% of published R-based analyses could be independently reproduced from the provided code. Reproducing work requires infrastructure, and most analysts do not build infrastructure until something has already gone wrong.
 
 Why it breaks:
 
@@ -117,7 +117,7 @@ One practical detail worth knowing: when you switch between projects that use re
 
 ## Quarto: code and prose together {#sec-quarto}
 
-You have a script that produces three figures. You have a Word document that describes those figures. You update the script, re-run it, forget to update the Word document, and now the text describes figures that no longer exist. This is not carelessness; it is an architectural failure. Code and prose live in different files, so they drift apart.
+You have a script that produces three figures. You have a Word document that describes those figures. You update the script, re-run it, forget to update the Word document, and now the text describes figures that no longer exist. The architecture guarantees drift: code and prose live in different files, so they drift apart.
 
 Quarto documents (`.qmd`) eliminate the gap by combining narrative text, code chunks, and their output in a single file. When you render the document, the code runs and the results appear inline:
 

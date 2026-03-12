@@ -37,7 +37,7 @@ rm(T)
 
 ::: callout-tip
 ## Opinion
-Never use `T` and `F`. Always write `TRUE` and `FALSE` in full. A few extra keystrokes buy you immunity from a class of bugs that are genuinely painful to track down, the kind where your filter silently returns the wrong rows and nothing throws an error.
+Never use `T` and `F`. Always write `TRUE` and `FALSE` in full. If someone reassigns `T`, your filter returns the wrong rows and nothing throws an error.
 :::
 
 

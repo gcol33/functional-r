@@ -261,7 +261,7 @@ count(penguins, species)
 
 ::: callout-tip
 ## Opinion
-After `summarise()`, the last grouping variable is silently peeled off, which means the result may still be grouped. This causes subtle bugs downstream: a `mutate()` you expect to operate on the full data frame operates per group instead. Always add `.groups = "drop"` to `summarise()`, or call `ungroup()` afterward. Grouping state should never be implicit.
+After `summarise()`, the last grouping variable is silently peeled off, which means the result may still be grouped. A `mutate()` you expect to operate on the full data frame then operates per group instead. Add `.groups = "drop"` to `summarise()`, or call `ungroup()` afterward.
 :::
 
 
