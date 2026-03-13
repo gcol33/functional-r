@@ -6,6 +6,6 @@ setTimeout(function() {
   var last = localStorage.getItem(key);
   if (last && (Date.now() - parseInt(last, 10)) < 43200000) return;
   localStorage.setItem(key, Date.now().toString());
-  fetch("/api/hit?p=" + encodeURIComponent(location.pathname));
+  fetch("https://thinking-in-r.netlify.app/api/hit?p=" + encodeURIComponent(location.pathname));
 }, 5000);
 </script>

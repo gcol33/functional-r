@@ -1,6 +1,6 @@
 [build]
-  publish = "_book"
-  command = "echo 'Using pre-built site'"
+  publish = "netlify/static"
+  command = "mkdir -p netlify/static"
 
 [functions]
   directory = "netlify/functions"
