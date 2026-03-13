@@ -10,7 +10,7 @@ book:
   date: "2026-03-08"
   date-format: "MMMM D, YYYY"
   reader-mode: true
-  site-url: https://thinking-in-r.gillescolling.com/
+  site-url: https://gillescolling.com/thinking-in-r/
   repo-url: https://github.com/gcol33/thinking-in-r/
   repo-branch: main
   favicon: favicon.svg

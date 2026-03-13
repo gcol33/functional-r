@@ -1,1 +1,1 @@
-Sitemap: https://thinking-in-r.gillescolling.com/sitemap.xml
+Sitemap: https://gillescolling.com/thinking-in-r/sitemap.xml
