@@ -147,7 +147,7 @@ export default async (req) => {
       const viewsArea = viewsLine + ` L${x(29)},${h} L${x(0)},${h} Z`;
       const uniqueArea = uniqueLine + ` L${x(29)},${h} L${x(0)},${h} Z`;
       const labels = daily.map((d, i) => {
-        if (!(i % 7 === 0 || i === 29)) return "";
+        if (!(i % 5 === 0 || i === 29)) return "";
         const [m, dd] = d.date.slice(5).split("-");
         return `<text class="x-label" x="${x(i)}" y="${h + 20}">${parseInt(m)}/${parseInt(dd)}</text>`;
       }).join("");
