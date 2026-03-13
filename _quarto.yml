@@ -72,8 +72,6 @@ format:
     include-after-body:
       - theme-toggle.html
       - analytics.html
-    filters:
-      - _date.lua
     callout-appearance: simple
   pdf:
     documentclass: scrbook

@@ -641,12 +641,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
     
   
-    <div>
-    <div class="quarto-title-meta-heading">Modified</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date-modified">March 13, 2026</p>
-    </div>
-  </div>
     
   </div>
   
@@ -677,7 +671,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="unnumbered anchored" data-anchor-id="exercises">Exercises</h3>
 <ol type="1">
 <li>Type <code>ggplot2::aes</code> at the console (no parentheses) and read the source. Where does it capture the user’s expressions? What function does it use?</li>
-<li>Look at the source of <code>ggplot2:::"+.gg"</code>. What does the <code>+</code> operator actually do to a ggplot object?</li>
+<li>Look at the source of <code>ggplot2</code>’s internal <code>"+.gg"</code> function (use the triple-colon operator). What does <code>+</code> actually do to a ggplot object?</li>
 <li>Compare <code>filter(df, x &gt; 5)</code> to <code>df[df$x &gt; 5, ]</code>. What does dplyr’s version gain from NSE? What does it cost?</li>
 </ol>
 </section>
