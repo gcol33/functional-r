@@ -9,7 +9,7 @@ source(here::here("_common.R"))
 >
 > --- John Horton Conway
 
-`TRUE + TRUE` equals `2` in R. Type it into the console and there it is. But R is not doing arithmetic on the word "true"; it is converting a logical value to the number `1`, twice, and adding. That conversion follows a rule, and the rule follows from a design decision, and the design decision follows from a paper written in 1936 by a mathematician named Alonzo Church, who was not thinking about programming at all.
+`TRUE + TRUE` equals `2` in R. But R is not doing arithmetic on the word "true"; it is converting a logical value to the number `1`, twice, and adding. That conversion follows a rule, and the rule follows from a design decision, and the design decision follows from a paper written in 1936 by a mathematician who was not thinking about programming at all.
 
 Church wanted to formalize computation using nothing but functions: functions that take other functions as arguments and return new functions as results. No variables to store things in, no steps to execute in order; just substitution, all the way down. John McCarthy built a programming language from it in 1958 and called it Lisp. Guy Steele and Gerald Sussman distilled it into Scheme in 1975. John Chambers designed S at Bell Labs in the 1980s with Scheme's ideas in his head, and two statisticians in Auckland built R from S in the 1990s. Ninety years after Church's paper, the fingerprints are on everything you type into an R console.
 
