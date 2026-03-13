@@ -6,14 +6,18 @@ export default async (req) => {
   const day = now.toISOString().slice(0, 10);
   const month = day.slice(0, 7);
 
-  // Gather stats
-  const [total, today, thisMonth, uTotal, uToday, uMonth] = await Promise.all([
+  // Gather stats (public + owner)
+  const [total, today, thisMonth, uTotal, uToday, uMonth,
+         oTotal, oToday, oMonth] = await Promise.all([
     store.get("total"),
     store.get(`daily:${day}`),
     store.get(`monthly:${month}`),
     store.get("unique:total"),
     store.get(`unique:daily:${day}`),
     store.get(`unique:monthly:${month}`),
+    store.get("owner:total"),
+    store.get(`owner:daily:${day}`),
+    store.get(`owner:monthly:${month}`),
   ]);
 
   // Last 30 days (views + unique)
@@ -54,6 +58,7 @@ export default async (req) => {
   const maxMonthly = Math.max(...monthly.map(m => m.views), 1);
 
   const p = (v) => parseInt(v || "0", 10);
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -134,7 +139,8 @@ export default async (req) => {
   ${monthly.map(m => {
     const vh = (m.views / maxMonthly) * 100;
     const uh = (m.unique / maxMonthly) * 100;
-    return `<div class="bar-group" title="${m.month}&#10;${m.unique} visitors, ${m.views} views"><div class="bar views" style="height:${vh}%"></div><div class="bar unique" style="height:${uh}%"></div><div class="bar-label">${m.month.slice(5)}</div></div>`;
+    const mLabel = monthNames[parseInt(m.month.slice(5), 10) - 1];
+    return `<div class="bar-group" title="${m.month}&#10;${m.unique} visitors, ${m.views} views"><div class="bar views" style="height:${vh}%"></div><div class="bar unique" style="height:${uh}%"></div><div class="bar-label">${mLabel}</div></div>`;
   }).join("")}
 </div>
 <div class="legend"><span><div class="dot unique"></div> Unique visitors</span><span><div class="dot views"></div> Page views</span></div>
@@ -144,6 +150,13 @@ export default async (req) => {
   <tr><th>Page</th><th>Views</th></tr>
   ${pages.slice(0, 30).map(p => `<tr><td class="page-path">${p.page}</td><td>${p.hits}</td></tr>`).join("")}
 </table>
+
+<h2>Your Visits (Owner)</h2>
+<div class="cards">
+  <div class="card"><div class="label">Today</div><div class="value">${p(oToday)}</div></div>
+  <div class="card"><div class="label">This Month</div><div class="value">${p(oMonth)}</div></div>
+  <div class="card"><div class="label">All Time</div><div class="value">${p(oTotal)}</div></div>
+</div>
 
 <div class="refresh">Last refreshed: ${now.toISOString().replace("T", " ").slice(0, 19)} UTC</div>
 </body>
