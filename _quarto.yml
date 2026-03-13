@@ -1,5 +1,5 @@
 execute:
-  freeze: auto
+  freeze: true
 
 project:
   type: book
