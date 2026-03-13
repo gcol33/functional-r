@@ -1302,21 +1302,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 
-// Only count if visitor stays 5+ seconds (filters bots and bounces)
-
 setTimeout(function() {
-
-  // Skip if page is hidden (prerender, background tab)
 
   if (document.hidden) return;
 
-  // One hit per page per session (avoid double-counts on back/forward)
+  // Deduplicate: one hit per page per 12 hours
 
   var key = "hit:" + location.pathname;
 
-  if (sessionStorage.getItem(key)) return;
+  var last = localStorage.getItem(key);
 
-  sessionStorage.setItem(key, "1");
+  if (last && (Date.now() - parseInt(last, 10)) < 43200000) return;
+
+  localStorage.setItem(key, Date.now().toString());
 
   fetch("/api/hit?p=" + encodeURIComponent(location.pathname));
 

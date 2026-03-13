@@ -25,11 +25,13 @@ export default async (req) => {
   const isOwner = OWNER_IPS.includes(ip);
   const prefix = isOwner ? "owner:" : "";
 
-  const visitorId = hash(ip + day);
+  // Half-day buckets for dedup (0-11h = "a", 12-23h = "b")
+  const halfDay = day + (now.getUTCHours() < 12 ? "a" : "b");
+  const visitorId = hash(ip + halfDay);
   const store = getStore("analytics");
 
-  // Deduplicate by IP per day
-  const seenKey = `${prefix}seen:${day}:${visitorId}`;
+  // Deduplicate by IP per half-day
+  const seenKey = `${prefix}seen:${halfDay}:${visitorId}`;
   const alreadySeen = await store.get(seenKey);
   const isNewVisitor = !alreadySeen;
 

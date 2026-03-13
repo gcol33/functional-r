@@ -77,13 +77,23 @@ export default async (req) => {
   .card .label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
   .card .value { font-size: 2rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
   .card .sub { font-size: 0.8rem; color: #4f8ff7; margin-top: 0.15rem; }
-  .chart { display: flex; align-items: flex-end; gap: 2px; height: 140px; background: #1a1d27; border-radius: 8px; padding: 1rem 1rem 2rem; position: relative; }
+  .line-chart { position: relative; height: 160px; background: #1a1d27; border-radius: 8px; padding: 1rem; }
+  .line-chart svg { width: 100%; height: 100%; }
+  .line-chart .line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .line-chart .area { opacity: 0.15; }
+  .line-chart .line.views { stroke: #2a3a5c; }
+  .line-chart .area.views { fill: #2a3a5c; }
+  .line-chart .line.unique { stroke: #4f8ff7; }
+  .line-chart .area.unique { fill: #4f8ff7; }
+  .line-chart .dot { r: 3; fill: #4f8ff7; opacity: 0; }
+  .line-chart .dot:hover { opacity: 1; }
+  .line-chart .x-label { font-size: 9px; fill: #555; text-anchor: middle; }
+  .chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; background: #1a1d27; border-radius: 8px; padding: 1rem 1rem 2rem; position: relative; }
   .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0; height: 100%; justify-content: flex-end; position: relative; }
-  .bars { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
   .bar { width: 100%; border-radius: 2px 2px 0 0; min-height: 0; }
   .bar.views { background: #2a3a5c; }
   .bar.unique { background: #4f8ff7; position: absolute; bottom: 0; }
-  .bar-label { font-size: 0.5rem; color: #555; position: absolute; bottom: -16px; white-space: nowrap; }
+  .bar-label { font-size: 0.65rem; color: #555; position: absolute; bottom: -16px; white-space: nowrap; }
   .bar-group:hover .bar.views { background: #3a4a6c; }
   .bar-group:hover .bar.unique { background: #6ea8ff; }
   .legend { display: flex; gap: 1.5rem; margin-top: 0.5rem; font-size: 0.7rem; color: #888; }
@@ -125,17 +135,28 @@ export default async (req) => {
 </div>
 
 <h2>Last 30 Days</h2>
-<div class="chart">
-  ${daily.map(d => {
-    const vh = (d.views / maxDaily) * 100;
-    const uh = (d.unique / maxDaily) * 100;
-    return `<div class="bar-group" title="${d.date}&#10;${d.unique} visitors, ${d.views} views"><div class="bar views" style="height:${vh}%"></div><div class="bar unique" style="height:${uh}%"></div><div class="bar-label">${d.date.slice(8)}</div></div>`;
-  }).join("")}
+<div class="line-chart">
+  <svg viewBox="0 0 600 130" preserveAspectRatio="none">
+    ${(() => {
+      const w = 600, h = 110, pad = 20;
+      const max = Math.max(...daily.map(d => d.views), 1);
+      const x = (i) => pad + (i / 29) * (w - 2 * pad);
+      const yV = (v) => h - (v / max) * (h - 10);
+      const yU = (v) => h - (v / max) * (h - 10);
+      const viewsLine = daily.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)},${yV(d.views)}`).join(" ");
+      const uniqueLine = daily.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)},${yU(d.unique)}`).join(" ");
+      const viewsArea = viewsLine + ` L${x(29)},${h} L${x(0)},${h} Z`;
+      const uniqueArea = uniqueLine + ` L${x(29)},${h} L${x(0)},${h} Z`;
+      const labels = daily.map((d, i) => (i % 5 === 0 || i === 29) ? `<text class="x-label" x="${x(i)}" y="${h + 16}">${d.date.slice(5)}</text>` : "").join("");
+      const dots = daily.map((d, i) => `<circle class="dot" cx="${x(i)}" cy="${yU(d.unique)}" r="3"><title>${d.date}: ${d.unique} visitors, ${d.views} views</title></circle>`).join("");
+      return `<path class="area views" d="${viewsArea}"/><path class="line views" d="${viewsLine}"/><path class="area unique" d="${uniqueArea}"/><path class="line unique" d="${uniqueLine}"/>${dots}${labels}`;
+    })()}
+  </svg>
 </div>
 <div class="legend"><span><div class="dot unique"></div> Unique visitors</span><span><div class="dot views"></div> Page views</span></div>
 
 <h2>Monthly</h2>
-<div class="chart">
+<div class="chart chart-monthly">
   ${monthly.map(m => {
     const vh = (m.views / maxMonthly) * 100;
     const uh = (m.unique / maxMonthly) * 100;
