@@ -5,24 +5,24 @@ export default async (req) => {
   const url = new URL(req.url);
   const key = url.searchParams.get("key");
 
-  // If a specific key is requested
   if (key) {
     const val = await store.get(key);
     return Response.json({ key, value: parseInt(val || "0", 10) });
   }
 
-  // Otherwise return a summary
   const now = new Date();
   const day = now.toISOString().slice(0, 10);
   const month = day.slice(0, 7);
 
-  const [total, today, thisMonth] = await Promise.all([
+  const [total, today, thisMonth, uniqueTotal, uniqueToday, uniqueMonth] = await Promise.all([
     store.get("total"),
     store.get(`daily:${day}`),
     store.get(`monthly:${month}`),
+    store.get("unique:total"),
+    store.get(`unique:daily:${day}`),
+    store.get(`unique:monthly:${month}`),
   ]);
 
-  // Get all page keys for top pages
   const { blobs } = await store.list({ prefix: "page:" });
   const pages = [];
   for (const blob of blobs) {
@@ -32,9 +32,16 @@ export default async (req) => {
   pages.sort((a, b) => b.hits - a.hits);
 
   return Response.json({
-    total: parseInt(total || "0", 10),
-    today: parseInt(today || "0", 10),
-    this_month: parseInt(thisMonth || "0", 10),
+    views: {
+      total: parseInt(total || "0", 10),
+      today: parseInt(today || "0", 10),
+      this_month: parseInt(thisMonth || "0", 10),
+    },
+    unique: {
+      total: parseInt(uniqueTotal || "0", 10),
+      today: parseInt(uniqueToday || "0", 10),
+      this_month: parseInt(uniqueMonth || "0", 10),
+    },
     top_pages: pages.slice(0, 20),
   });
 };

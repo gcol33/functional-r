@@ -1,5 +1,16 @@
 import { getStore } from "@netlify/blobs";
 
+// IPs to track separately (owner visits)
+const OWNER_IPS = ["84.112.10.156"];
+
+function hash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return h.toString(36);
+}
+
 export default async (req) => {
   const url = new URL(req.url);
   const page = url.searchParams.get("p") || "/";
@@ -7,22 +18,47 @@ export default async (req) => {
   const day = now.toISOString().slice(0, 10);
   const month = day.slice(0, 7);
 
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || req.headers.get("x-nf-client-connection-ip")
+    || "unknown";
+
+  const isOwner = OWNER_IPS.includes(ip);
+  const prefix = isOwner ? "owner:" : "";
+
+  const visitorId = hash(ip + day);
   const store = getStore("analytics");
 
-  // Increment helpers — read, parse, increment, write
+  // Deduplicate by IP per day
+  const seenKey = `${prefix}seen:${day}:${visitorId}`;
+  const alreadySeen = await store.get(seenKey);
+  const isNewVisitor = !alreadySeen;
+
+  if (isNewVisitor) {
+    await store.set(seenKey, "1");
+  }
+
   const inc = async (key) => {
     const val = await store.get(key);
     const count = val ? parseInt(val, 10) + 1 : 1;
     await store.set(key, count.toString());
-    return count;
   };
 
+  // Page views (prefixed for owner)
   await Promise.all([
-    inc("total"),
-    inc(`daily:${day}`),
-    inc(`monthly:${month}`),
-    inc(`page:${page}`),
+    inc(`${prefix}total`),
+    inc(`${prefix}daily:${day}`),
+    inc(`${prefix}monthly:${month}`),
+    inc(`${prefix}page:${page}`),
   ]);
+
+  // Unique visitors
+  if (isNewVisitor) {
+    await Promise.all([
+      inc(`${prefix}unique:total`),
+      inc(`${prefix}unique:daily:${day}`),
+      inc(`${prefix}unique:monthly:${month}`),
+    ]);
+  }
 
   return new Response("ok", {
     status: 200,
