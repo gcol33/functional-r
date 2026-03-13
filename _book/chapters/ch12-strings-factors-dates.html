@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>12&nbsp; Strings, factors, and dates – Thinking in R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/ch13-reading-writing-data.html" rel="next">
+<link href="../chapters/ch11-data-frames.html" rel="prev">
+<link href="../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-70a47bd5681a7291082a5b9f83d58762.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-4c6d65c679321d81af7ec8b61b1d5a24.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-70a47bd5681a7291082a5b9f83d58762.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch10-lists.html">Part II: Working with data</a></li><li class="breadcrumb-item"><a href="../chapters/ch12-strings-factors-dates.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Strings, factors, and dates</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Thinking in R</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/gcol33/thinking-in-r/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/foreword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foreword</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch01-two-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Two models of computation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch02-family-tree.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">R’s family tree</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch03-expressions-names.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Expressions and names</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch04-vectors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vectors</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch05-first-function.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Your first function</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch06-numerical-computing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Numerical computing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch07-functions-are-values.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Functions are values</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch08-logic-control-flow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Logic and control flow</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch09-complexity-and-algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Complexity and algorithms</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Working with data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch10-lists.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Lists</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch11-data-frames.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Data frames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch12-strings-factors-dates.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Strings, factors, and dates</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch13-reading-writing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Reading and writing data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch14-data-transformation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Data transformation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch15-pipes-and-composition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Pipes and composition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch16-tidy-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Tidy data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch17-visualization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Visualization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Thinking functionally</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch18-closures-and-scope.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Closures and scope</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch19-iteration-without-loops.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Iteration without loops</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch20-function-factories.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Function factories</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch21-reduce-and-accumulate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Reduce and accumulate</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch22-recursion-and-fixed-points.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Recursion and fixed points</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch23-lazy-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Lazy evaluation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: The type system</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch24-s3-and-s7.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">S3, S4, and S7</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch25-contracts-and-defensive-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Contracts and defensive code</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch26-metaprogramming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Metaprogramming</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch27-building-a-dsl.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building a DSL</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: Going further</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch28-performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Performance</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch29-r-internals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">R internals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch30-r-as-mathematics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">R as mathematics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch31-connecting-to-other-languages.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Connecting to other languages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch32-building-packages.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Building packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch33-reproducibility-and-workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Reproducibility and workflow</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/afterword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Afterword</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-character-vectors" id="toc-sec-character-vectors" class="nav-link active" data-scroll-target="#sec-character-vectors"><span class="header-section-number">12.1</span> Character vectors</a>
+  <ul class="collapse">
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-stringr" id="toc-sec-stringr" class="nav-link" data-scroll-target="#sec-stringr"><span class="header-section-number">12.2</span> stringr: consistent string operations</a>
+  <ul class="collapse">
+  <li><a href="#exercises-1" id="toc-exercises-1" class="nav-link" data-scroll-target="#exercises-1">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-regex-essentials" id="toc-sec-regex-essentials" class="nav-link" data-scroll-target="#sec-regex-essentials"><span class="header-section-number">12.3</span> Regex essentials</a>
+  <ul class="collapse">
+  <li><a href="#exercises-2" id="toc-exercises-2" class="nav-link" data-scroll-target="#exercises-2">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-why-factors" id="toc-sec-why-factors" class="nav-link" data-scroll-target="#sec-why-factors"><span class="header-section-number">12.4</span> Why factors exist</a>
+  <ul class="collapse">
+  <li><a href="#exercises-3" id="toc-exercises-3" class="nav-link" data-scroll-target="#exercises-3">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-forcats" id="toc-sec-forcats" class="nav-link" data-scroll-target="#sec-forcats"><span class="header-section-number">12.5</span> forcats: taming factors</a>
+  <ul class="collapse">
+  <li><a href="#exercises-4" id="toc-exercises-4" class="nav-link" data-scroll-target="#exercises-4">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-dates-times" id="toc-sec-dates-times" class="nav-link" data-scroll-target="#sec-dates-times"><span class="header-section-number">12.6</span> Dates and times</a>
+  <ul class="collapse">
+  <li><a href="#exercises-5" id="toc-exercises-5" class="nav-link" data-scroll-target="#exercises-5">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-lubridate" id="toc-sec-lubridate" class="nav-link" data-scroll-target="#sec-lubridate"><span class="header-section-number">12.7</span> lubridate: dates for humans</a>
+  <ul class="collapse">
+  <li><a href="#exercises-6" id="toc-exercises-6" class="nav-link" data-scroll-target="#exercises-6">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-strings-factors-dates-summary" id="toc-sec-strings-factors-dates-summary" class="nav-link" data-scroll-target="#sec-strings-factors-dates-summary"><span class="header-section-number">12.8</span> Summary</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/gcol33/thinking-in-r/edit/main/chapters/ch12-strings-factors-dates.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/gcol33/thinking-in-r/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch10-lists.html">Part II: Working with data</a></li><li class="breadcrumb-item"><a href="../chapters/ch12-strings-factors-dates.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Strings, factors, and dates</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-strings-factors-dates" class="quarto-section-identifier"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Strings, factors, and dates</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">March 13, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>You have a column of dates in three different formats, a species column that plots in the wrong order, and a free-text field full of trailing whitespace and inconsistent capitalization. Numbers behave; text, categories, and time do not. This chapter covers the three types that derail an afternoon: strings, factors, and dates. Each has a dedicated tidyverse package (<code>stringr</code>, <code>forcats</code>, <code>lubridate</code>), each comes with traps that catch beginners, and none of them will feel fully tamed by the end of a single chapter. The three topics are independent; skip to whichever one is causing you trouble right now.</p>
+<p>We will use the <code>palmerpenguins</code> dataset throughout. Load it now:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(palmerpenguins)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Attaching package: 'palmerpenguins'</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The following objects are masked from 'package:datasets':</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     penguins, penguins_raw</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forcats)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Attaching package: 'lubridate'</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     date, intersect, setdiff, union</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="sec-character-vectors" class="level2" data-number="12.1">
+<h2 data-number="12.1" class="anchored" data-anchor-id="sec-character-vectors"><span class="header-section-number">12.1</span> Character vectors</h2>
+<p>A string in R is a character vector of length 1. There is no special string type: <code>"hello"</code> is <code>character(1)</code>, the same kind of atomic vector you met in <a href="ch04-vectors.html#sec-atomic-vectors" class="quarto-xref"><span>Section 4.2</span></a>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="st">"hello"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">typeof</span>(x)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "character"</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(x)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Double quotes and single quotes both work. Pick one and stick with it.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Opinion
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Use double quotes. R’s own style guide does, and so does most code you will encounter in the wild. Single quotes earn their keep inside double-quoted strings: <code>"it's easy"</code>.</p>
+</div>
+</div>
+<p>R uses UTF-8 as its modern string encoding, a scheme that Ken Thompson and Rob Pike designed on a placemat in a New Jersey diner in September 1992, one that is backward-compatible with ASCII, self-synchronizing, and variable-width (one to four bytes per character). If accented characters come out garbled, the file is probably Latin-1; <code>stringr::str_conv()</code> or <code>readr::locale(encoding = "latin1")</code> handles that.</p>
+<p>Special characters use backslash escapes: <code>\n</code> (newline), <code>\t</code> (tab), <code>\\</code> (literal backslash). Compare <code>print()</code> and <code>cat()</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"line one</span><span class="sc">\n</span><span class="st">line two"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "line one\nline two"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"line one</span><span class="sc">\n</span><span class="st">line two"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; line one</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; line two</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>print()</code> shows the escape sequence as literal text; <code>cat()</code> renders it. A small difference, until you spend ten minutes wondering why your output has <code>\n</code> in it instead of a line break.</p>
+<p>Base R provides a handful of string tools:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nchar</span>(<span class="st">"penguin"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 7</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"Gentoo"</span>, <span class="st">"penguin"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Gentoo penguin"</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">paste0</span>(<span class="st">"Gentoo"</span>, <span class="st">"penguin"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Gentoopenguin"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sprintf</span>(<span class="st">"The %s weighs %d grams"</span>, <span class="st">"Gentoo"</span>, <span class="dv">5200</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "The Gentoo weighs 5200 grams"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>nchar()</code> counts characters, <code>paste()</code> joins with a space, <code>paste0()</code> joins without, and <code>sprintf()</code> does formatted substitution borrowing syntax from C. These work, but they are inconsistent in argument order and <code>NA</code> handling, and inconsistency compounds fast once you start chaining operations. What would a consistent interface look like?</p>
+<section id="exercises" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises">Exercises</h3>
+<ol type="1">
+<li>What does <code>nchar(NA)</code> return? What about <code>nchar("")</code>?</li>
+<li>Use <code>paste()</code> to combine <code>"Species"</code>, <code>":"</code>, and <code>"Adelie"</code> into a single string. Then do the same with <code>paste0()</code>. What is different?</li>
+<li>Use <code>sprintf()</code> to produce the string <code>"Island: Biscoe, n = 168"</code>.</li>
+</ol>
+</section>
+</section>
+<section id="sec-stringr" class="level2" data-number="12.2">
+<h2 data-number="12.2" class="anchored" data-anchor-id="sec-stringr"><span class="header-section-number">12.2</span> stringr: consistent string operations</h2>
+<p>Base R has <code>grep()</code>, <code>grepl()</code>, <code>sub()</code>, <code>gsub()</code> — they work, but the argument orders are inconsistent, the return types vary, and good luck guessing what <code>gsub</code> stands for. No convention ties them together, so you memorize each one separately.</p>
+<p>stringr fixes this with a single rule: every function starts with <code>str_</code>, takes the string as the first argument, and takes the pattern second. Once you know the convention, you can guess function names before you look them up.</p>
+<p>The essentials:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_length</span>(<span class="st">"penguin"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 7</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str_sub</span>(<span class="st">"penguin"</span>, <span class="dv">1</span>, <span class="dv">4</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "peng"</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str_c</span>(<span class="st">"Gentoo"</span>, <span class="st">"penguin"</span>, <span class="at">sep =</span> <span class="st">" "</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Gentoo penguin"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>str_length()</code> counts characters (like <code>nchar()</code>), <code>str_sub()</code> extracts by position, and <code>str_c()</code> combines strings. But unlike <code>paste()</code>, <code>str_c()</code> propagates <code>NA</code>, which means a missing value stays missing instead of silently becoming the literal text <code>"NA"</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"hello"</span>, <span class="cn">NA</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "hello NA"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str_c</span>(<span class="st">"hello"</span>, <span class="cn">NA</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] NA</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Case conversion and whitespace cleaning:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_to_upper</span>(<span class="st">"gentoo"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "GENTOO"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str_to_title</span>(<span class="st">"gentoo penguin"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Gentoo Penguin"</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str_trim</span>(<span class="st">"  messy data  "</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "messy data"</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">str_squish</span>(<span class="st">"  too   many   spaces  "</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "too many spaces"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Pattern matching is where stringr earns its place. Where base R gives you <code>grepl()</code>, stringr gives you <code>str_detect()</code>, a name that actually describes what it does:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>species <span class="ot">&lt;-</span> penguins<span class="sc">$</span>species</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_detect</span>(species, <span class="st">"Gentoo"</span>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Extraction and replacement:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>islands <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Biscoe Island"</span>, <span class="st">"Dream Island"</span>, <span class="st">"Torgersen Island"</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_extract</span>(islands, <span class="st">"^[A-Za-z]+"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Biscoe"    "Dream"     "Torgersen"</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str_replace</span>(islands, <span class="st">"Island"</span>, <span class="st">"Isl."</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Biscoe Isl."    "Dream Isl."     "Torgersen Isl."</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Splitting:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_split</span>(<span class="st">"one-two-three"</span>, <span class="st">"-"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "one"   "two"   "three"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>str_split()</code> returns a list because each input string could split into a different number of pieces, the same reason <code>strsplit()</code> does in base R, and a preview of why lists matter for irregular output.</p>
+<p>On the penguins data:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_to_upper</span>(<span class="fu">levels</span>(penguins<span class="sc">$</span>island))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "BISCOE"    "DREAM"     "TORGERSEN"</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">str_detect</span>(penguins<span class="sc">$</span>species, <span class="st">"Adelie"</span>))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 152</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="exercises-1" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-1">Exercises</h3>
+<ol type="1">
+<li>How many penguins have species names containing the letter “e”? Use <code>str_detect()</code>.</li>
+<li>Use <code>str_sub()</code> to extract the first three letters of each island name in <code>penguins$island</code>.</li>
+<li>Use <code>str_replace_all()</code> to replace all spaces in <code>"Gentoo penguin species"</code> with underscores.</li>
+</ol>
+</section>
+</section>
+<section id="sec-regex-essentials" class="level2" data-number="12.3">
+<h2 data-number="12.3" class="anchored" data-anchor-id="sec-regex-essentials"><span class="header-section-number">12.3</span> Regex essentials</h2>
+<p>You have seen <code>str_detect()</code> matching literal text. But what if you need to match “any string that starts with a capital letter and ends with a digit”? Literal matching cannot express that. Regular expressions can.</p>
+<p>Regular expressions are a mini-language for describing patterns in text. The syntax is not R-specific — the same patterns work in Python, JavaScript, and <code>grep</code> on the command line. What follows covers enough to read and write simple patterns; <code>?regex</code> has the full reference.</p>
+<p>The core building blocks:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Pattern</th>
+<th>Matches</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.</code></td>
+<td>Any single character</td>
+</tr>
+<tr class="even">
+<td><code>^</code></td>
+<td>Start of string</td>
+</tr>
+<tr class="odd">
+<td><code>$</code></td>
+<td>End of string</td>
+</tr>
+<tr class="even">
+<td><code>[abc]</code></td>
+<td>Any of a, b, or c</td>
+</tr>
+<tr class="odd">
+<td><code>[0-9]</code></td>
+<td>Any digit</td>
+</tr>
+<tr class="even">
+<td><code>+</code></td>
+<td>One or more of the preceding</td>
+</tr>
+<tr class="odd">
+<td><code>*</code></td>
+<td>Zero or more of the preceding</td>
+</tr>
+<tr class="even">
+<td><code>?</code></td>
+<td>Zero or one of the preceding</td>
+</tr>
+<tr class="odd">
+<td><code>(A|B)</code></td>
+<td>A or B (alternation)</td>
+</tr>
+<tr class="even">
+<td><code>\\d</code></td>
+<td>Digit (same as <code>[0-9]</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>\\s</code></td>
+<td>Whitespace</td>
+</tr>
+<tr class="even">
+<td><code>\\w</code></td>
+<td>Word character (letter, digit, underscore)</td>
+</tr>
+</tbody>
+</table>
+<p>The doubled backslashes (<code>\\d</code> instead of <code>\d</code>) exist because R strings process backslashes first: to get a literal <code>\d</code> to the regex engine, you write <code>"\\d"</code> in R. Regular expressions themselves come from formal language theory, where Stephen Kleene defined regular languages in 1956 using concatenation, alternation, and closure (repetition). Ken Thompson implemented them in the QED editor in 1968 and <code>grep</code> in 1973; the <code>*</code> quantifier is still called the <em>Kleene star</em> after him.</p>
+<p><code>str_view()</code> lets you see what a pattern matches, making it the best tool for building and debugging:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fruits <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"apple"</span>, <span class="st">"banana"</span>, <span class="st">"cherry"</span>, <span class="st">"date"</span>, <span class="st">"elderberry"</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view</span>(fruits, <span class="st">"[aeiou]"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] │ &lt;a&gt;ppl&lt;e&gt;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2] │ b&lt;a&gt;n&lt;a&gt;n&lt;a&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3] │ ch&lt;e&gt;rry</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4] │ d&lt;a&gt;t&lt;e&gt;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [5] │ &lt;e&gt;ld&lt;e&gt;rb&lt;e&gt;rry</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Some practical patterns:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Strings that start with a capital letter</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_detect</span>(<span class="fu">c</span>(<span class="st">"Hello"</span>, <span class="st">"world"</span>, <span class="st">"R"</span>), <span class="st">"^[A-Z]"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  TRUE FALSE  TRUE</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Strings that end in a digit</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">str_detect</span>(<span class="fu">c</span>(<span class="st">"room101"</span>, <span class="st">"lobby"</span>, <span class="st">"floor3"</span>), <span class="st">"</span><span class="sc">\\</span><span class="st">d$"</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  TRUE FALSE  TRUE</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract numbers from text</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">str_extract</span>(<span class="st">"penguin weighs 5200 grams"</span>, <span class="st">"</span><span class="sc">\\</span><span class="st">d+"</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "5200"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Opinion
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>You do not need to memorize regex. Know that it exists, know the basics from the table above, and keep the stringr cheatsheet within arm’s reach. That is enough.</p>
+</div>
+</div>
+<section id="exercises-2" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-2">Exercises</h3>
+<ol type="1">
+<li>Write a regex that matches strings starting with “G” and ending with “o”. Test it on <code>c("Gentoo", "Galileo", "Go", "Gusto", "Goo")</code>.</li>
+<li>Use <code>str_extract_all()</code> to pull all words (sequences of <code>\\w+</code>) from <code>"The quick brown fox"</code>.</li>
+<li>Use <code>str_detect()</code> and a regex to find which island names in <code>penguins$island</code> contain two consecutive vowels.</li>
+</ol>
+</section>
+</section>
+<section id="sec-why-factors" class="level2" data-number="12.4">
+<h2 data-number="12.4" class="anchored" data-anchor-id="sec-why-factors"><span class="header-section-number">12.4</span> Why factors exist</h2>
+<p>Strings handle free text. But many columns are not free text: species, island, treatment group. These columns have a fixed set of values, and the order of those values matters for plots and models. That is where factors come in.</p>
+<p>Try plotting penguin species as a bar chart. The bars come out in alphabetical order: Adelie, Chinstrap, Gentoo. You want them ordered by count, or by body mass, or by some logic that makes sense for your story. Character vectors do not carry ordering information, so you cannot tell the plot “put Gentoo first” without something more.</p>
+<p>A factor is that something more: a vector of integers with labels. When R stores <code>c("male", "female", "female")</code> as a factor, it is really storing <code>c(1, 2, 2)</code> with a mapping (1 = “female”, 2 = “male”, alphabetical by default).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">c</span>(<span class="st">"male"</span>, <span class="st">"female"</span>, <span class="st">"female"</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>x</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] male   female female</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Levels: female male</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">typeof</span>(x)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "integer"</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">unclass</span>(x)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2 1 1</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,"levels")</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "female" "male"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>typeof()</code> returns <code>"integer"</code>. <code>unclass()</code> strips the factor shell and shows the integers underneath.</p>
+<p>In type theory, a factor is a <em>sum type</em>: <code>factor(c("male", "female"))</code> defines a type with exactly two variants, <code>male | female</code>, and a value must be one of them. Logical vectors are the simplest case: <code>Bool = TRUE | FALSE</code>. Factors generalize it: <code>Species = Adelie | Chinstrap | Gentoo</code> is a sum type with three variants. Where a data frame is a product type (combine fields with AND, <a href="ch11-data-frames.html" class="quarto-xref"><span>Chapter 11</span></a>), a factor is a sum type (choose one variant with OR). The distinction matters because product types grow by adding fields, while sum types grow by adding variants, and the two compose differently. Rust’s <code>enum</code>, Haskell’s algebraic data types, and TypeScript’s union types all make this distinction explicit; R keeps it implicit in the factor machinery, but the structure is the same.</p>
+<p>That implicit structure does real work. When you store 10,000 penguin observations with three species, a character vector holds the full string <code>"Adelie"</code> repeated thousands of times. A factor holds the integer <code>1</code> and a three-entry lookup table. The compression matters for memory, but it matters more for reasoning: the moment you write <code>factor(species, levels = c("Adelie", "Chinstrap", "Gentoo"))</code>, you are declaring a contract. These three values can appear in this column, and nothing else. That contract is what lets <code>lm()</code> generate dummy variables automatically — the full set of categories is declared up front, not discovered by scanning the data. It also means <code>fct_reorder()</code> can reorder levels without inventing ones that do not exist, and data-entry errors (<code>"Adelie"</code> vs <code>"adelie"</code>) surface at the moment of assignment rather than downstream in a model that silently treats them as two distinct categories. A character vector is an open set: anything goes. A factor is a closed set, and closed sets are easier to reason about, for you and for every function that receives them.</p>
+<p>So why does R have this machinery at all? Statistical models need to encode categorical variables, and factors tell R “these are categories, not arbitrary text.” Without factors, R would not know that <code>"male"</code> and <code>"female"</code> represent a finite set of categories rather than two arbitrary strings.</p>
+<p>Historical baggage worth knowing: <code>data.frame()</code> used to convert all strings to factors by default, which caused years of confusion and the ubiquitous <code>stringsAsFactors = FALSE</code> incantation. R 4.0 (released 2020) changed the default to <code>FALSE</code>, ending decades of pain. If you see old code with <code>stringsAsFactors</code>, now you know why it is there.</p>
+<p>When do factors actually help?</p>
+<ul>
+<li>Controlling the order of levels in plots (bars, legends, facets)</li>
+<li>Statistical modeling (<code>lm()</code>, <code>glm()</code>, and friends)</li>
+<li>Any time the set of possible values matters: months, Likert scales, treatment groups</li>
+</ul>
+<p>When they do not: most data wrangling. If you are filtering and counting, character vectors are fine. But the moment you need a plot where the ordering tells a story, you will reach for factors, and at that point the question becomes how to wrangle them without pain.</p>
+<section id="exercises-3" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-3">Exercises</h3>
+<ol type="1">
+<li>Create a factor from <code>c("low", "medium", "high", "low", "high")</code>. What are the levels? In what order?</li>
+<li>Use <code>unclass()</code> to see the integer codes. Which integer corresponds to “low”?</li>
+<li>What happens if you try to assign a value that is not in the levels? Try <code>x[1] &lt;- "extreme"</code> on your factor.</li>
+</ol>
+</section>
+</section>
+<section id="sec-forcats" class="level2" data-number="12.5">
+<h2 data-number="12.5" class="anchored" data-anchor-id="sec-forcats"><span class="header-section-number">12.5</span> forcats: taming factors</h2>
+<p>Base R’s <code>factor()</code> lets you set levels manually:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>sizes <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">c</span>(<span class="st">"small"</span>, <span class="st">"medium"</span>, <span class="st">"large"</span>), <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"small"</span>, <span class="st">"medium"</span>, <span class="st">"large"</span>))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>sizes</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] small  medium large </span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Levels: small medium large</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The <code>levels</code> argument controls the allowed values and their order. Without it, R defaults to alphabetical, which is why “high” comes before “low” and plots look wrong. But manually specifying levels for every factor in every analysis gets tedious fast, and tedium breeds errors.</p>
+<p>forcats provides cleaner tools, all starting with <code>fct_</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reorder levels manually</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fct_relevel</span>(sizes, <span class="st">"large"</span>, <span class="st">"medium"</span>, <span class="st">"small"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] small  medium large </span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Levels: large medium small</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Order levels by frequency in the data</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fct_infreq</span>(penguins<span class="sc">$</span>species) <span class="sc">|&gt;</span> <span class="fu">table</span>()</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    Adelie    Gentoo Chinstrap </span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       152       124        68</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Collapse rare levels into "Other"</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fct_lump_n</span>(penguins<span class="sc">$</span>species, <span class="at">n =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> <span class="fu">table</span>()</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Adelie Gentoo  Other </span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    152    124     68</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename levels</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fct_recode</span>(penguins<span class="sc">$</span>species, <span class="at">AP =</span> <span class="st">"Adelie"</span>, <span class="at">GP =</span> <span class="st">"Gentoo"</span>, <span class="at">CP =</span> <span class="st">"Chinstrap"</span>) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] AP AP AP AP AP AP</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Levels: AP CP GP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The most useful function is <code>fct_reorder()</code>, which reorders levels by a summary of another variable, and this is where factors stop being an annoyance and start being a plotting superpower:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>penguins_clean <span class="ot">&lt;-</span> penguins[<span class="sc">!</span><span class="fu">is.na</span>(penguins<span class="sc">$</span>body_mass_g), ]</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(penguins_clean, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">fct_reorder</span>(species, body_mass_g, median), <span class="at">y =</span> body_mass_g)) <span class="sc">+</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Species (ordered by median body mass)"</span>, <span class="at">y =</span> <span class="st">"Body mass (g)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ch12-strings-factors-dates_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="480"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Without <code>fct_reorder()</code>, species appear alphabetically: Adelie, Chinstrap, Gentoo. With it, they appear in order of median body mass, and suddenly the plot tells a story instead of reciting the alphabet. This is the moment factors click: the labels reflect the data, not a sorting convention that has nothing to do with penguins.</p>
+<section id="exercises-4" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-4">Exercises</h3>
+<ol type="1">
+<li>Use <code>fct_infreq()</code> on <code>penguins$island</code> to see which island has the most observations.</li>
+<li>Use <code>fct_lump_n()</code> with <code>n = 1</code> on <code>penguins$species</code>. What happens?</li>
+<li>Create a bar chart of <code>penguins$species</code> with bars ordered by frequency (hint: <code>fct_infreq()</code> inside <code>aes()</code>).</li>
+</ol>
+</section>
+</section>
+<section id="sec-dates-times" class="level2" data-number="12.6">
+<h2 data-number="12.6" class="anchored" data-anchor-id="sec-dates-times"><span class="header-section-number">12.6</span> Dates and times</h2>
+<p>Strings are irregular text; factors are constrained categories. Dates look like strings but behave like numbers, and that dual nature is the source of most of the trouble.</p>
+<p>Add one month to January 31. What do you get? February 28? February 31 (which does not exist)? An error? The answer depends on your tool, and the fact that reasonable tools disagree tells you something about why date arithmetic is harder than it looks. Time zones, leap years, daylight saving transitions, and varying month lengths conspire to make even simple calculations surprisingly tricky.</p>
+<p>R has three date-time classes:</p>
+<ul>
+<li><code>Date</code>: date only, stored as days since 1970-01-01</li>
+<li><code>POSIXct</code>: date + time, stored as seconds since 1970-01-01 (compact, use in data frames)</li>
+<li><code>POSIXlt</code>: date + time as a named list of components (rarely needed)</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>today <span class="ot">&lt;-</span> <span class="fu">Sys.Date</span>()</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>today</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-03-13"</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">typeof</span>(today)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "double"</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">unclass</span>(today)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 20525</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The number from <code>unclass()</code> is days since the Unix epoch. Dates in R count from 1970-01-01 because Unix measured time as seconds from that date; 32-bit signed integers can count seconds from 1970 until January 19, 2038 (the “Year 2038 problem”), and R, Python, JavaScript, and most databases all inherit this same epoch. Date arithmetic works as you would expect:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as.Date</span>(<span class="st">"2026-03-07"</span>) <span class="sc">-</span> <span class="fu">as.Date</span>(<span class="st">"2026-01-01"</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Time difference of 65 days</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>R returns a <code>difftime</code> object. Subtraction works, and so does addition with scalars:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as.Date</span>(<span class="st">"2026-01-01"</span>) <span class="sc">+</span> <span class="dv">30</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-01-31"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The base R parsing function is <code>as.Date()</code>, which expects ISO 8601 format (<code>"YYYY-MM-DD"</code>) by default:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as.Date</span>(<span class="st">"2026-03-07"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-03-07"</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">as.Date</span>(<span class="st">"07/03/2026"</span>, <span class="at">format =</span> <span class="st">"%d/%m/%Y"</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-03-07"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The <code>format</code> argument uses <code>%Y</code> (4-digit year), <code>%m</code> (month), <code>%d</code> (day), and similar codes. These are hard to remember and easy to get wrong, especially when your data mixes formats. Is <code>"03/07/2026"</code> March 7th or July 3rd? The format string decides, and if you pick wrong, R will not complain.</p>
+<section id="exercises-5" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-5">Exercises</h3>
+<ol type="1">
+<li>What day number (since 1970-01-01) is today? Use <code>unclass(Sys.Date())</code>.</li>
+<li>What date is 1000 days from today? Use <code>Sys.Date() + 1000</code>.</li>
+<li>How many days are between <code>"2024-02-28"</code> and <code>"2024-03-01"</code>? (2024 is a leap year.)</li>
+</ol>
+</section>
+</section>
+<section id="sec-lubridate" class="level2" data-number="12.7">
+<h2 data-number="12.7" class="anchored" data-anchor-id="sec-lubridate"><span class="header-section-number">12.7</span> lubridate: dates for humans</h2>
+<p>Remember the <code>%Y/%m/%d</code> format codes? lubridate lets you forget them. Its parsing functions are named after the order of components, so the function name <em>is</em> the format:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ymd</span>(<span class="st">"2026-03-07"</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-03-07"</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dmy</span>(<span class="st">"07/03/2026"</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-03-07"</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mdy</span>(<span class="st">"03-07-2026"</span>)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-03-07"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>All three produce the same date. No format strings to memorize, no ambiguity about which code means what.</p>
+<p>For date-times:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ymd_hms</span>(<span class="st">"2026-03-07 14:30:00"</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-03-07 14:30:00 UTC"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Extracting components:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">ymd</span>(<span class="st">"2026-03-07"</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">year</span>(d)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2026</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="fu">month</span>(d)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="fu">day</span>(d)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 7</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="fu">wday</span>(d, <span class="at">label =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] Sat</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Levels: Sun &lt; Mon &lt; Tue &lt; Wed &lt; Thu &lt; Fri &lt; Sat</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Date arithmetic with human-readable units:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>d <span class="sc">+</span> <span class="fu">days</span>(<span class="dv">30</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-04-06"</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>d <span class="sc">+</span> <span class="fu">months</span>(<span class="dv">1</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2026-04-07"</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>d <span class="sc">+</span> <span class="fu">years</span>(<span class="dv">1</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "2027-03-07"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>lubridate handles month-length differences correctly: adding one month to January 31 gives February 28 (or 29 in a leap year), not an error. That question from the previous section now has a clear answer.</p>
+<p>lubridate distinguishes three kinds of time spans:</p>
+<ul>
+<li><strong>Duration</strong>: exact number of seconds. <code>ddays(1)</code> is always 86400 seconds.</li>
+<li><strong>Period</strong>: human units. <code>days(1)</code> is “one day,” which could be 23 or 25 hours around daylight saving transitions.</li>
+<li><strong>Interval</strong>: an anchored span with a start and end.</li>
+</ul>
+<p>For most work, periods (<code>days()</code>, <code>months()</code>, <code>years()</code>) are what you want. Durations (<code>ddays()</code>, <code>dmonths()</code>) matter when you need physical time, the kind a stopwatch measures rather than a calendar.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># How old is R? (first public release: 1993-08-01)</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">interval</span>(<span class="fu">ymd</span>(<span class="st">"1993-08-01"</span>), <span class="fu">Sys.Date</span>()) <span class="sc">%/%</span> <span class="fu">years</span>(<span class="dv">1</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 32</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Opinion
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Parse with lubridate, extract with lubridate, do arithmetic with lubridate. Reach for base R date functions only when you need zero dependencies.</p>
+</div>
+</div>
+<section id="exercises-6" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-6">Exercises</h3>
+<ol type="1">
+<li>Parse the following dates: <code>"15-Jan-2024"</code>, <code>"2024/06/30"</code>, <code>"December 25, 2023"</code>. Which lubridate function does each need?</li>
+<li>What day of the week were you born? Use <code>ymd()</code> and <code>wday(label = TRUE)</code>.</li>
+<li>Compute the number of days between <code>"2020-03-01"</code> and <code>"2026-03-01"</code>. Then compute the number of months using <code>interval()</code> and <code>%/%</code>.</li>
+</ol>
+</section>
+</section>
+<section id="sec-strings-factors-dates-summary" class="level2" data-number="12.8">
+<h2 data-number="12.8" class="anchored" data-anchor-id="sec-strings-factors-dates-summary"><span class="header-section-number">12.8</span> Summary</h2>
+<p>Each of these data types has a matching tidyverse package:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 17%">
+<col style="width: 42%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Data type</th>
+<th>Base R</th>
+<th>Tidyverse package</th>
+<th>Prefix</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Text</td>
+<td><code>paste()</code>, <code>grep()</code>, <code>sub()</code></td>
+<td>stringr</td>
+<td><code>str_</code></td>
+</tr>
+<tr class="even">
+<td>Categories</td>
+<td><code>factor()</code>, <code>levels()</code></td>
+<td>forcats</td>
+<td><code>fct_</code></td>
+</tr>
+<tr class="odd">
+<td>Dates</td>
+<td><code>as.Date()</code>, <code>Sys.Date()</code></td>
+<td>lubridate</td>
+<td><code>ymd()</code>, <code>year()</code>, …</td>
+</tr>
+</tbody>
+</table>
+<p>The tidyverse packages give these operations a consistent interface and naming scheme. In some cases (like <code>str_detect</code> vs <code>grepl</code>) the difference is mostly cosmetic; in others (like lubridate’s timezone handling) the package catches real bugs that base R silently lets through.</p>
+<p><a href="ch11-data-frames.html" class="quarto-xref"><span>Chapter 11</span></a> covered the structure; this chapter covered the three column types that cause the most trouble. But data frames need data, so <a href="ch13-reading-writing-data.html" class="quarto-xref"><span>Chapter 13</span></a> deals with getting files off disk and into R. After that, <a href="ch14-data-transformation.html" class="quarto-xref"><span>Chapter 14</span></a> shows how these pieces combine: <code>str_detect()</code> inside <code>filter()</code>, <code>fct_reorder()</code> inside <code>ggplot()</code>, date arithmetic inside <code>mutate()</code>. That is where the column-level work starts saving you real time.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+
+
+
+  // Replace Quarto's default toggle icon with sun/moon SVGs
+
+  var toggle = document.querySelector('.quarto-color-scheme-toggle');
+
+  if (toggle) {
+
+    var icon = toggle.querySelector('i.bi');
+
+    if (icon) {
+
+      icon.outerHTML =
+
+        '<svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+
+          '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>' +
+
+        '</svg>' +
+
+        '<svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+
+          '<circle cx="12" cy="12" r="5"/>' +
+
+          '<line x1="12" y1="1" x2="12" y2="3"/>' +
+
+          '<line x1="12" y1="21" x2="12" y2="23"/>' +
+
+          '<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>' +
+
+          '<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>' +
+
+          '<line x1="1" y1="12" x2="3" y2="12"/>' +
+
+          '<line x1="21" y1="12" x2="23" y2="12"/>' +
+
+          '<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>' +
+
+          '<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>' +
+
+        '</svg>';
+
+    }
+
+  }
+
+
+
+  // Citation copy button
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn) {
+
+    btn.addEventListener('click', function() {
+
+      var text = this.closest('.citation-box').querySelector('.citation-text').textContent;
+
+      var originalHTML = btn.innerHTML;
+
+      navigator.clipboard.writeText(text).then(function() {
+
+        btn.classList.add('copied');
+
+        btn.innerHTML = 'Copied!';
+
+        setTimeout(function() {
+
+          btn.classList.remove('copied');
+
+          btn.innerHTML = originalHTML;
+
+        }, 2000);
+
+      });
+
+    });
+
+  });
+
+
+
+});
+
+</script>
+
+<script>
+
+fetch("/api/hit?p=" + encodeURIComponent(location.pathname));
+
+</script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/thinking-in-r\.gillescolling\.com\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/ch11-data-frames.html" class="pagination-link" aria-label="Data frames">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Data frames</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/ch13-reading-writing-data.html" class="pagination-link" aria-label="Reading and writing data">
+        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Reading and writing data</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/gcol33/thinking-in-r/edit/main/chapters/ch12-strings-factors-dates.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/gcol33/thinking-in-r/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

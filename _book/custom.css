@@ -1,0 +1,660 @@
+/* ============================================================
+   Thinking in R — Custom Theme
+   Matches gillescolling.com dark/light palette
+   ============================================================ */
+
+/* --- Web fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* --- Lock font family across both themes --- */
+body {
+  font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+code, pre code {
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace !important;
+  font-size: 0.88em;
+}
+
+/* No transitions on theme switch — Quarto swaps stylesheets, so
+   transitions cause a staggered/async repaint. Instant is cleaner. */
+
+/* ============================================================
+   SUN/MOON TOGGLE (inside Quarto's native toggle)
+   ============================================================ */
+
+/* Vertically center the SVG icons */
+.quarto-color-scheme-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Light mode: show moon, hide sun */
+.quarto-color-scheme-toggle .icon-sun {
+  display: none;
+}
+.quarto-color-scheme-toggle .icon-moon {
+  display: inline-block;
+}
+
+/* Dark mode: show sun, hide moon */
+body.quarto-dark .quarto-color-scheme-toggle .icon-sun {
+  display: inline-block;
+}
+body.quarto-dark .quarto-color-scheme-toggle .icon-moon {
+  display: none;
+}
+
+/* ============================================================
+   CITATION BOX
+   ============================================================ */
+
+.citation-box {
+  position: relative;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem 3rem 1rem 1rem;
+  margin: 1rem 0;
+}
+
+.citation-text {
+  margin: 0 !important;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.citation-box p {
+  margin: 0 !important;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.copy-btn:hover {
+  opacity: 1;
+  color: #333;
+}
+
+.copy-btn.copied {
+  color: #28a745;
+  opacity: 1;
+}
+
+/* ============================================================
+   PULL QUOTES
+   Usage: ::: {.pull-quote}  text  :::
+   ============================================================ */
+
+.pull-quote {
+  border-left: 3px solid #c0a080;
+  margin: 1.5rem 0 1.5rem 0;
+  padding: 0.8rem 1.2rem;
+  font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  line-height: 1.6;
+  color: #444;
+}
+
+.pull-quote p {
+  margin: 0;
+}
+
+.pull-quote .attribution {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-style: normal;
+  font-variant: small-caps;
+  color: #777;
+}
+
+/* ============================================================
+   CHAPTER SUMMARY BOX
+   Usage: ::: {.chapter-summary}  text  :::
+   ============================================================ */
+
+.chapter-summary {
+  background: linear-gradient(135deg, #f8f6f3 0%, #f0ece6 100%);
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #555;
+  border-left: 3px solid #c0a080;
+}
+
+.chapter-summary p:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================================
+   LAST UPDATED BADGE
+   ============================================================ */
+
+.document-date-modified {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* ============================================================
+   MARGIN NOTES / SIDENOTES
+   Usage: ::: {.column-margin}  text  :::
+   Quarto natively supports .column-margin; we just style it.
+   ============================================================ */
+
+.column-margin {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #666;
+}
+
+.column-margin p:first-child {
+  margin-top: 0;
+}
+
+.column-margin code {
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   KEY TAKEAWAYS BOX
+   Usage: ::: {.key-takeaways}  - bullet  - bullet  :::
+   ============================================================ */
+
+.key-takeaways {
+  background-color: #f0f7f0;
+  border: 1px solid #c3dcc3;
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.key-takeaways::before {
+  content: "Key takeaways";
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: #2d6a2d;
+}
+
+.key-takeaways ul {
+  margin-bottom: 0;
+  padding-left: 1.2rem;
+}
+
+.key-takeaways li {
+  margin-bottom: 0.3rem;
+  font-size: 0.93rem;
+}
+
+/* ============================================================
+   CROSS-CHAPTER NAVIGATION HINT
+   Usage: ::: {.chapter-nav}  text  :::
+   ============================================================ */
+
+.chapter-nav {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #777;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 0.8rem;
+  margin-top: 2rem;
+}
+
+.chapter-nav a {
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* ============================================================
+   DARK MODE (using Quarto's native .quarto-dark class)
+   ============================================================ */
+
+/* --- Palette (matches gillescolling.com) --- */
+body.quarto-dark {
+  --bs-body-bg: #1a1a1a;
+  --bs-body-color: #b0b0b0;
+  --dm-bg-primary: #1a1a1a;
+  --dm-bg-secondary: #2d2d2d;
+  --dm-bg-tertiary: #3d3d3d;
+  --dm-text-primary: #f0f0f0;
+  --dm-text-secondary: #b0b0b0;
+  --dm-accent: #f8f0ea;
+  --dm-border: #404040;
+  --dm-code-bg: #252525;
+  --dm-code-color: #e8b4b8;
+  --dm-link: #8ab4f8;
+}
+
+/* --- Base --- */
+body.quarto-dark {
+  background-color: var(--dm-bg-primary);
+  color: var(--dm-text-secondary);
+}
+
+/* --- Headings --- */
+body.quarto-dark h1,
+body.quarto-dark h2,
+body.quarto-dark h3,
+body.quarto-dark h4,
+body.quarto-dark h5,
+body.quarto-dark h6,
+body.quarto-dark .sidebar-title {
+  color: var(--dm-text-primary) !important;
+}
+
+/* --- Links --- */
+body.quarto-dark a {
+  color: var(--dm-link);
+}
+
+body.quarto-dark a:hover {
+  color: #aeccff;
+}
+
+/* --- Sidebar --- */
+body.quarto-dark #quarto-sidebar,
+body.quarto-dark .sidebar-navigation {
+  background-color: var(--dm-bg-primary);
+  border-right-color: var(--dm-border);
+}
+
+body.quarto-dark .sidebar-item-text,
+body.quarto-dark .sidebar-item a {
+  color: var(--dm-text-secondary) !important;
+}
+
+body.quarto-dark .sidebar-item.active > .sidebar-item-text,
+body.quarto-dark .sidebar-item.active > a {
+  color: var(--dm-text-primary) !important;
+  font-weight: 600;
+}
+
+body.quarto-dark .sidebar .chapter-number {
+  color: var(--dm-text-secondary);
+}
+
+/* --- Content area --- */
+body.quarto-dark #quarto-content {
+  background-color: var(--dm-bg-primary);
+}
+
+body.quarto-dark .page-columns {
+  background-color: var(--dm-bg-primary);
+}
+
+/* --- Code blocks --- */
+body.quarto-dark pre {
+  background-color: var(--dm-code-bg);
+  border: 1px solid var(--dm-border);
+  border-radius: 6px;
+}
+
+body.quarto-dark pre code {
+  background-color: transparent;
+  color: var(--dm-text-primary);
+}
+
+body.quarto-dark code {
+  background-color: var(--dm-bg-secondary);
+  color: var(--dm-code-color);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+body.quarto-dark pre code {
+  padding: 0;
+}
+
+/* --- Syntax highlighting (match website's warm tones) --- */
+body.quarto-dark .sourceCode .co { color: #6a9955; }   /* comments */
+body.quarto-dark .sourceCode .st { color: #ce9178; }   /* strings */
+body.quarto-dark .sourceCode .dv { color: #b5cea8; }   /* numbers */
+body.quarto-dark .sourceCode .kw { color: #c586c0; }   /* keywords */
+body.quarto-dark .sourceCode .fu { color: #dcdcaa; }   /* functions */
+body.quarto-dark .sourceCode .op { color: #d4d4d4; }   /* operators */
+body.quarto-dark .sourceCode .cn { color: #4fc1ff; }   /* constants */
+body.quarto-dark .sourceCode .sc { color: #d7ba7d; }   /* special chars */
+
+/* --- R output --- */
+body.quarto-dark pre.sourceCode code .r-out,
+body.quarto-dark .cell-output pre {
+  color: #a0a0a0;
+}
+
+/* --- Callouts --- */
+body.quarto-dark .callout {
+  background-color: var(--dm-bg-secondary);
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .callout-body p {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .callout-header {
+  color: var(--dm-text-primary);
+}
+
+body.quarto-dark .callout-tip {
+  border-left-color: #4ec9b0;
+}
+
+body.quarto-dark .callout-note {
+  border-left-color: var(--dm-link);
+}
+
+body.quarto-dark .callout-warning {
+  border-left-color: #cca700;
+}
+
+body.quarto-dark .callout-important {
+  border-left-color: #f48771;
+}
+
+/* --- Tables --- */
+body.quarto-dark .table,
+body.quarto-dark table {
+  color: var(--dm-text-secondary);
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .table thead th,
+body.quarto-dark table thead th {
+  color: var(--dm-text-primary);
+  background-color: var(--dm-bg-secondary);
+  border-bottom-color: var(--dm-border);
+}
+
+body.quarto-dark .table td,
+body.quarto-dark table td {
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--dm-text-secondary);
+}
+
+/* --- TOC (right sidebar) --- */
+body.quarto-dark #quarto-margin-sidebar,
+body.quarto-dark .toc-actions {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark #quarto-margin-sidebar a {
+  color: var(--dm-text-secondary) !important;
+}
+
+body.quarto-dark #quarto-margin-sidebar a.active {
+  color: var(--dm-text-primary) !important;
+}
+
+/* --- Search --- */
+body.quarto-dark .aa-DetachedFormContainer,
+body.quarto-dark .aa-Panel {
+  background-color: var(--dm-bg-secondary);
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .aa-Input {
+  background-color: var(--dm-bg-primary);
+  color: var(--dm-text-primary);
+}
+
+/* --- Footer and nav --- */
+body.quarto-dark .nav-footer {
+  background-color: var(--dm-bg-primary);
+  border-top-color: var(--dm-border);
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .nav-page a {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .nav-page a:hover {
+  color: var(--dm-text-primary);
+}
+
+/* --- Horizontal rules --- */
+body.quarto-dark hr {
+  border-color: var(--dm-border);
+}
+
+/* --- Blockquotes --- */
+body.quarto-dark blockquote {
+  border-left-color: var(--dm-border);
+  color: var(--dm-text-secondary);
+}
+
+/* --- Images: slight brightness reduction --- */
+body.quarto-dark img {
+  filter: brightness(0.85);
+}
+
+body.quarto-dark img:hover {
+  filter: brightness(0.95);
+}
+
+/* --- Exercises sections --- */
+body.quarto-dark .unnumbered {
+  color: var(--dm-text-primary);
+}
+
+/* --- Selection highlight --- */
+body.quarto-dark ::selection {
+  background-color: rgba(138, 180, 248, 0.3);
+  color: var(--dm-text-primary);
+}
+
+/* --- Citation box dark mode --- */
+body.quarto-dark .citation-box {
+  background-color: var(--dm-bg-secondary);
+  border-color: var(--dm-border);
+}
+
+body.quarto-dark .citation-text {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .copy-btn {
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .copy-btn:hover {
+  color: var(--dm-text-primary);
+}
+
+/* --- Pull quotes dark mode --- */
+body.quarto-dark .pull-quote {
+  border-left-color: #a08060;
+  color: var(--dm-text-secondary);
+}
+
+body.quarto-dark .pull-quote .attribution {
+  color: #888;
+}
+
+/* --- Chapter summary dark mode --- */
+body.quarto-dark .chapter-summary {
+  background: linear-gradient(135deg, #252525 0%, #2a2723 100%);
+  border-left-color: #a08060;
+  color: var(--dm-text-secondary);
+}
+
+/* --- Margin notes dark mode --- */
+body.quarto-dark .column-margin {
+  color: #888;
+}
+
+/* --- Key takeaways dark mode --- */
+body.quarto-dark .key-takeaways {
+  background-color: #1e2b1e;
+  border-color: #3a5a3a;
+}
+
+body.quarto-dark .key-takeaways::before {
+  color: #6abf6a;
+}
+
+body.quarto-dark .key-takeaways li {
+  color: var(--dm-text-secondary);
+}
+
+/* --- Cross-chapter nav dark mode --- */
+body.quarto-dark .chapter-nav {
+  color: #888;
+  border-top-color: var(--dm-border);
+}
+
+/* ============================================================
+   COVER IMAGE HERO (index page)
+   ============================================================ */
+
+.book-cover-hero {
+  text-align: center;
+  margin: 1.5rem 0 2rem 0;
+}
+
+.book-cover-hero img {
+  max-width: 280px;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+body.quarto-dark .book-cover-hero img {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  filter: brightness(1);
+}
+
+.buy-link {
+  margin-top: 0.8rem;
+  font-size: 0.9rem;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+  color: #888;
+}
+
+.buy-coffee {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: #5aaa9a;
+  text-decoration: none;
+  border: 1px solid #5aaa9a;
+  border-radius: 4px;
+  padding: 0.3rem 0.8rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.buy-coffee:hover {
+  background-color: #5aaa9a;
+  color: #fff;
+}
+
+body.quarto-dark .buy-coffee {
+  color: #6abaa8;
+  border-color: #6abaa8;
+}
+
+body.quarto-dark .buy-coffee:hover {
+  background-color: #6abaa8;
+  color: #0e1412;
+}
+
+/* ============================================================
+   TEAL ACCENT INTEGRATION (from cover palette)
+   ============================================================ */
+
+/* Teal accent for links and active states */
+a {
+  color: #2a7a6a;
+}
+
+a:hover {
+  color: #4a9a8a;
+}
+
+/* Sidebar active item teal accent */
+.sidebar-item.active > .sidebar-item-text,
+.sidebar-item.active > a {
+  color: #2a7a6a !important;
+  border-left-color: #3a8a7a;
+}
+
+/* TOC active link */
+#quarto-margin-sidebar a.active {
+  color: #2a7a6a !important;
+}
+
+/* Dark mode teal accents */
+body.quarto-dark a {
+  color: #5aaa9a;
+}
+
+body.quarto-dark a:hover {
+  color: #7acab8;
+}
+
+body.quarto-dark .sidebar-item.active > .sidebar-item-text,
+body.quarto-dark .sidebar-item.active > a {
+  color: #6abaa8 !important;
+}
+
+body.quarto-dark #quarto-margin-sidebar a.active {
+  color: #6abaa8 !important;
+}
+
+/* Callout tip uses teal instead of default green */
+.callout-tip {
+  border-left-color: #3a8a7a;
+}
+
+body.quarto-dark .callout-tip {
+  border-left-color: #5aaa9a;
+}
+
+/* ============================================================
+   MOBILE TITLE SPACING FIX
+   ============================================================ */
+
+/* More breathing room between chapter title and body text */
+.chapter-title,
+#title-block-header h1,
+main h1.title {
+  margin-bottom: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .chapter-title,
+  #title-block-header h1,
+  main h1.title,
+  #quarto-content h1:first-child {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  /* Ensure part titles also have spacing on mobile */
+  .part-title {
+    margin-bottom: 1.5rem;
+  }
+}

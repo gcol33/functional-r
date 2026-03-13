@@ -1,10 +1,6 @@
 [build]
   publish = "_book"
+  command = "echo 'Using pre-built site'"
 
 [functions]
   directory = "netlify/functions"
-
-[[plugins]]
-  package = "@quarto/netlify-plugin-quarto"
-  [plugins.inputs]
-    cmd = "render"

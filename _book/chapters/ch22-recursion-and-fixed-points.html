@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>22&nbsp; Recursion and fixed points – Thinking in R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/ch23-lazy-evaluation.html" rel="next">
+<link href="../chapters/ch21-reduce-and-accumulate.html" rel="prev">
+<link href="../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-70a47bd5681a7291082a5b9f83d58762.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-4c6d65c679321d81af7ec8b61b1d5a24.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-70a47bd5681a7291082a5b9f83d58762.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch18-closures-and-scope.html">Part III: Thinking functionally</a></li><li class="breadcrumb-item"><a href="../chapters/ch22-recursion-and-fixed-points.html"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Recursion and fixed points</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Thinking in R</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/gcol33/thinking-in-r/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/foreword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foreword</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch01-two-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Two models of computation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch02-family-tree.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">R’s family tree</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch03-expressions-names.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Expressions and names</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch04-vectors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vectors</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch05-first-function.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Your first function</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch06-numerical-computing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Numerical computing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch07-functions-are-values.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Functions are values</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch08-logic-control-flow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Logic and control flow</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch09-complexity-and-algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Complexity and algorithms</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Working with data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch10-lists.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Lists</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch11-data-frames.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Data frames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch12-strings-factors-dates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Strings, factors, and dates</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch13-reading-writing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Reading and writing data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch14-data-transformation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Data transformation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch15-pipes-and-composition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Pipes and composition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch16-tidy-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Tidy data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch17-visualization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Visualization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Thinking functionally</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch18-closures-and-scope.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Closures and scope</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch19-iteration-without-loops.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Iteration without loops</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch20-function-factories.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Function factories</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch21-reduce-and-accumulate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Reduce and accumulate</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch22-recursion-and-fixed-points.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Recursion and fixed points</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch23-lazy-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Lazy evaluation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: The type system</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch24-s3-and-s7.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">S3, S4, and S7</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch25-contracts-and-defensive-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Contracts and defensive code</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch26-metaprogramming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Metaprogramming</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch27-building-a-dsl.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building a DSL</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: Going further</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch28-performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Performance</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch29-r-internals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">R internals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch30-r-as-mathematics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">R as mathematics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch31-connecting-to-other-languages.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Connecting to other languages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch32-building-packages.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Building packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/ch33-reproducibility-and-workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Reproducibility and workflow</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/afterword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Afterword</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-recursive-functions" id="toc-sec-recursive-functions" class="nav-link active" data-scroll-target="#sec-recursive-functions"><span class="header-section-number">22.1</span> Recursive functions</a>
+  <ul class="collapse">
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-call-stack" id="toc-sec-call-stack" class="nav-link" data-scroll-target="#sec-call-stack"><span class="header-section-number">22.2</span> The call stack</a>
+  <ul class="collapse">
+  <li><a href="#exercises-1" id="toc-exercises-1" class="nav-link" data-scroll-target="#exercises-1">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-tail-recursion" id="toc-sec-tail-recursion" class="nav-link" data-scroll-target="#sec-tail-recursion"><span class="header-section-number">22.3</span> Tail recursion and accumulators</a>
+  <ul class="collapse">
+  <li><a href="#exercises-2" id="toc-exercises-2" class="nav-link" data-scroll-target="#exercises-2">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-trampolining" id="toc-sec-trampolining" class="nav-link" data-scroll-target="#sec-trampolining"><span class="header-section-number">22.4</span> Trampolining</a>
+  <ul class="collapse">
+  <li><a href="#exercises-3" id="toc-exercises-3" class="nav-link" data-scroll-target="#exercises-3">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-divide-conquer" id="toc-sec-divide-conquer" class="nav-link" data-scroll-target="#sec-divide-conquer"><span class="header-section-number">22.5</span> Divide and conquer</a>
+  <ul class="collapse">
+  <li><a href="#exercises-4" id="toc-exercises-4" class="nav-link" data-scroll-target="#exercises-4">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-recursive-lists" id="toc-sec-recursive-lists" class="nav-link" data-scroll-target="#sec-recursive-lists"><span class="header-section-number">22.6</span> Recursive list processing</a>
+  <ul class="collapse">
+  <li><a href="#exercises-5" id="toc-exercises-5" class="nav-link" data-scroll-target="#exercises-5">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-mutual-recursion" id="toc-sec-mutual-recursion" class="nav-link" data-scroll-target="#sec-mutual-recursion"><span class="header-section-number">22.7</span> Mutual recursion</a></li>
+  <li><a href="#sec-fixed-point-combinators" id="toc-sec-fixed-point-combinators" class="nav-link" data-scroll-target="#sec-fixed-point-combinators"><span class="header-section-number">22.8</span> Fixed-point combinators</a>
+  <ul class="collapse">
+  <li><a href="#exercises-6" id="toc-exercises-6" class="nav-link" data-scroll-target="#exercises-6">Exercises</a></li>
+  </ul></li>
+  <li><a href="#sec-when-not-recurse" id="toc-sec-when-not-recurse" class="nav-link" data-scroll-target="#sec-when-not-recurse"><span class="header-section-number">22.9</span> When not to recurse</a></li>
+  <li><a href="#sec-recursion-history" id="toc-sec-recursion-history" class="nav-link" data-scroll-target="#sec-recursion-history"><span class="header-section-number">22.10</span> Historical notes</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/gcol33/thinking-in-r/edit/main/chapters/ch22-recursion-and-fixed-points.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/gcol33/thinking-in-r/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch18-closures-and-scope.html">Part III: Thinking functionally</a></li><li class="breadcrumb-item"><a href="../chapters/ch22-recursion-and-fixed-points.html"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Recursion and fixed points</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-recursion" class="quarto-section-identifier"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Recursion and fixed points</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">March 13, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Suppose you need to process a tree of unknown depth, a structure that nests inside itself with no predetermined bottom. A <code>for</code> loop can’t express this because you don’t know how many levels to iterate; you would need a loop inside a loop inside a loop, turtles all the way down. The alternative is a function that calls itself, peeling away one layer of nesting each time until it reaches something solid. That function is recursive, and recursion predates loops by decades in the theory of computation.</p>
+<p>A recursive function calls itself. The sentence sounds circular because circularity is the point: you solve a problem by breaking it into smaller copies of the same problem, bottoming out when the copies are small enough to answer directly. You saw <code>Reduce()</code> in <a href="ch21-reduce-and-accumulate.html" class="quarto-xref"><span>Chapter 21</span></a> collapse a list into a single value by repeatedly applying a binary function, but <code>Reduce()</code> is just one specific recursive pattern wearing a loop’s clothing. Recursion itself can express anything a loop can, and several things loops express awkwardly. What happens, though, when the chain of self-calls grows too long for R to handle?</p>
+<section id="sec-recursive-functions" class="level2" data-number="22.1">
+<h2 data-number="22.1" class="anchored" data-anchor-id="sec-recursive-functions"><span class="header-section-number">22.1</span> Recursive functions</h2>
+<p>The simplest case is the one every textbook reaches for: the factorial. n! = n * (n-1) * … * 1, with 0! = 1:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>factorial_r <span class="ot">&lt;-</span> <span class="cf">function</span>(n) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="dv">1</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  n <span class="sc">*</span> <span class="fu">factorial_r</span>(n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">factorial_r</span>(<span class="dv">6</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 720</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Two parts make this work. A <em>base case</em> stops the recursion (<code>n == 0</code> here), and a <em>recursive case</em> makes progress toward it (since <code>n - 1</code> is closer to 0 than <code>n</code> was). Forget the base case and you get infinite recursion, which in R means a stack overflow error, the computational equivalent of a sentence that never finds its period.</p>
+<p>Fibonacci numbers are the other classic:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fib <span class="ot">&lt;-</span> <span class="cf">function</span>(n) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">&lt;=</span> <span class="dv">1</span>) <span class="fu">return</span>(n)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fib</span>(n <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">fib</span>(n <span class="sc">-</span> <span class="dv">2</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">10</span>, fib)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1]  0  1  1  2  3  5  8 13 21 34 55</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This works but is spectacularly inefficient: each call spawns two more calls, ballooning to O(2^n) time complexity (see <a href="ch09-complexity-and-algorithms.html" class="quarto-xref"><span>Chapter 9</span></a> for Big-O), so <code>fib(30)</code> alone triggers over a million calls. Memoization (<a href="ch20-function-factories.html#sec-memoization" class="quarto-xref"><span>Section 20.4</span></a>) or an accumulator (later in this chapter) fixes the performance problem, but the naive version illustrates a real danger of recursion: elegant code can hide terrible performance. Performance aside, there is a more basic question. Does a recursive function even need a name?</p>
+<p><code>Recall()</code> calls the current function without naming it:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="cf">function</span>(n) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="dv">1</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  n <span class="sc">*</span> <span class="fu">Recall</span>(n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>})(<span class="dv">6</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 720</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>It looks up the function on the call stack using <code>sys.function()</code>, so it works even inside an anonymous function. In practice, named functions are clearer, but <code>Recall()</code> occasionally appears in one-off recursive helpers passed to higher-order functions.</p>
+<section id="exercises" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises">Exercises</h3>
+<ol type="1">
+<li>Write a recursive function <code>sum_to(n)</code> that computes 1 + 2 + … + n.&nbsp;What is the base case?</li>
+<li>Write a recursive function <code>power_r(x, n)</code> that computes x^n using repeated multiplication. Handle the case n = 0.</li>
+<li>The naive <code>fib()</code> recomputes the same values many times. Use <code>memoise::memoise()</code> to create <code>fib_memo</code> and compare <code>system.time(fib(30))</code> with <code>system.time(fib_memo(30))</code>.</li>
+</ol>
+</section>
+</section>
+<section id="sec-call-stack" class="level2" data-number="22.2">
+<h2 data-number="22.2" class="anchored" data-anchor-id="sec-call-stack"><span class="header-section-number">22.2</span> The call stack</h2>
+<p>Every time R calls a function, it creates a new <em>frame</em> on the call stack: a record of the function, its arguments, and its local variables (each frame corresponds to the execution environment from <a href="ch18-closures-and-scope.html#sec-execution-environments" class="quarto-xref"><span>Section 18.3</span></a>). When the function returns, its frame is popped. Recursive calls pile up frames like plates on a spring-loaded stack, and you can watch it happen:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>factorial_traced <span class="ot">&lt;-</span> <span class="cf">function</span>(n) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Entering n ="</span>, n, <span class="st">"at depth"</span>, <span class="fu">sys.nframe</span>(), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="dv">1</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> n <span class="sc">*</span> <span class="fu">factorial_traced</span>(n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Returning"</span>, result, <span class="st">"for n ="</span>, n, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  result</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">factorial_traced</span>(<span class="dv">4</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Entering n = 4 at depth 31 </span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Entering n = 3 at depth 32 </span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Entering n = 2 at depth 33 </span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Entering n = 1 at depth 34 </span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Entering n = 0 at depth 35 </span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Returning 1 for n = 1 </span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Returning 2 for n = 2 </span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Returning 6 for n = 3 </span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Returning 24 for n = 4</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 24</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>sys.nframe()</code> returns the current depth of the call stack, and each recursive call adds one frame. For <code>factorial_traced(4)</code>, the stack grows to depth 4 (plus whatever depth the calling context contributes), then unwinds as each call returns its result back up the chain.</p>
+<p>R imposes a limit on this depth. The default sits around 5,000 frames, controlled by <code>options(expressions = ...)</code>, and if you exceed it you get one of two messages:</p>
+<pre><code>Error: C stack usage &lt;number&gt; is too close to the limit</code></pre>
+<p>or:</p>
+<pre><code>Error: evaluation nested too deeply</code></pre>
+<p>This is not a soft limit you should raise. It exists to protect against infinite recursion crashing your R session entirely, and if your algorithm needs more than a few thousand levels, the right response is to restructure it, not to bump a number in your options.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This will error:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>count_down <span class="ot">&lt;-</span> <span class="cf">function</span>(n) {</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="dv">0</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count_down</span>(n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">count_down</span>(<span class="dv">10000</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="exercises-1" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-1">Exercises</h3>
+<ol type="1">
+<li>Call <code>factorial_traced(5)</code> and note the depth values. Then call <code>factorial_traced(5)</code> from inside another function. How do the depths change?</li>
+<li>What is the default value of <code>getOption("expressions")</code>? Try setting it to 100 and calling <code>count_down(200)</code>. What error do you get?</li>
+</ol>
+</section>
+</section>
+<section id="sec-tail-recursion" class="level2" data-number="22.3">
+<h2 data-number="22.3" class="anchored" data-anchor-id="sec-tail-recursion"><span class="header-section-number">22.3</span> Tail recursion and accumulators</h2>
+<p>Look at <code>factorial_r</code> one more time:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>factorial_r <span class="ot">&lt;-</span> <span class="cf">function</span>(n) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="dv">1</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  n <span class="sc">*</span> <span class="fu">factorial_r</span>(n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>After the recursive call returns, there is still work left: multiply the result by <code>n</code>. That pending multiplication means R cannot discard the current frame while waiting for the recursion to bottom out; every single frame in the chain must stay alive, holding onto its local <code>n</code>, until the deepest call finally returns 1 and the whole tower of deferred multiplications collapses upward.</p>
+<p>A <em>tail-recursive</em> version eliminates that pending work by threading the partial answer through an accumulator argument, so the recursive call becomes the very last operation the function performs:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>factorial_tail <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">acc =</span> <span class="dv">1</span>) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(acc)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factorial_tail</span>(n <span class="sc">-</span> <span class="dv">1</span>, acc <span class="sc">*</span> n)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">factorial_tail</span>(<span class="dv">6</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 720</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>When the recursive call sits in <em>tail position</em> (nothing happens after it), a smart compiler can reuse the current frame instead of allocating a new one, converting O(n) stack usage to O(1). This is <em>tail-call optimization</em> (TCO), and Scheme guarantees it. Haskell effectively provides it. R does not. So <code>factorial_tail(10000)</code> will still overflow the stack, even though the function is logically a loop in disguise.</p>
+<p>The accumulator pattern still pays its rent, though. It clarifies intent (the accumulator carries the “answer so far”), it is the prerequisite for trampolining (next section), and it can convert exponential algorithms into linear ones. Here is Fibonacci rewritten with two accumulators, running in linear time instead of exponential:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fib_tail <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">a =</span> <span class="dv">0</span>, <span class="at">b =</span> <span class="dv">1</span>) {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(a)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fib_tail</span>(n <span class="sc">-</span> <span class="dv">1</span>, b, a <span class="sc">+</span> b)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fib_tail</span>(<span class="dv">30</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 832040</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Where the naive <code>fib()</code> needed millions of calls for <code>fib(30)</code>, this version makes exactly n.&nbsp;But it still can’t survive <code>fib_tail(10000)</code> on R’s stack. What if we could get the O(1) stack usage ourselves, without waiting for a language feature R will never add?</p>
+<section id="exercises-2" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-2">Exercises</h3>
+<ol type="1">
+<li>Write a tail-recursive <code>sum_to_tail(n, acc = 0)</code> that computes 1 + 2 + … + n.</li>
+<li>Write a tail-recursive <code>reverse_list(x, acc = list())</code> that reverses a list.</li>
+<li>Verify that <code>factorial_tail(5000)</code> still crashes. Why can R not optimize this?</li>
+</ol>
+</section>
+</section>
+<section id="sec-trampolining" class="level2" data-number="22.4">
+<h2 data-number="22.4" class="anchored" data-anchor-id="sec-trampolining"><span class="header-section-number">22.4</span> Trampolining</h2>
+<p>Since R refuses to optimize tail calls, you can do it by hand. The idea: instead of making a recursive call, return a <em>thunk</em> (a zero-argument function that represents the call you <em>would</em> have made). Then a loop, the <em>trampoline</em>, keeps calling thunks until it gets a non-function result:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>trampoline <span class="ot">&lt;-</span> <span class="cf">function</span>(f, ...) {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">f</span>(...)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (<span class="fu">is.function</span>(result)) {</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    result <span class="ot">&lt;-</span> <span class="fu">result</span>()</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  result</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now rewrite <code>factorial_tail</code> to return thunks instead of calling itself:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>factorial_thunk <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">acc =</span> <span class="dv">1</span>) {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(acc)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>() <span class="fu">factorial_thunk</span>(n <span class="sc">-</span> <span class="dv">1</span>, acc <span class="sc">*</span> n)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">trampoline</span>(factorial_thunk, <span class="dv">10</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3628800</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">trampoline</span>(factorial_thunk, <span class="dv">1000</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] Inf</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>That second call churns through 1,000 iterations without growing the stack at all; each “recursive” step returns a closure, and the <code>while</code> loop in <code>trampoline</code> calls it, bouncing like a ball on a trampoline (hence the name). Stack depth stays at O(1) no matter how deep the logical recursion goes.</p>
+<p>The pattern works for any tail-recursive function: rewrite the tail call as a thunk and let the trampoline do the looping. The cost is one closure allocation per step, which is cheap. The CRAN package <code>trampoline</code> provides a polished implementation with better error handling, but the core idea is exactly this <code>while</code> loop. The trampoline frees recursion from the stack, but notice that <code>factorial_thunk</code> still refers to itself by name inside the returned closure. What if you wanted recursion without even that?</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Opinion
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Trampolining is clever, but if you catch yourself trampolining in production R code, pause and ask whether a <code>for</code> loop or <code>Reduce()</code> would be simpler. The trampoline rescues recursive algorithms from the stack limit; it does not replace straightforward iteration. Save it for cases where you genuinely need recursion (tree traversal of unknown depth, for instance) but the depth could be large.</p>
+</div>
+</div>
+<section id="exercises-3" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-3">Exercises</h3>
+<ol type="1">
+<li>Convert <code>fib_tail</code> into a trampolined version. Compute <code>fib(100000)</code> without a stack overflow. (The number will be huge; just verify it completes.)</li>
+<li>The <code>trampoline</code> function above has a subtle limitation: it cannot return a function as a final result (since functions trigger another iteration). How would you fix this? Hint: wrap the final result in a special marker.</li>
+</ol>
+</section>
+</section>
+<section id="sec-divide-conquer" class="level2" data-number="22.5">
+<h2 data-number="22.5" class="anchored" data-anchor-id="sec-divide-conquer"><span class="header-section-number">22.5</span> Divide and conquer</h2>
+<p>Some problems split cleanly in half, and each half looks just like the original problem, only smaller. Split, solve each piece recursively, combine. This is the <em>divide and conquer</em> strategy, and recursion expresses it so naturally that the code almost reads like the definition.</p>
+<p>Merge sort is the cleanest example: split the vector in half, sort each half, merge the sorted halves back together:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>merge_sort <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(x) <span class="sc">&lt;=</span> <span class="dv">1</span>) <span class="fu">return</span>(x)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  mid <span class="ot">&lt;-</span> <span class="fu">length</span>(x) <span class="sc">%/%</span> <span class="dv">2</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  left  <span class="ot">&lt;-</span> <span class="fu">merge_sort</span>(x[<span class="dv">1</span><span class="sc">:</span>mid])</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  right <span class="ot">&lt;-</span> <span class="fu">merge_sort</span>(x[(mid <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">length</span>(x)])</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">merge_sorted</span>(left, right)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>merge_sorted <span class="ot">&lt;-</span> <span class="cf">function</span>(a, b) {</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(a) <span class="sc">+</span> <span class="fu">length</span>(b))</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">&lt;-</span> j <span class="ot">&lt;-</span> k <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (i <span class="sc">&lt;=</span> <span class="fu">length</span>(a) <span class="sc">&amp;&amp;</span> j <span class="sc">&lt;=</span> <span class="fu">length</span>(b)) {</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (a[i] <span class="sc">&lt;=</span> b[j]) {</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>      result[k] <span class="ot">&lt;-</span> a[i]; i <span class="ot">&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>      result[k] <span class="ot">&lt;-</span> b[j]; j <span class="ot">&lt;-</span> j <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    k <span class="ot">&lt;-</span> k <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (i <span class="sc">&lt;=</span> <span class="fu">length</span>(a)) { result[k] <span class="ot">&lt;-</span> a[i]; i <span class="ot">&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span>; k <span class="ot">&lt;-</span> k <span class="sc">+</span> <span class="dv">1</span> }</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (j <span class="sc">&lt;=</span> <span class="fu">length</span>(b)) { result[k] <span class="ot">&lt;-</span> b[j]; j <span class="ot">&lt;-</span> j <span class="sc">+</span> <span class="dv">1</span>; k <span class="ot">&lt;-</span> k <span class="sc">+</span> <span class="dv">1</span> }</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  result</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="fu">merge_sort</span>(<span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">2</span>, <span class="dv">8</span>, <span class="dv">1</span>, <span class="dv">9</span>, <span class="dv">3</span>))</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1 2 3 5 8 9</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Each level of recursion halves the problem, giving O(log n) levels, and each level does O(n) work merging, so the total comes to O(n log n) as discussed in <a href="ch09-complexity-and-algorithms.html" class="quarto-xref"><span>Chapter 9</span></a>. The recursion depth is only log2(n), which means even a million-element vector needs just 20 levels. Stack overflow is not a concern for balanced divide-and-conquer algorithms; the branching that makes them powerful also keeps them shallow.</p>
+<p>Binary search follows the same pattern but only recurses into one half:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>binary_search <span class="ot">&lt;-</span> <span class="cf">function</span>(x, target, <span class="at">lo =</span> <span class="dv">1</span>, <span class="at">hi =</span> <span class="fu">length</span>(x)) {</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (lo <span class="sc">&gt;</span> hi) <span class="fu">return</span>(<span class="cn">NA</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  mid <span class="ot">&lt;-</span> (lo <span class="sc">+</span> hi) <span class="sc">%/%</span> <span class="dv">2</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (x[mid] <span class="sc">==</span> target) <span class="fu">return</span>(mid)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (x[mid] <span class="sc">&lt;</span> target) <span class="fu">binary_search</span>(x, target, mid <span class="sc">+</span> <span class="dv">1</span>, hi)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="fu">binary_search</span>(x, target, lo, mid <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">binary_search</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="dv">73</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 73</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="exercises-4" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-4">Exercises</h3>
+<ol type="1">
+<li>Trace through <code>merge_sort(c(4, 1, 3, 2))</code> on paper. How many recursive calls are made?</li>
+<li>Write a recursive function <code>tree_depth</code> that takes a nested list and returns its maximum depth. <code>tree_depth(list(1, list(2, list(3))))</code> should return 3.</li>
+</ol>
+</section>
+</section>
+<section id="sec-recursive-lists" class="level2" data-number="22.6">
+<h2 data-number="22.6" class="anchored" data-anchor-id="sec-recursive-lists"><span class="header-section-number">22.6</span> Recursive list processing</h2>
+<p>Nested lists are R’s tree structure, and recursion is the natural way to walk them. You might think <code>unlist()</code> already handles this, but <code>unlist()</code> flattens blindly: it discards the nesting, coerces everything to a common type, and gives you no control over which elements to keep or transform. When the tree has mixed types or you need to preserve structure while operating on selected leaves, hand-written recursion recovers what <code>unlist()</code> throws away.</p>
+<p>Suppose you need to extract all numeric values buried somewhere inside an arbitrarily nested list, but you don’t know how deep the nesting goes or where the numbers hide:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>find_numbers <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.numeric</span>(x)) <span class="fu">return</span>(x)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.list</span>(x)) <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlist</span>(<span class="fu">lapply</span>(x, find_numbers))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>nested <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">"a"</span>, <span class="fu">list</span>(<span class="dv">1</span>, <span class="fu">list</span>(<span class="st">"b"</span>, <span class="dv">2</span>, <span class="fu">list</span>(<span class="dv">3</span>, <span class="st">"c"</span>))))</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">find_numbers</span>(nested)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1 2 3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The function dispatches on type: numbers come back directly, non-list non-numbers get discarded, and lists trigger a recursive <code>lapply</code> that peels off one layer at a time. This pattern of “check the base cases, recurse on the structure” is the backbone of all tree-processing code; once you see it, you see it everywhere.</p>
+<p>Base R provides <code>rapply()</code> for recursive application over lists:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rapply</span>(nested, sqrt, <span class="at">classes =</span> <span class="st">"numeric"</span>, <span class="at">how =</span> <span class="st">"unlist"</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.000000 1.414214 1.732051</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>rapply()</code> walks the nested structure, applies <code>sqrt</code> to every numeric element it encounters, and returns the results. The <code>classes</code> argument filters which elements get processed, and <code>how</code> controls the output shape (“unlist”, “replace”, or “list”).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rapply</span>(nested, toupper, <span class="at">classes =</span> <span class="st">"character"</span>, <span class="at">how =</span> <span class="st">"replace"</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "A"</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]][[1]]</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]][[2]]</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]][[2]][[1]]</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "B"</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]][[2]][[2]]</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]][[2]][[3]]</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]][[2]][[3]][[1]]</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]][[2]][[3]][[2]]</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "C"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>With <code>how = "replace"</code>, the nesting is preserved: character elements are uppercased in place while everything else stays untouched. <code>rapply()</code> is surprisingly powerful but rarely seen in practice, partly because deeply nested lists are uncommon in day-to-day R work, and partly because fewer people know about it than about <code>lapply</code> or <code>map</code>. If your data is a tree, though, it deserves a look.</p>
+<section id="exercises-5" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-5">Exercises</h3>
+<ol type="1">
+<li>Write a recursive function <code>flatten</code> that takes a nested list and returns a flat list of its leaf elements. Compare with <code>rapply(x, identity, how = "unlist")</code>.</li>
+<li>Use <code>rapply()</code> with <code>how = "replace"</code> to double every numeric element in <code>list(1, list("a", 2, list(3, "b")))</code>.</li>
+<li>Write a recursive function that counts the total number of leaf elements in a nested list.</li>
+</ol>
+</section>
+</section>
+<section id="sec-mutual-recursion" class="level2" data-number="22.7">
+<h2 data-number="22.7" class="anchored" data-anchor-id="sec-mutual-recursion"><span class="header-section-number">22.7</span> Mutual recursion</h2>
+<p>Two functions can call each other, passing control back and forth. Mutual recursion appears naturally in recursive descent parsers, where each grammar rule becomes a function that may call functions for other rules, and in state machines, where each state is a function that transitions by calling another state’s function. The pattern is easier to see, though, in a stripped-down example:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>is_even <span class="ot">&lt;-</span> <span class="cf">function</span>(n) {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">TRUE</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">is_odd</span>(n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>is_odd <span class="ot">&lt;-</span> <span class="cf">function</span>(n) {</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">FALSE</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">is_even</span>(n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="fu">is_even</span>(<span class="dv">4</span>)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="fu">is_odd</span>(<span class="dv">7</span>)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Each function delegates to the other, peeling off one layer at a time. Nobody would check parity this way, but the structure is identical to what a parser does when an expression rule calls a term rule that calls an expression rule again.</p>
+<p>The stack cost is the same as ordinary recursion, doubled: each round trip consumes two frames. For deep mutual recursion, trampolining works identically; just have both functions return thunks instead of calling each other directly. But mutual recursion raises a subtler question than stack depth: both <code>is_even</code> and <code>is_odd</code> refer to each other by name. The trampoline removed the stack constraint; can anything remove the naming constraint?</p>
+</section>
+<section id="sec-fixed-point-combinators" class="level2" data-number="22.8">
+<h2 data-number="22.8" class="anchored" data-anchor-id="sec-fixed-point-combinators"><span class="header-section-number">22.8</span> Fixed-point combinators</h2>
+<p>Here is an odd question. Can you write a recursive function without ever giving it a name? Named functions call themselves by name, so recursion seems to require naming. But what if you only have anonymous functions, nothing else?</p>
+<p>A <em>fixed point</em> of a function f is a value x where f(x) = x. The number 0 is a fixed point of <code>function(x) x^2</code>, because 0^2 = 0. A <em>fixed-point combinator</em> extends this idea to functions that return functions: it takes a “template” for recursion and threads the self-reference through automatically, producing a working recursive function from anonymous parts alone.</p>
+<p>In lazy languages (Haskell, untyped lambda calculus), the Y combinator does this:</p>
+<pre><code>Y = λf. (λx. f(x x))(λx. f(x x))</code></pre>
+<p>R is strict, though: it evaluates arguments before passing them, and that eagerness is fatal here. If you translate Y directly into R, the self-application <code>x(x)</code> evaluates immediately, which triggers another <code>x(x)</code>, which triggers another, and the whole thing diverges before <code>f</code> ever gets a chance to run. Step by step: <code>Y(f)</code> calls <code>(function(x) f(x(x)))</code> with itself as argument, so <code>x</code> becomes <code>function(x) f(x(x))</code>. To evaluate <code>f(x(x))</code>, R must first evaluate <code>x(x)</code>, which means evaluating <code>f(x(x))</code> again, forever:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This diverges in R:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="cf">function</span>(f) (<span class="cf">function</span>(x) <span class="fu">f</span>(<span class="fu">x</span>(x)))(<span class="cf">function</span>(x) <span class="fu">f</span>(<span class="fu">x</span>(x)))</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Y</span>(<span class="cf">function</span>(f) <span class="cf">function</span>(n) <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="dv">1</span> <span class="cf">else</span> n <span class="sc">*</span> <span class="fu">f</span>(n <span class="sc">-</span> <span class="dv">1</span>))</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Error: C stack usage is too close to the limit</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The fix is the Z combinator, which wraps each <code>x(x)</code> in a lambda, <code>function(v) x(x)(v)</code>, to delay evaluation. That extra wrapper acts as a thunk: <code>x(x)</code> is not evaluated when the combinator is constructed, only when the inner function is actually called with an argument <code>v</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>Z <span class="ot">&lt;-</span> <span class="cf">function</span>(f) {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  (<span class="cf">function</span>(x) <span class="fu">f</span>(<span class="cf">function</span>(v) <span class="fu">x</span>(x)(v)))(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(x) <span class="fu">f</span>(<span class="cf">function</span>(v) <span class="fu">x</span>(x)(v)))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The structure is identical to Y, except each <code>x(x)</code> wears a <code>function(v) ...</code> coat. That single change is the difference between divergence and termination in a strict language.</p>
+<p>Now define factorial without any self-reference at all:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fact <span class="ot">&lt;-</span> <span class="fu">Z</span>(<span class="cf">function</span>(f) <span class="cf">function</span>(n) {</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">==</span> <span class="dv">0</span>) <span class="dv">1</span> <span class="cf">else</span> n <span class="sc">*</span> <span class="fu">f</span>(n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">fact</span>(<span class="dv">6</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 720</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The argument <code>f</code> inside the inner function comes from the Z combinator, which threads in the self-reference from thin air — the function never names itself. The function never names itself, never uses <code>Recall()</code>, yet it recurses.</p>
+<p>This is not a party trick. In 1936, Church proved that recursion can be derived from lambda calculus, a system with only three constructs: variables, abstraction (function definition), and application (function calling). No built-in recursion, no loops, no assignment. The Y/Z combinator is the mechanism that makes it work, and <a href="ch30-r-as-mathematics.html" class="quarto-xref"><span>Chapter 30</span></a> explores the full implications, along with Church numerals and the deeper connections between lambda calculus and computation.</p>
+<p>You will never use the Z combinator in production R code. But understanding that recursion is not primitive, that it emerges from function application alone, changes how you think about what functions are capable of. If anonymous functions can bootstrap recursion without any help from the language, what else might be hiding in plain sight?</p>
+<section id="exercises-6" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="exercises-6">Exercises</h3>
+<ol type="1">
+<li>Use the Z combinator to define a recursive Fibonacci function without self-reference.</li>
+<li>Apply <code>Z</code> to <code>function(f) function(xs) if (length(xs) == 0) 0 else xs[[1]] + f(xs[-1])</code> and test it on <code>list(1, 2, 3, 4, 5)</code>. What does this compute?</li>
+<li>Why does the Y combinator (without the extra <code>function(v)</code> wrapper) diverge in R? What happens if you try <code>Y &lt;- function(f) (function(x) f(x(x)))(function(x) f(x(x)))</code>?</li>
+</ol>
+</section>
+</section>
+<section id="sec-when-not-recurse" class="level2" data-number="22.9">
+<h2 data-number="22.9" class="anchored" data-anchor-id="sec-when-not-recurse"><span class="header-section-number">22.9</span> When not to recurse</h2>
+<p>R is not Scheme. It does not optimize tail calls, its stack is limited, and function call overhead is high compared to vectorized operations. The shape of the data tells you whether recursion is the right tool or a trap.</p>
+<p><em>Tree-shaped</em> problems, where the structure branches and nests (nested lists, file system traversal, parsing hierarchical data, divide-and-conquer algorithms with O(log n) depth), stay well within stack limits and express naturally as recursive functions. These are recursion’s home territory.</p>
+<p><em>Linear</em> problems are a different story. Summing a vector, computing a running total, filtering elements: these are loops, <code>Reduce()</code> calls, or vectorized operations, and writing them recursively wastes n stack frames on something that <code>sum()</code> handles in a single C call.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Opinion
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If your recursive function processes a flat sequence from left to right, it is a fold; use <code>Reduce()</code> or <code>purrr::reduce()</code> from <a href="ch21-reduce-and-accumulate.html" class="quarto-xref"><span>Chapter 21</span></a>. If it processes elements independently, it is a map; use <code>lapply()</code> or <code>purrr::map()</code> from <a href="ch07-functions-are-values.html#sec-passing-functions" class="quarto-xref"><span>Section 7.1</span></a>. Reserve recursion for problems where the structure of the data is itself recursive. When the data branches, your code should too.</p>
+</div>
+</div>
+<p>The table below summarizes when each approach fits:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problem shape</th>
+<th>Preferred approach</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Element-wise transformation</td>
+<td><code>lapply()</code> / <code>map()</code> / vectorized</td>
+<td>No overhead, parallel-friendly</td>
+</tr>
+<tr class="even">
+<td>Linear fold (sum, concat, merge)</td>
+<td><code>Reduce()</code> / <code>reduce()</code></td>
+<td>Constant stack, clear intent</td>
+</tr>
+<tr class="odd">
+<td>Tree traversal, nested structures</td>
+<td>Recursion / <code>rapply()</code></td>
+<td>Matches the data shape</td>
+</tr>
+<tr class="even">
+<td>Divide and conquer (sort, search)</td>
+<td>Recursion</td>
+<td>O(log n) depth, natural decomposition</td>
+</tr>
+<tr class="odd">
+<td>Deep linear recursion (&gt;1000)</td>
+<td>Trampoline or convert to loop</td>
+<td>Stack limit workaround</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sec-recursion-history" class="level2" data-number="22.10">
+<h2 data-number="22.10" class="anchored" data-anchor-id="sec-recursion-history"><span class="header-section-number">22.10</span> Historical notes</h2>
+<p>By the early twentieth century, mathematicians had built formal systems powerful enough to express most of mathematics. The natural next question was whether those systems could verify themselves: could a formal system prove that every true statement within it is provable? If yes, mathematics would be self-certifying, a closed loop with no loose ends. The systems were expressive enough to state any mathematical truth, so surely they were expressive enough to prove any mathematical truth. Hilbert had made exactly this bet (the same program that led to the Entscheidungsproblem in <a href="ch09-complexity-and-algorithms.html#sec-halting-problem" class="quarto-xref"><span>Section 9.6.1</span></a>), challenging mathematicians to prove their formal systems complete and consistent, but then in 1931 a twenty-five-year-old logician in Vienna found a way to make a formal system reason about its own proofs.</p>
+<p>He encoded logical statements as numbers using primitive recursive functions, turning each proof step into arithmetic. Once proofs were numbers, he could construct a statement inside the system that said, in effect, “this statement has no proof in this system.” If the system could prove it, the statement would be false, and the system would be proving a falsehood. If the system could not prove it, the statement would be true, and there would be a true statement the system could never reach. Either way, the closed loop was shattered. Mathematics would always have blind spots: true statements that no amount of cleverness, no added axioms, no better proof strategies could ever capture. It became known as Godel’s incompleteness theorem.</p>
+<p>Five years later, Church showed that recursion did not need to be a primitive at all: the fixed-point combinator could derive it from pure function application. Turing’s machines provided the alternative model, and Church and Turing proved the two equivalent. But recursion stayed in mathematics until McCarthy gave it a programming language. LISP (1960) was the first language where recursive function calls served as the primary control structure; <code>car</code>, <code>cdr</code>, and <code>cons</code> made recursive list processing practical. Recursion was no longer a proof technique restricted to mathematics; it was how you wrote programs.</p>
+<p>The question that remained was efficiency. Landin’s SECD machine (1964) showed how to mechanically evaluate expressions with closures and recursive calls. A decade later, Steele and Sussman proved something that surprised the programming world: tail-recursive calls and <code>goto</code> are the same thing. Their “Lambda the Ultimate” papers (1975-1980) showed that lambda expressions can replace every control structure, and that a sufficiently smart compiler can make functional code as fast as imperative code. Scheme guaranteed tail-call optimization as a consequence.</p>
+<p>R chose not to. S was designed for interactive statistical computing, where vectorized operations do the heavy lifting, not deep recursion. The absence of TCO reflects that priority: the language optimized for the common case (vectorized numerical work) at the cost of the uncommon one (recursive descent past a thousand frames).</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+
+
+
+  // Replace Quarto's default toggle icon with sun/moon SVGs
+
+  var toggle = document.querySelector('.quarto-color-scheme-toggle');
+
+  if (toggle) {
+
+    var icon = toggle.querySelector('i.bi');
+
+    if (icon) {
+
+      icon.outerHTML =
+
+        '<svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+
+          '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>' +
+
+        '</svg>' +
+
+        '<svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+
+          '<circle cx="12" cy="12" r="5"/>' +
+
+          '<line x1="12" y1="1" x2="12" y2="3"/>' +
+
+          '<line x1="12" y1="21" x2="12" y2="23"/>' +
+
+          '<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>' +
+
+          '<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>' +
+
+          '<line x1="1" y1="12" x2="3" y2="12"/>' +
+
+          '<line x1="21" y1="12" x2="23" y2="12"/>' +
+
+          '<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>' +
+
+          '<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>' +
+
+        '</svg>';
+
+    }
+
+  }
+
+
+
+  // Citation copy button
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn) {
+
+    btn.addEventListener('click', function() {
+
+      var text = this.closest('.citation-box').querySelector('.citation-text').textContent;
+
+      var originalHTML = btn.innerHTML;
+
+      navigator.clipboard.writeText(text).then(function() {
+
+        btn.classList.add('copied');
+
+        btn.innerHTML = 'Copied!';
+
+        setTimeout(function() {
+
+          btn.classList.remove('copied');
+
+          btn.innerHTML = originalHTML;
+
+        }, 2000);
+
+      });
+
+    });
+
+  });
+
+
+
+});
+
+</script>
+
+<script>
+
+fetch("/api/hit?p=" + encodeURIComponent(location.pathname));
+
+</script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/thinking-in-r\.gillescolling\.com\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/ch21-reduce-and-accumulate.html" class="pagination-link" aria-label="Reduce and accumulate">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Reduce and accumulate</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/ch23-lazy-evaluation.html" class="pagination-link" aria-label="Lazy evaluation">
+        <span class="nav-page-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Lazy evaluation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/gcol33/thinking-in-r/edit/main/chapters/ch22-recursion-and-fixed-points.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/gcol33/thinking-in-r/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
