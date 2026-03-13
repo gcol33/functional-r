@@ -859,7 +859,7 @@ Figure&nbsp;8.1: Standard logic gate symbols. Inputs enter from the left, output
 </figcaption>
 </figure>
 </div>
-<div id="fig-half-adder" class="quarto-float quarto-figure quarto-figure-left anchored" alt="Circuit diagram of a half adder showing one XOR gate producing Sum and one AND gate producing Carry, with inputs A and B." data-fig-align="left">
+<div id="fig-half-adder" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left" alt="Circuit diagram of a half adder showing one XOR gate producing Sum and one AND gate producing Carry, with inputs A and B.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-half-adder-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/half_adder.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%" alt="Circuit diagram of a half adder showing one XOR gate producing Sum and one AND gate producing Carry, with inputs A and B.">
@@ -927,7 +927,7 @@ Cin    00   01   11   10
 <p>Much simpler than the four-term canonical form. For Sum, the K-map shows no adjacent groups (the 1s form a checkerboard), so there’s no simplification beyond XOR:</p>
 <pre><code>Sum = A XOR B XOR Cin</code></pre>
 <p><strong>Step 4: build the circuit.</strong> The Sum formula chains two XOR gates. The Cout formula uses two AND gates and one OR gate, but engineers noticed that <code>(B AND Cin) OR (A AND Cin)</code> can be rewritten as <code>((A XOR B) AND Cin)</code>, because the XOR captures whether exactly one of A, B is 1. The final circuit uses five gates: two XOR, two AND, one OR.</p>
-<div id="fig-full-adder" class="quarto-float quarto-figure quarto-figure-left anchored" alt="Circuit diagram of a full adder showing two XOR gates, two AND gates, and one OR gate connected with labeled wires for A, B, Cin, Sum, and Cout." data-fig-align="left">
+<div id="fig-full-adder" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left" alt="Circuit diagram of a full adder showing two XOR gates, two AND gates, and one OR gate connected with labeled wires for A, B, Cin, Sum, and Cout.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-full-adder-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/full_adder.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%" alt="Circuit diagram of a full adder showing two XOR gates, two AND gates, and one OR gate connected with labeled wires for A, B, Cin, Sum, and Cout.">
