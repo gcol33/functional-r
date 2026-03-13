@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "dependencies": {
+    "@quarto/netlify-plugin-quarto": "^0.0.5",
+    "@netlify/blobs": "^8.1.0"
+  }
+}
