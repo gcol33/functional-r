@@ -1,7 +1,4 @@
 /.quarto/
-
-# PDF figures in _book (not needed for HTML site, PDF is sold separately)
-_book/**/figure-pdf/
 **/*.quarto_ipynb
 
 # Reference repos (cloned for research, not part of this book)
