@@ -1,3 +1,6 @@
+execute:
+  freeze: auto
+
 project:
   type: book
   output-dir: _book

@@ -1,6 +1,5 @@
 /.quarto/
 /_book/
-/_freeze/
 **/*.quarto_ipynb
 
 # Reference repos (cloned for research, not part of this book)
