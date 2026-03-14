@@ -7,7 +7,7 @@ source(here::here("_common.R"))
 
 Once upon a time, four numbers had been left on the table: 3, 5, 2, 8.
 
-Mr. Tape came in through the front door. He was very long and very thin, and he walked in a straight line from the door to the table. Behind him came Mr. State, who stood very still.
+Mr. Tape came in through the front door. He was very long and very thin, and he walked in a straight line from the door to the table. Behind him came Mr. State, who stood very still. At the far end of the table, someone was already sitting with his hands flat on the surface.
 
 Mr. Tape picked up the first number and handed it to Mr. State. "Three." Mr. State held it and seemed pleased. Mr. Tape picked up the next. "Five." Mr. State was holding an 8. The 3 was gone. He looked at the 8 as though he had always been holding it. "Two." He was holding a 10. "Eight." He was holding an 18. He could not have told you what he'd had a moment before.
 
@@ -15,7 +15,7 @@ Mr. Tape picked up the first number and handed it to Mr. State. "Three." Mr. Sta
 
 Mr. State put the 18 on the table. He looked at his empty hands.
 
-Mr. Fold had been sitting at the far end of the table the whole time. He picked up the 2 and the 8. He pressed their edges together and creased them flat. A 10 sat on the table. The 2 and the 8 were gone. He folded the 10 into the 5 the same way. Crease and press. Then the 15 into the 3.
+Mr. Fold picked up the 2 and the 8. He pressed their edges together and creased them flat. A 10 sat on the table. The 2 and the 8 were gone. He folded the 10 into the 5 the same way. Crease and press. Then the 15 into the 3.
 
 Mr. State picked it up and turned it over.
 
