@@ -17,9 +17,9 @@ Mr. State put the 18 on the table, face down. He looked at his empty hands. Then
 
 The man at the far end of the table had not moved. He pulled the four numbers toward himself: 3, 5, 2, 8. He picked up the 2 and the 8, pressed their edges together and creased them flat. A 10. He folded the 10 into the 5. Crease and press. Then the 15 into the 3.
 
-Eighteen.
-
 He turned over the number Mr. State had left.
+
+It was the same number.
 
 
 ## Instructions and state {#sec-turing}
