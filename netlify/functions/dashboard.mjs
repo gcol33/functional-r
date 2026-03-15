@@ -74,6 +74,8 @@ export default async (req) => {
   h2 { font-size: 1rem; margin: 2rem 0 0.75rem; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
   .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
   .card { background: #1a1d27; border-radius: 8px; padding: 1.25rem; }
+  a.card { text-decoration: none; color: inherit; transition: background 0.15s; }
+  a.card:hover { background: #222538; }
   .card .label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
   .card .value { font-size: 2rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
   .card .sub { font-size: 0.8rem; color: #4f8ff7; margin-top: 0.15rem; }
@@ -117,21 +119,21 @@ export default async (req) => {
 
 <h2>Overview</h2>
 <div class="cards">
-  <div class="card">
+  <a class="card" href="/api/breakdown?period=today">
     <div class="label">Today</div>
     <div class="value">${p(uToday)}</div>
     <div class="sub">${p(today)} page views</div>
-  </div>
-  <div class="card">
+  </a>
+  <a class="card" href="/api/breakdown?period=month">
     <div class="label">Month</div>
     <div class="value">${p(uMonth)}</div>
     <div class="sub">${p(thisMonth)} page views</div>
-  </div>
-  <div class="card">
+  </a>
+  <a class="card" href="/api/breakdown?period=alltime">
     <div class="label">All Time</div>
     <div class="value">${p(uTotal)}</div>
     <div class="sub">${p(total)} page views</div>
-  </div>
+  </a>
 </div>
 
 <h2>Last 30 Days</h2>
