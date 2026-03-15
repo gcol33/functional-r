@@ -5,7 +5,7 @@
 source(here::here("_common.R"))
 ```
 
-Once upon a time, four numbers had been left on the table: 3, 5, 2, 8.
+Once upon a time, four numbers had been left on the table in two identical rows: 3, 5, 2, 8.
 
 Mr. Tape came in through the front door. He was long and thin, and he walked in a straight line from the door to the table. Behind him came Mr. State, who took his place behind Mr. Tape and waited, as he always did. But they were not the only ones there. At the far end of the table someone was already sitting with his hands flat on the surface.
 
