@@ -1,5 +1,18 @@
 import { getStore } from "@netlify/blobs";
 
+function fmtTime(secs) {
+  if (secs < 60) return `${secs}s`;
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ${secs % 60}s`;
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  return `${h}h ${m}m`;
+}
+
+function avgTime(totalSecs, sessions) {
+  if (sessions === 0) return "—";
+  return fmtTime(Math.round(totalSecs / sessions));
+}
+
 export default async (req) => {
   const url = new URL(req.url);
   const period = url.searchParams.get("period") || "today";
@@ -10,23 +23,25 @@ export default async (req) => {
   const p = (v) => parseInt(v || "0", 10);
   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  let title, rows, chartHtml, summaryHtml;
+  let title, chartHtml, summaryHtml;
 
   if (period === "today") {
     title = `Today — ${day}`;
-    // Get today + yesterday for comparison
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const yDay = yesterday.toISOString().slice(0, 10);
 
-    const [views, unique, yViews, yUnique] = await Promise.all([
+    const [views, unique, yViews, yUnique, durSecs, durSessions] = await Promise.all([
       store.get(`daily:${day}`),
       store.get(`unique:daily:${day}`),
       store.get(`daily:${yDay}`),
       store.get(`unique:daily:${yDay}`),
+      store.get(`duration:daily:${day}`),
+      store.get(`duration:sessions:daily:${day}`),
     ]);
 
     const v = p(views), u = p(unique), yv = p(yViews), yu = p(yUnique);
+    const ds = p(durSecs), dn = p(durSessions);
     const delta = (curr, prev) => {
       if (prev === 0) return curr > 0 ? "↑ new" : "—";
       const pct = Math.round(((curr - prev) / prev) * 100);
@@ -34,7 +49,7 @@ export default async (req) => {
     };
 
     summaryHtml = `
-    <div class="cards">
+    <div class="cards cards-4">
       <div class="card">
         <div class="label">Page Views</div>
         <div class="value">${v}</div>
@@ -46,13 +61,18 @@ export default async (req) => {
         <div class="sub">${delta(u, yu)} vs yesterday (${yu})</div>
       </div>
       <div class="card">
+        <div class="label">Avg. Time on Page</div>
+        <div class="value">${avgTime(ds, dn)}</div>
+        <div class="sub">${fmtTime(ds)} total across ${dn} sessions</div>
+      </div>
+      <div class="card">
         <div class="label">Views / Visitor</div>
         <div class="value">${u > 0 ? (v / u).toFixed(1) : "—"}</div>
         <div class="sub">pages per session</div>
       </div>
     </div>`;
 
-    // Last 7 days mini table for context
+    // Last 7 days mini table
     const week = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
@@ -65,12 +85,13 @@ export default async (req) => {
       week.push({ date: k, views: p(wv), unique: p(wu) });
     }
 
-    const maxW = Math.max(...week.map(d => d.views), 1);
+    const weekFiltered = week.filter(d => d.views > 0 || d.date === day);
+    const maxW = Math.max(...weekFiltered.map(d => d.views), 1);
     chartHtml = `
     <h2>Last 7 Days</h2>
     <table>
       <tr><th>Date</th><th>Visitors</th><th>Views</th><th></th></tr>
-      ${week.map(d => {
+      ${weekFiltered.map(d => {
         const barW = Math.round((d.views / maxW) * 100);
         const isToday = d.date === day;
         return `<tr${isToday ? ' style="background:#1f2233"' : ""}>
@@ -84,27 +105,26 @@ export default async (req) => {
 
   } else if (period === "month") {
     title = `This Month — ${month}`;
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const currentDay = now.getDate();
 
-    const [mViews, mUnique] = await Promise.all([
-      store.get(`monthly:${month}`),
-      store.get(`unique:monthly:${month}`),
-    ]);
-
-    // Previous month for comparison
     const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonth = prevDate.toISOString().slice(0, 7);
-    const [pmViews, pmUnique] = await Promise.all([
+
+    const [mViews, mUnique, pmViews, pmUnique, durSecs, durSessions] = await Promise.all([
+      store.get(`monthly:${month}`),
+      store.get(`unique:monthly:${month}`),
       store.get(`monthly:${prevMonth}`),
       store.get(`unique:monthly:${prevMonth}`),
+      store.get(`duration:monthly:${month}`),
+      store.get(`duration:sessions:monthly:${month}`),
     ]);
 
     const v = p(mViews), u = p(mUnique), pv = p(pmViews), pu = p(pmUnique);
+    const ds = p(durSecs), dn = p(durSessions);
     const avg = currentDay > 0 ? (v / currentDay).toFixed(1) : "0";
 
     summaryHtml = `
-    <div class="cards">
+    <div class="cards cards-4">
       <div class="card">
         <div class="label">Page Views</div>
         <div class="value">${v}</div>
@@ -114,6 +134,11 @@ export default async (req) => {
         <div class="label">Unique Visitors</div>
         <div class="value">${u}</div>
         <div class="sub">last month: ${pu}</div>
+      </div>
+      <div class="card">
+        <div class="label">Avg. Time on Page</div>
+        <div class="value">${avgTime(ds, dn)}</div>
+        <div class="sub">${fmtTime(ds)} total across ${dn} sessions</div>
       </div>
       <div class="card">
         <div class="label">Daily Average</div>
@@ -133,12 +158,13 @@ export default async (req) => {
       days.push({ date: k, day: i, views: p(dv), unique: p(du) });
     }
 
-    const maxD = Math.max(...days.map(d => d.views), 1);
+    const daysFiltered = days.filter(d => d.views > 0 || d.date === day);
+    const maxD = Math.max(...daysFiltered.map(d => d.views), 1);
     chartHtml = `
     <h2>Day by Day</h2>
     <table>
       <tr><th>Date</th><th>Visitors</th><th>Views</th><th></th></tr>
-      ${days.map(d => {
+      ${daysFiltered.map(d => {
         const barW = Math.round((d.views / maxD) * 100);
         const isToday = d.date === day;
         return `<tr${isToday ? ' style="background:#1f2233"' : ""}>
@@ -154,11 +180,13 @@ export default async (req) => {
     // alltime
     title = "All Time";
 
-    const [total, uTotal] = await Promise.all([
+    const [total, uTotal, durSecs, durSessions] = await Promise.all([
       store.get("total"),
       store.get("unique:total"),
+      store.get("duration:total"),
+      store.get("duration:sessions:total"),
     ]);
-    const v = p(total), u = p(uTotal);
+    const v = p(total), u = p(uTotal), ds = p(durSecs), dn = p(durSessions);
 
     // Collect all months
     const months = [];
@@ -175,7 +203,7 @@ export default async (req) => {
     const activeMonths = months.filter(m => m.views > 0).length;
 
     summaryHtml = `
-    <div class="cards">
+    <div class="cards cards-4">
       <div class="card">
         <div class="label">Total Page Views</div>
         <div class="value">${v}</div>
@@ -187,18 +215,24 @@ export default async (req) => {
         <div class="sub">${u > 0 ? (v / u).toFixed(1) : "—"} views/visitor</div>
       </div>
       <div class="card">
+        <div class="label">Avg. Time on Page</div>
+        <div class="value">${avgTime(ds, dn)}</div>
+        <div class="sub">${fmtTime(ds)} total across ${dn} sessions</div>
+      </div>
+      <div class="card">
         <div class="label">Monthly Average</div>
         <div class="value">${activeMonths > 0 ? Math.round(v / activeMonths) : "—"}</div>
         <div class="sub">views/month</div>
       </div>
     </div>`;
 
-    const maxM = Math.max(...months.map(m => m.views), 1);
+    const monthsFiltered = months.filter(m => m.views > 0);
+    const maxM = Math.max(...monthsFiltered.map(m => m.views), 1);
     chartHtml = `
     <h2>Monthly Breakdown</h2>
     <table>
       <tr><th>Month</th><th>Visitors</th><th>Views</th><th></th></tr>
-      ${months.map(m => {
+      ${monthsFiltered.map(m => {
         const barW = Math.round((m.views / maxM) * 100);
         const label = monthNames[parseInt(m.month.slice(5), 10) - 1] + " " + m.month.slice(0, 4);
         const isCurrent = m.month === month;
@@ -235,6 +269,7 @@ export default async (req) => {
   .back:hover { text-decoration: underline; }
   h2 { font-size: 1rem; margin: 2rem 0 0.75rem; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
   .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .cards-4 { grid-template-columns: repeat(4, 1fr); }
   .card { background: #1a1d27; border-radius: 8px; padding: 1.25rem; }
   .card .label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
   .card .value { font-size: 2rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
@@ -250,6 +285,7 @@ export default async (req) => {
   .tab { padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.8rem; text-decoration: none; color: #888; background: #1a1d27; }
   .tab:hover { color: #fff; }
   .tab.active { color: #fff; background: #2a3a5c; }
+  @media (max-width: 600px) { .cards-4 { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>

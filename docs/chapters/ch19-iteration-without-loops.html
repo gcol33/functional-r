@@ -1165,23 +1165,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 
-setTimeout(function() {
+(function() {
 
-  if (document.hidden) return;
+  var start = Date.now();
 
-  // Deduplicate: one hit per page per 12 hours
+  var sent = false;
 
-  var key = "hit:" + location.pathname;
+  setTimeout(function() {
 
-  var last = localStorage.getItem(key);
+    if (document.hidden) return;
 
-  if (last && (Date.now() - parseInt(last, 10)) < 43200000) return;
+    // Deduplicate: one hit per page per 12 hours
 
-  localStorage.setItem(key, Date.now().toString());
+    var key = "hit:" + location.pathname;
 
-  fetch("https://thinking-in-r.netlify.app/api/hit?p=" + encodeURIComponent(location.pathname));
+    var last = localStorage.getItem(key);
 
-}, 5000);
+    if (last && (Date.now() - parseInt(last, 10)) < 43200000) return;
+
+    localStorage.setItem(key, Date.now().toString());
+
+    fetch("https://thinking-in-r.netlify.app/api/hit?p=" + encodeURIComponent(location.pathname));
+
+  }, 5000);
+
+  function sendDuration() {
+
+    if (sent) return;
+
+    sent = true;
+
+    var secs = Math.round((Date.now() - start) / 1000);
+
+    if (secs < 5 || secs > 3600) return;
+
+    navigator.sendBeacon("https://thinking-in-r.netlify.app/api/duration?p=" + encodeURIComponent(location.pathname) + "&s=" + secs);
+
+  }
+
+  document.addEventListener("visibilitychange", function() { if (document.hidden) sendDuration(); });
+
+  window.addEventListener("pagehide", sendDuration);
+
+})();
 
 </script>
 
