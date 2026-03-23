@@ -632,7 +632,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p>By 1930, the dream was nearly complete. Three centuries of work — formalizing numbers, formalizing logic, formalizing proof — had brought mathematicians to the edge of something unprecedented: a mechanical method that could settle any mathematical question. Feed in a statement, turn the crank, get the answer. The greatest living mathematician stood before a crowd in Königsberg and declared it would be done. <em>Wir müssen wissen. Wir werden wissen.</em> We must know. We shall know.</p>
 <p>But to build the machine that turns the crank, someone first had to answer a question that nobody had thought to ask. What does it mean to compute?</p>
-<p>David Hilbert had spent thirty years building toward that question. He believed all of mathematics could be reduced to mechanical proof. Feed in a statement, turn the crank, get the answer. To finish, he needed someone to define what “turning the crank” actually meant.</p>
+<p>David Hilbert had spent thirty years building toward that question. To finish his life’s work, he needed someone to define what “turning the crank” actually meant.</p>
 <p>Once upon a time, four numbers had been left on the table: 3, 5, 2, 8.</p>
 <p>Mr.&nbsp;Tape came in through the front door. He was long and thin, and he walked in a straight line from the door to the table. Behind him came Mr.&nbsp;State, who took his place behind Mr.&nbsp;Tape and waited, as he always did. But they were not the only ones there. At the far end of the table someone was already sitting with his hands flat on the surface.</p>
 <p>Mr.&nbsp;Tape touched the first number and read it aloud.</p>
@@ -655,7 +655,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>It was the same number.</p>
 <section id="sec-turing" class="level2" data-number="1.1">
 <h2 data-number="1.1" class="anchored" data-anchor-id="sec-turing"><span class="header-section-number">1.1</span> Instructions and state</h2>
-<p>Before 1936, nobody had a precise answer to a deceptively simple question: what does it mean to compute something? Mathematicians could compute; they could describe procedures that produced answers. But no one had pinned down the minimum machinery needed to go from question to answer. A twenty-four-year-old graduate student at Cambridge answered it by imagining the simplest possible machine: a device that reads a symbol from a tape, writes a new one, shifts left or right, and moves to a new internal state. Then it does it again. He proved that this device, given the right set of rules, can carry out any computation that can be precisely described. The graduate student was Alan Turing, who three years later would crack the German military’s Enigma cipher in World War II. The machine he imagined is what we now call a computer.</p>
+<p>Mr.&nbsp;Tape and Mr.&nbsp;State are a computing machine. In 1936, a twenty-four-year-old graduate student at Cambridge proved that their method — read a symbol, update a state, move to the next — is enough to carry out any computation that can be precisely described. The graduate student was Alan Turing, who three years later would crack the German military’s Enigma cipher in World War II. The machine he imagined is what we now call a computer.</p>
 <p>A Turing machine <em>does</em> things: it reads, writes, moves, changes. It has memory (the tape), and that memory changes over time. A program, in this view, is a sequence of instructions that progressively modify stored values until the answer emerges.</p>
 <p>Here is what that looks like as pseudocode, for a simple sum of four numbers:</p>
 <pre><code>total = 0
@@ -678,7 +678,7 @@ Figure&nbsp;1.1: Two models of computation: a Turing machine mutates state step 
 </section>
 <section id="sec-church" class="level2" data-number="1.2">
 <h2 data-number="1.2" class="anchored" data-anchor-id="sec-church"><span class="header-section-number">1.2</span> Expressions and functions</h2>
-<p>Alonzo Church, who happened to be Turing’s doctoral advisor at Princeton, was working on the same problem at the same time but from a completely different angle. Church built a notation called the <em>lambda calculus</em>. It has three things:</p>
+<p>Mr.&nbsp;Fold had a different answer. Alonzo Church, who happened to be Turing’s doctoral advisor at Princeton, was working on the same problem at the same time but from a completely different angle. Church built a notation called the <em>lambda calculus</em>. It has three things:</p>
 <ol type="1">
 <li>Variables: <code>x</code></li>
 <li>Functions: <code>λx. x + 1</code> (take <code>x</code>, return <code>x + 1</code>)</li>

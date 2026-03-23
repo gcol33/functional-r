@@ -9,7 +9,7 @@ By 1930, the dream was nearly complete. Three centuries of work — formalizing 
 
 But to build the machine that turns the crank, someone first had to answer a question that nobody had thought to ask. What does it mean to compute?
 
-David Hilbert had spent thirty years building toward that question. He believed all of mathematics could be reduced to mechanical proof. Feed in a statement, turn the crank, get the answer. To finish, he needed someone to define what "turning the crank" actually meant.
+David Hilbert had spent thirty years building toward that question. To finish his life's work, he needed someone to define what "turning the crank" actually meant.
 
 Once upon a time, four numbers had been left on the table: 3, 5, 2, 8.
 
@@ -54,7 +54,7 @@ It was the same number.
 
 ## Instructions and state {#sec-turing}
 
-Before 1936, nobody had a precise answer to a deceptively simple question: what does it mean to compute something? Mathematicians could compute; they could describe procedures that produced answers. But no one had pinned down the minimum machinery needed to go from question to answer. A twenty-four-year-old graduate student at Cambridge answered it by imagining the simplest possible machine: a device that reads a symbol from a tape, writes a new one, shifts left or right, and moves to a new internal state. Then it does it again. He proved that this device, given the right set of rules, can carry out any computation that can be precisely described. The graduate student was Alan Turing, who three years later would crack the German military's Enigma cipher in World War II. The machine he imagined is what we now call a computer.
+Mr. Tape and Mr. State are a computing machine. In 1936, a twenty-four-year-old graduate student at Cambridge proved that their method — read a symbol, update a state, move to the next — is enough to carry out any computation that can be precisely described. The graduate student was Alan Turing, who three years later would crack the German military's Enigma cipher in World War II. The machine he imagined is what we now call a computer.
 
 A Turing machine *does* things: it reads, writes, moves, changes. It has memory (the tape), and that memory changes over time. A program, in this view, is a sequence of instructions that progressively modify stored values until the answer emerges.
 
@@ -77,7 +77,7 @@ So is it?
 
 ## Expressions and functions {#sec-church}
 
-Alonzo Church, who happened to be Turing's doctoral advisor at Princeton, was working on the same problem at the same time but from a completely different angle. Church built a notation called the *lambda calculus*. It has three things:
+Mr. Fold had a different answer. Alonzo Church, who happened to be Turing's doctoral advisor at Princeton, was working on the same problem at the same time but from a completely different angle. Church built a notation called the *lambda calculus*. It has three things:
 
 1. Variables: `x`
 2. Functions: `λx. x + 1` (take `x`, return `x + 1`)
