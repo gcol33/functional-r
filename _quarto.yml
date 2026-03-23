@@ -53,7 +53,7 @@ book:
         - chapters/ch25-contracts-and-defensive-code.qmd
         - chapters/ch26-metaprogramming.qmd
         - chapters/ch27-building-a-dsl.qmd
-    - part: "Part V: Going further"
+    - part: "Part V: Building on R"
       chapters:
         - chapters/ch28-performance.qmd
         - chapters/ch29-r-internals.qmd
