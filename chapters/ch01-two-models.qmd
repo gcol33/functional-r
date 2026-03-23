@@ -77,7 +77,9 @@ So is it?
 
 ## Expressions and functions {#sec-church}
 
-Mr. Fold had a different answer. Alonzo Church, who happened to be Turing's doctoral advisor at Princeton, was working on the same problem at the same time but from a completely different angle. Church built a notation called the *lambda calculus*. It has three things:
+Mr. Fold used no tape and kept no state. He pressed numbers together, pair by pair, each pair replaced by its sum and the originals destroyed, until one remained. Replacement instead of memory, and yet the same answer as Mr. Tape and Mr. State. Can Mr. Fold match their infinite reading and rewriting power?
+
+Alonzo Church, who happened to be Turing's doctoral advisor at Princeton, was working on the same problem at the same time but from a completely different angle. Church built a notation called the *lambda calculus*. It has three things:
 
 1. Variables: `x`
 2. Functions: `λx. x + 1` (take `x`, return `x + 1`)
