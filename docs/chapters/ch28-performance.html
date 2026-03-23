@@ -315,7 +315,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Going further</a></li><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Performance</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Building on R</a></li><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Performance</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -570,7 +570,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
- <span class="menu-text">Part V: Going further</span></a>
+ <span class="menu-text">Part V: Building on R</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -659,7 +659,7 @@ window.Quarto = {
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Going further</a></li><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Performance</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Building on R</a></li><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Performance</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span id="sec-performance" class="quarto-section-identifier"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Performance</span></span></h1>
 </div>
@@ -784,7 +784,7 @@ Figure&nbsp;28.1: Flame graph of <code>slow_analysis()</code>: width is time. Th
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(x)) y[i] <span class="ot">&lt;-</span> x[i] <span class="sc">*</span> <span class="dv">2</span></span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>})</span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    user  system elapsed </span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       0       0       0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    0.00    0.01    0.00</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The difference grows with input size, and part of the speedup has nothing to do with R at all. Vectorized operations work on contiguous memory with sequential access patterns that the CPU prefetcher predicts correctly; <code>sum(x)</code> on a contiguous vector can be 100x faster than summing the same values scattered in a list, because L1 cache is roughly 27x faster than main memory. Martin Thompson, a high-performance computing advocate who borrowed the term from racing driver Jackie Stewart, calls this <em>mechanical sympathy</em>: writing software that works with the hardware rather than against it.</p>
 <p>Common vectorization patterns:</p>
@@ -861,9 +861,9 @@ Figure&nbsp;28.1: Flame graph of <code>slow_analysis()</code>: width is time. Th
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 6</span></span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 growing       429µs  485.5µs     1933.    3.88MB    155. </span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 prealloc       15µs   16.9µs    57809.   25.78KB     11.6</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 vector        900ns    1.2µs   737609.   11.81KB    148.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 growing     431.6µs    580µs     1768.    3.88MB    142. </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 prealloc     15.5µs   17.1µs    57494.   25.78KB     11.5</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 vector          1µs    1.2µs   722529.   11.81KB    145.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Each call to <code>c(result, value)</code> allocates a new vector of size <code>length(result) + 1</code> and copies every existing element into it. For <code>n</code> iterations, that totals <span class="math inline">\(1 + 2 + 3 + \cdots + n = O(n^2)\)</span> copies, which means doubling your input size quadruples your runtime. Pre-allocation sidesteps the entire problem: you tell R the final size upfront with <code>numeric(n)</code>, <code>character(n)</code>, <code>logical(n)</code>, or <code>vector("list", n)</code>, and each assignment writes directly into the slot without copying anything.</p>
 <p>But pre-allocation only solves the allocation problem. There is a second performance trap hiding in how R shares memory.</p>
@@ -877,10 +877,10 @@ Figure&nbsp;28.1: Flame graph of <code>slow_analysis()</code>: width is time. Th
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tracemem</span>(x)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "&lt;0000014CD97489A0&gt;"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "&lt;00000295DAB61F90&gt;"</span></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> x</span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>y[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="dv">0</span>L    <span class="co"># triggers a copy</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tracemem[0x0000014cd97489a0 -&gt; 0x0000014cd949dc28]: eval eval withVisible withCallingHandlers eval eval with_handlers doWithOneRestart withOneRestart withRestartList doWithOneRestart withOneRestart withRestartList withRestarts &lt;Anonymous&gt; evaluate in_dir in_input_dir eng_r block_exec call_block process_group withCallingHandlers with_options &lt;Anonymous&gt; process_file &lt;Anonymous&gt; &lt;Anonymous&gt; execute .main</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tracemem[0x00000295dab61f90 -&gt; 0x00000295dae76d18]: eval eval withVisible withCallingHandlers eval eval with_handlers doWithOneRestart withOneRestart withRestartList doWithOneRestart withOneRestart withRestartList withRestarts &lt;Anonymous&gt; evaluate in_dir in_input_dir eng_r block_exec call_block process_group withCallingHandlers with_options &lt;Anonymous&gt; process_file &lt;Anonymous&gt; &lt;Anonymous&gt; execute .main</span></span>
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">untracemem</span>(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>When only one name references an object, R modifies it in place, which is why pre-allocated loops are fast: the result vector has a single reference, so <code>result[i] &lt;- value</code> writes directly without triggering a copy. The subtlety is that functions create references too. When you pass <code>x</code> to a function, the function parameter and the caller’s variable both point to the same object; if the function modifies its copy, R silently allocates a new one. This means helper functions called inside tight loops can trigger copies you never intended. <code>tracemem()</code> is your diagnostic tool here.</p>
@@ -971,8 +971,9 @@ Figure&nbsp;28.1: Flame graph of <code>slow_analysis()</code>: width is time. Th
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, <span class="st">"SELECT region, SUM(revenue) FROM sales GROUP BY region"</span>)</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><strong>duckplyr</strong> removes the SQL entirely: it is a drop-in replacement for dplyr that routes computation through DuckDB’s engine. Same syntax, faster execution, near-zero transition cost.</p>
+<p><strong>duckplyr</strong> removes the SQL entirely: it is a drop-in replacement for dplyr that routes computation through DuckDB’s engine. Same syntax, faster execution, near-zero transition cost. In June 2025, duckplyr formally joined the tidyverse. Existing dplyr code runs unchanged; duckplyr intercepts the verbs, routes what it can through DuckDB, and falls back to dplyr for anything DuckDB does not support.</p>
 <p>The stack looks like this: Parquet files on disk, Arrow or DuckDB as the engine, dplyr verbs as the interface, results collected into R. You write the same code you already know; the machinery underneath is faster. Much of that speed comes from <em>query fusion</em>, combining multiple operations into a single pass over the data and eliminating intermediate allocations. In functional programming, this technique is called <em>deforestation</em> (Wadler, 1988): <code>map f . map g</code> creates an intermediate list, but fusion rewrites it as <code>map (f . g)</code>, traversing the data once. data.table and Arrow apply the same principle at scale.</p>
+<p>The dplyr verbs from <a href="ch14-data-transformation.html" class="quarto-xref"><span>Chapter 14</span></a> were designed as a functional interface: data frame in, data frame out, no mutation of the input. data.table, Arrow, DuckDB, and Polars are all different engines, written in different languages (C, C++, Rust), with different memory layouts and different optimization strategies. The dplyr verbs sit on top of all of them unchanged. <code>filter()</code>, <code>mutate()</code>, <code>summarise()</code> work on a local data frame, on a Parquet file through Arrow, on a DuckDB table through duckplyr. Four engines have appeared since dplyr was designed, and the interface has not changed once.</p>
 <div class="callout callout-style-simple callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">

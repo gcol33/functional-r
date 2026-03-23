@@ -286,7 +286,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Going further</a></li><li class="breadcrumb-item"><a href="../chapters/ch30-r-as-mathematics.html"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">R as mathematics</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Building on R</a></li><li class="breadcrumb-item"><a href="../chapters/ch30-r-as-mathematics.html"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">R as mathematics</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -541,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
- <span class="menu-text">Part V: Going further</span></a>
+ <span class="menu-text">Part V: Building on R</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -631,8 +631,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#exercises-6" id="toc-exercises-6" class="nav-link" data-scroll-target="#exercises-6">Exercises</a></li>
   </ul></li>
-  <li><a href="#sec-math-history" id="toc-sec-math-history" class="nav-link" data-scroll-target="#sec-math-history"><span class="header-section-number">30.10</span> The historical thread</a></li>
-  <li><a href="#references-and-sources" id="toc-references-and-sources" class="nav-link" data-scroll-target="#references-and-sources"><span class="header-section-number">30.11</span> References and sources</a></li>
+  <li><a href="#sec-still-moving" id="toc-sec-still-moving" class="nav-link" data-scroll-target="#sec-still-moving"><span class="header-section-number">30.10</span> The language is still moving</a></li>
+  <li><a href="#sec-math-history" id="toc-sec-math-history" class="nav-link" data-scroll-target="#sec-math-history"><span class="header-section-number">30.11</span> The historical thread</a></li>
+  <li><a href="#references-and-sources" id="toc-references-and-sources" class="nav-link" data-scroll-target="#references-and-sources"><span class="header-section-number">30.12</span> References and sources</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/gcol33/thinking-in-r/edit/main/chapters/ch30-r-as-mathematics.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/gcol33/thinking-in-r/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -640,7 +641,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Going further</a></li><li class="breadcrumb-item"><a href="../chapters/ch30-r-as-mathematics.html"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">R as mathematics</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Building on R</a></li><li class="breadcrumb-item"><a href="../chapters/ch30-r-as-mathematics.html"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">R as mathematics</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span id="sec-r-as-mathematics" class="quarto-section-identifier"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">R as mathematics</span></span></h1>
 </div>
@@ -1200,15 +1201,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 </section>
 </section>
-<section id="sec-math-history" class="level2" data-number="30.10">
-<h2 data-number="30.10" class="anchored" data-anchor-id="sec-math-history"><span class="header-section-number">30.10</span> The historical thread</h2>
+<section id="sec-still-moving" class="level2" data-number="30.10">
+<h2 data-number="30.10" class="anchored" data-anchor-id="sec-still-moving"><span class="header-section-number">30.10</span> The language is still moving</h2>
+<p>Base R is still absorbing functional idioms, and each addition shrinks the gap between what the language offers and what the lambda calculus requires.</p>
+<p>R 4.1 (2021) introduced two changes. The first was <code>\(x) x + 1</code> as shorthand for <code>function(x) x + 1</code>. The backslash is not decoration. Church wrote λ; R now writes <code>\</code>, and the one-character syntax makes anonymous functions cheap enough to use anywhere: inside <code>lapply()</code>, inside <code>Reduce()</code>, as arguments to <code>Map()</code>. Before R 4.1, the nine characters of <code>function(x)</code> were a tax on every lambda expression. The shorthand removed it.</p>
+<p>The second was the native pipe <code>|&gt;</code>. Before R 4.1, the pipe came from the magrittr package (<code>%&gt;%</code>), which means it was a function that manipulated the call, not a language primitive. The native pipe is syntax: <code>x |&gt; f()</code> is parsed by R’s interpreter as <code>f(x)</code> before evaluation begins. Function composition is now part of R’s grammar, not a library feature.</p>
+<p>R 4.4 (2024) moved <code>%||%</code> from rlang into base R. <code>x %||% y</code> returns <code>x</code> if <code>x</code> is not <code>NULL</code>, otherwise <code>y</code>. This is the null-coalescing operator that C# has had since 2003, Swift since 2014, and Kotlin since 2016. In functional terms, it is a default combinator: given a value that might be absent, provide a fallback. It replaces the four-line <code>if (is.null(x)) y else x</code> with a single infix operator.</p>
+<p>Anonymous functions, composition, and null handling — three operations that appear in every functional language — moved into R’s core syntax between 2021 and 2024. The language is still compressing toward its functional core.</p>
+</section>
+<section id="sec-math-history" class="level2" data-number="30.11">
+<h2 data-number="30.11" class="anchored" data-anchor-id="sec-math-history"><span class="header-section-number">30.11</span> The historical thread</h2>
 <p>Each idea in this chapter passed through specific hands. The chain is worth tracing because each link solved a problem that the previous link could not.</p>
 <p>Could you reduce all of reasoning to calculation? In 1679, a man who had already co-invented calculus thought you could. Gottfried Wilhelm Leibniz imagined a <em>calculus ratiocinator</em>, a formal system that would make thinking mechanical. The dream was premature by two and a half centuries. By the 1870s, mathematicians had spent decades making their own foundations rigorous — formalizing limits, infinity, the number line. A German mathematician named Gottlob Frege saw that logic could be next. His <em>Begriffsschrift</em> (1879) introduced quantifiers, variables, and functions as logical primitives, the first formal notation for logic itself. Modern mathematical logic begins here, but Frege’s system was too heavy. Church stripped it to three constructs (variable, abstraction, application) and showed in 1936 that everything could be built back from those alone. The Church numerals and Church booleans in this chapter are his constructions.</p>
 <p>That was the theory. The question was whether anyone could make it run. McCarthy answered it in 1960 with LISP, the first programming language where <code>(lambda (x) (+ x 1))</code> was a direct encoding of Church’s <code>λx. x + 1</code>. But LISP had dynamic scoping, which meant closures did not work the way the theory said they should. Steele and Sussman fixed that in 1975 with Scheme: lexical scoping, first-class closures, and the “Lambda the Ultimate” papers that showed lambda expressions could replace <code>goto</code>, assignment, and most control structures.</p>
 <p>In the 1970s, a statistician at Bell Labs who wanted to run a regression still had to write a Fortran program, compile it, and wait for output. Chambers designed S (1976) to change that: a language for statistical computing where you could type an expression and see the result immediately. It had functions and expressions at its core but borrowed its computational style from Fortran. The statistical vocabulary (data frames, formulas, vectorized operations) was new. When Ihaka and Gentleman reimplemented S at the University of Auckland in 1993, they made one decision that changed everything: they replaced S’s scoping rules with Scheme’s lexical scoping. That single choice is why closures work in R, why function factories work, why every Church encoding in this chapter runs without modification.</p>
 </section>
-<section id="references-and-sources" class="level2" data-number="30.11">
-<h2 data-number="30.11" class="anchored" data-anchor-id="references-and-sources"><span class="header-section-number">30.11</span> References and sources</h2>
+<section id="references-and-sources" class="level2" data-number="30.12">
+<h2 data-number="30.12" class="anchored" data-anchor-id="references-and-sources"><span class="header-section-number">30.12</span> References and sources</h2>
 <p><strong>Lambda calculus in R:</strong></p>
 <ul>
 <li>Alonzo Church, “An Unsolvable Problem of Elementary Number Theory” (1936). The paper that started it all.</li>

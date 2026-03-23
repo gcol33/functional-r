@@ -286,7 +286,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Going further</a></li><li class="breadcrumb-item"><a href="../chapters/ch33-reproducibility-and-workflow.html"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Reproducibility and workflow</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Building on R</a></li><li class="breadcrumb-item"><a href="../chapters/ch33-reproducibility-and-workflow.html"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Reproducibility and workflow</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -541,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
- <span class="menu-text">Part V: Going further</span></a>
+ <span class="menu-text">Part V: Building on R</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -639,7 +639,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Going further</a></li><li class="breadcrumb-item"><a href="../chapters/ch33-reproducibility-and-workflow.html"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Reproducibility and workflow</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Building on R</a></li><li class="breadcrumb-item"><a href="../chapters/ch33-reproducibility-and-workflow.html"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Reproducibility and workflow</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span id="sec-reproducibility-and-workflow" class="quarto-section-identifier"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Reproducibility and workflow</span></span></h1>
 </div>
@@ -852,6 +852,7 @@ quarto render analysis.qmd --to docx</code></pre>
 </div>
 <p><code>tar_make()</code> runs the pipeline. <code>tar_visnetwork()</code> visualizes the dependency graph. <code>tar_read(model)</code> retrieves a cached result.</p>
 <p>Each target is a function call. Functions are the unit of computation (<a href="ch07-functions-are-values.html" class="quarto-xref"><span>Chapter 7</span></a>); targets are the unit of caching. If <code>raw_data</code> has not changed, <code>clean_data</code> does not re-run. If you change <code>plot_results()</code>, only <code>fig</code> re-runs.</p>
+<p>The caching works precisely because the functions are pure: given the same inputs, <code>clean_penguins()</code> returns the same output, so <code>targets</code> can skip it when the inputs have not changed. A function with side effects (one that reads from a database, modifies a global variable, or depends on the current time) would break the caching, because the same inputs would no longer guarantee the same output. <code>targets</code> makes the functional discipline from <a href="ch18-closures-and-scope.html" class="quarto-xref"><span>Chapter 18</span></a> pay off at the project level: pure functions compose into pipelines that <code>targets</code> can reason about, cache, and selectively re-execute.</p>
 <p>Not every project needs <code>targets</code>. A single Quarto document handles simple analyses perfectly well. Reach for <code>targets</code> when you have long-running steps, many interdependent outputs, or pipelines that change frequently.</p>
 <p>The real power shows when your pipeline is expensive: if a model takes an hour to fit, you do not want to re-fit it every time you tweak a color on a plot. <code>targets</code> caches the model result and only re-fits when the model code or its inputs change, so the plot target re-runs in seconds because it reads the cached model. <code>tar_visnetwork()</code> produces a dependency graph showing which targets are up to date (green), outdated (blue), or errored (red), which makes debugging complex pipelines far easier than staring at a collection of numbered scripts.</p>
 <div class="callout callout-style-simple callout-tip callout-titled">

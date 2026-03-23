@@ -286,7 +286,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Going further</a></li><li class="breadcrumb-item"><a href="../chapters/ch31-connecting-to-other-languages.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Connecting to other languages</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Building on R</a></li><li class="breadcrumb-item"><a href="../chapters/ch31-connecting-to-other-languages.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Connecting to other languages</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -541,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
- <span class="menu-text">Part V: Going further</span></a>
+ <span class="menu-text">Part V: Building on R</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -628,7 +628,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Going further</a></li><li class="breadcrumb-item"><a href="../chapters/ch31-connecting-to-other-languages.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Connecting to other languages</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/ch28-performance.html">Part V: Building on R</a></li><li class="breadcrumb-item"><a href="../chapters/ch31-connecting-to-other-languages.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Connecting to other languages</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span id="sec-connecting-languages" class="quarto-section-identifier"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Connecting to other languages</span></span></h1>
 </div>
@@ -796,7 +796,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="fu">fib</span>(<span class="dv">10</span>)</span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 55</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>No <code>PROTECT</code>, no <code>UNPROTECT</code>, no <code>SEXP</code>. The type conversion between R and Rust is handled by extendr’s <code>#[extendr]</code> macro (used in source files) or inferred by <code>rust_function()</code>. But does the safety justify the ecosystem trade-off?</p>
+<p>No <code>PROTECT</code>, no <code>UNPROTECT</code>, no <code>SEXP</code>. The type conversion between R and Rust is handled by extendr’s <code>#[extendr]</code> macro (used in source files) or inferred by <code>rust_function()</code>.</p>
+<p>Rust’s ownership model says every value has exactly one owner; when ownership transfers, the old name becomes invalid. R’s copy-on-modify semantics (<a href="ch28-performance.html#sec-memory" class="quarto-xref"><span>Section 28.3</span></a>) say an object is shared until someone modifies it, at which point R copies it so the original is preserved. The two mechanisms look different — Rust enforces ownership at compile time; R defers to runtime copying — but they guarantee the same thing: a value will not change while someone else is looking at it. That guarantee is why Rust backends like the Polars data frame library can hand data to R through extendr without defensive copying.</p>
+<p>But does the safety justify the ecosystem trade-off?</p>
 <p><strong>Rcpp vs extendr</strong>: Rcpp has over 2,600 reverse dependencies on CRAN and has been battle-tested for 15 years; its documentation, Stack Overflow coverage, and library of examples are unmatched in the R world. extendr is younger, with a smaller ecosystem and fewer production examples. The trade-off is safety. Rcpp inherits C++’s memory model, where segfaults and undefined behavior remain possible if you make mistakes. Rust eliminates those entire categories of bug at compile time, which matters more the larger and more complex the compiled codebase becomes.</p>
 <p>For package development, <code>rextendr::use_extendr()</code> sets up the directory structure and build configuration. The <code>polars</code> package (R bindings to the Polars data frame library) and <code>gifski</code> (GIF encoding) are production examples of extendr-based packages on CRAN.</p>
 <div class="callout callout-style-simple callout-tip callout-titled">

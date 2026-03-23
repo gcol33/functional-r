@@ -541,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
- <span class="menu-text">Part V: Going further</span></a>
+ <span class="menu-text">Part V: Building on R</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -860,7 +860,8 @@ Figure&nbsp;24.1: S3 dispatch: R constructs a method name from the generic and t
 </section>
 <section id="sec-s7" class="level2" data-number="24.7">
 <h2 data-number="24.7" class="anchored" data-anchor-id="sec-s7"><span class="header-section-number">24.7</span> S7</h2>
-<p>S7 is available on CRAN.</p>
+<p>S7 is available on CRAN. In May 2024, R-Core merged four patches into base R (version 4.4) that generalize the internal dispatch machinery to support systems like S7. Those patches did not add S7 to base R, but they changed the foundation underneath it: <code>UseMethod()</code> and the method lookup tables now accommodate external OOP systems that follow S7’s functional dispatch model. The long-term plan, stated by the R Consortium OOP Working Group, is to incorporate S7 into base R itself.</p>
+<p>S3 attached a string to an object and hoped someone would write the right method. S4 replaced hope with a registry, typed slots, and <code>setClass()</code> declarations. <code>new_class()</code> returns a constructor function. <code>new_generic()</code> returns a function. You register methods by assigning to <code>method()</code>. The entire OOP system is made of functions you call, compose, and pass around — the same primitive this book has been building on since <a href="ch05-first-function.html" class="quarto-xref"><span>Chapter 5</span></a>. The objects have typed properties and built-in validation, but the machinery that defines classes, creates generics, and dispatches methods is itself just functions.</p>
 <p>Classes are created with <code>new_class()</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(S7)</span>
