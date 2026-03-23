@@ -454,6 +454,15 @@ body.quarto-dark img:hover {
   filter: brightness(0.95);
 }
 
+/* --- SVG diagrams: invert for dark mode --- */
+body.quarto-dark img[src$=".svg"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+body.quarto-dark img[src$=".svg"]:hover {
+  filter: invert(1) hue-rotate(180deg) brightness(1.1);
+}
+
 /* --- Exercises sections --- */
 body.quarto-dark .unnumbered {
   color: var(--dm-text-primary);
