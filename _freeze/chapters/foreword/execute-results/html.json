@@ -1,0 +1,17 @@
+{
+  "hash": "8b534520442d541f096831534873f444",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Foreword {.unnumbered}\n\n\n\n> \"You know, people think mathematics is complicated. Mathematics is the simple bit. It's the stuff we can understand. It's cats that are complicated.\"\n>\n> --- John Horton Conway\n\nType `TRUE + TRUE` into an R console. You get `2`. Why? R is not doing arithmetic on the word \"true.\" It converts a logical value to the number `1`, twice, and adds. That conversion follows a rule, and the rule traces back to a design decision that predates R by sixty years and programming itself by two decades. Where did it come from?\n\nIn 1936, a logician named Alonzo Church defined booleans as functions that choose: TRUE picks the first argument, FALSE picks the second. No special boolean type, no `if` keyword — just functions calling functions. John McCarthy built a programming language from that idea in 1958 and called it Lisp. Guy Steele and Gerald Sussman distilled it into Scheme in 1975. John Chambers designed S at Bell Labs in the 1980s with Scheme's scoping rules in his head, and two statisticians in Auckland built R from S in the 1990s. The `TRUE + TRUE` in your console still carries Church's fingerprint, and so does nearly everything else you type into R.\n\n",
+    "supporting": [
+      "foreword_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
