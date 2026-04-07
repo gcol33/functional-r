@@ -1,6 +1,6 @@
 [build]
-  publish = "netlify/static"
-  command = "mkdir -p netlify/static"
+  publish = "docs"
+  command = ""
 
 [functions]
   directory = "netlify/functions"

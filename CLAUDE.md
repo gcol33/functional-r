@@ -2,8 +2,10 @@
 
 ## Deployment
 
-- Book hosted on **GitHub Pages** at `thinking-in-r.gillescolling.com` (serves `docs/` from `main`)
-- Analytics hosted on **Netlify** at `thinking-in-r.netlify.app` (functions only, no static site)
+- Book hosted on **Netlify** at `thinking-in-r.gillescolling.com` (serves `docs/` from `main`, alongside `/api/*` analytics functions)
+- DNS: `thinking-in-r.gillescolling.com` is a CNAME to `thinking-in-r.netlify.app`
+- GitHub Pages also builds `docs/` on every push (workflow `Deploy to GitHub Pages`), reachable at `gcol33.github.io/thinking-in-r/`, but not bound to the custom domain
+- **TODO (Option B):** if we want to restore the original split (book on GitHub Pages, Netlify only for `/api/*`), change the DNS CNAME at the registrar from `thinking-in-r.netlify.app` to `gcol33.github.io`, then re-set the Pages custom domain via `gh api repos/gcol33/thinking-in-r/pages -X PUT -f cname=thinking-in-r.gillescolling.com -F https_enforced=true`. `analytics.html` already uses absolute `thinking-in-r.netlify.app/api/*` URLs so stats keep flowing across origins.
 - **Always re-render before pushing**: run `quarto render --to html` locally, then commit `docs/` along with source changes
 - The `_date.lua` Lua filter auto-sets `date-modified` from the latest git commit
 - Analytics: custom hit counter via Netlify Functions + Blobs
