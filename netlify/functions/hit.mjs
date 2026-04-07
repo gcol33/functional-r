@@ -11,7 +11,7 @@ function hash(str) {
   return h.toString(36);
 }
 
-export default async (req) => {
+export default async (req, context) => {
   const url = new URL(req.url);
   const page = url.searchParams.get("p") || "/";
   const now = new Date();
@@ -24,6 +24,9 @@ export default async (req) => {
 
   const isOwner = OWNER_IPS.includes(ip);
   const prefix = isOwner ? "owner:" : "";
+
+  // Geo (from Netlify request context)
+  const country = context?.geo?.country?.code || "??";
 
   // Half-day buckets for dedup (0-11h = "a", 12-23h = "b")
   const halfDay = day + (now.getUTCHours() < 12 ? "a" : "b");
@@ -51,6 +54,7 @@ export default async (req) => {
     inc(`${prefix}daily:${day}`),
     inc(`${prefix}monthly:${month}`),
     inc(`${prefix}page:${page}`),
+    inc(`${prefix}country:${country}`),
   ]);
 
   // Unique visitors
@@ -59,6 +63,7 @@ export default async (req) => {
       inc(`${prefix}unique:total`),
       inc(`${prefix}unique:daily:${day}`),
       inc(`${prefix}unique:monthly:${month}`),
+      inc(`${prefix}unique:country:${country}`),
     ]);
   }
 

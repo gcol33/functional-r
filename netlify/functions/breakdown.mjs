@@ -255,6 +255,24 @@ export default async (req) => {
   }
   pages.sort((a, b) => b.hits - a.hits);
 
+  // Top countries (page views + unique visitors)
+  const { blobs: countryBlobs } = await store.list({ prefix: "country:" });
+  const countryMap = new Map();
+  for (const blob of countryBlobs) {
+    const code = blob.key.replace("country:", "");
+    const val = p(await store.get(blob.key));
+    countryMap.set(code, { code, views: val, unique: 0 });
+  }
+  const { blobs: uCountryBlobs } = await store.list({ prefix: "unique:country:" });
+  for (const blob of uCountryBlobs) {
+    const code = blob.key.replace("unique:country:", "");
+    const val = p(await store.get(blob.key));
+    const entry = countryMap.get(code) || { code, views: 0, unique: 0 };
+    entry.unique = val;
+    countryMap.set(code, entry);
+  }
+  const countries = [...countryMap.values()].sort((a, b) => b.views - a.views);
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -305,6 +323,12 @@ ${chartHtml}
 <table>
   <tr><th>Page</th><th>Views</th></tr>
   ${pages.slice(0, 30).map(pg => `<tr><td class="page-path">${pg.page}</td><td>${pg.hits}</td></tr>`).join("")}
+</table>
+
+<h2>Top Countries</h2>
+<table>
+  <tr><th>Country</th><th>Visitors</th><th>Views</th></tr>
+  ${countries.slice(0, 20).map(c => `<tr><td>${c.code}</td><td>${c.unique}</td><td>${c.views}</td></tr>`).join("")}
 </table>
 
 <div class="refresh">Last refreshed: ${now.toISOString().replace("T", " ").slice(0, 19)} UTC</div>
