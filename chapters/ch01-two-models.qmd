@@ -5,11 +5,11 @@
 source(here::here("_common.R"))
 ```
 
-By 1930, the dream was nearly complete. Three centuries of work — formalizing numbers, formalizing logic, formalizing proof — had brought mathematicians to the edge of something unprecedented: a mechanical method that could settle any mathematical question. Feed in a statement, turn the crank, get the answer. The greatest living mathematician stood before a crowd in Königsberg and declared it would be done. *Wir müssen wissen. Wir werden wissen.* We must know. We shall know.
+By 1930, the dream was nearly complete. Three centuries of work (formalizing numbers, formalizing logic, formalizing proof) had brought mathematicians to the edge of something unprecedented: a mechanical method that could settle any mathematical question. Feed in a statement, turn the crank, get the answer. The greatest living mathematician stood before a crowd in Königsberg and declared it would be done. *Wir müssen wissen. Wir werden wissen.* We must know. We shall know.
 
 But to build the machine that turns the crank, someone first had to answer a question that nobody had thought to ask. What does it mean to compute?\index{computation}
 
-David Hilbert\index{Hilbert, David} had spent thirty years building toward that question. To finish his life's work, he needed someone to define what "turning the crank" actually meant. Two people did — within months of each other, working independently, arriving at completely different answers. One built a machine. The other wrote a sentence. Both were right, and the split between them runs through every programming language that exists today, including R. We'll get to the formalism. First, the intuition.
+David Hilbert\index{Hilbert, David} had spent thirty years building toward that question. To finish his life's work, he needed someone to define what "turning the crank" actually meant. Two people answered him in 1936, strangers to each other. One imagined a machine: a paper tape, a reading head, a finite list of rules. The other wrote down a grammar of functions, three lines long. It would take a few years before anyone noticed that the two answers described exactly the same thing. The split between them runs through every programming language alive today, R included. We'll get to the formalism. First, the intuition.
 
 ***
 

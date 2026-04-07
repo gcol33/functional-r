@@ -915,7 +915,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="exercises-2" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="exercises-2">Exercises</h3>
 <ol type="1">
-<li>Rewrite <code>eval(parse(text = paste0("mean(mtcars$", col, ")")))</code> without <code>eval(parse(...))</code>. Use <code>[[</code> or <code>rlang::sym()</code>.</li>
+<li>Given the expression <code>eval(parse(text = paste0("mean(mtcars$", col, ")")))</code>, rewrite it without <code>eval(parse(...))</code>. Use <code>[[</code> or <code>rlang::sym()</code>.</li>
 <li>Write a function <code>safe_select(data, col_name)</code> that takes a string column name and returns that column. Do it without <code>eval(parse(text = ...))</code>.</li>
 </ol>
 </section>

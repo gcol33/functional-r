@@ -617,7 +617,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#exercises-2" id="toc-exercises-2" class="nav-link" data-scroll-target="#exercises-2">Exercises</a></li>
   </ul></li>
   <li><a href="#sec-vignettes" id="toc-sec-vignettes" class="nav-link" data-scroll-target="#sec-vignettes"><span class="header-section-number">32.7</span> Vignettes</a></li>
-  <li><a href="#basic-usage" id="toc-basic-usage" class="nav-link" data-scroll-target="#basic-usage"><span class="header-section-number">32.8</span> Basic usage</a>
+  <li><a href="#sec-r-cmd-check" id="toc-sec-r-cmd-check" class="nav-link" data-scroll-target="#sec-r-cmd-check"><span class="header-section-number">32.8</span> R CMD check</a>
   <ul class="collapse">
   <li><a href="#exercises-3" id="toc-exercises-3" class="nav-link" data-scroll-target="#exercises-3">Exercises</a></li>
   </ul></li>
@@ -843,7 +843,7 @@ RoxygenNote: 7.3.1</code></pre>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Good: unambiguous</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">filter</span>(data, x <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><code>usethis::use_package("dplyr")</code> adds to <code>Imports</code> in <code>DESCRIPTION</code>. <code>usethis::use_package("ggplot2", type = "Suggests")</code> adds to <code>Suggests</code>.</p>
+<p><code>usethis::use_package("dplyr")</code> adds the package to <code>Imports</code> in <code>DESCRIPTION</code>. The variant <code>usethis::use_package("ggplot2", type = "Suggests")</code> adds it to <code>Suggests</code> instead.</p>
 <p>When you use a Suggested package in tests or vignettes, guard the code:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"plotting works"</span>, {</span>
@@ -911,44 +911,40 @@ RoxygenNote: 7.3.1</code></pre>
 <p>This creates a template in <code>vignettes/</code>. R Markdown vignettes (<code>.Rmd</code>) are the standard: code chunks run during package build, and the output is HTML. Quarto vignettes (<code>.qmd</code>) are the newer option, with more features but requiring Quarto as a system dependency.</p>
 <p>A good package has at least one vignette: “Getting Started” or “Introduction to mypackage.” Write it as if the reader has never seen your package before and has five minutes to decide whether to keep reading.</p>
 <p>A vignette template looks like this:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="sc">---</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>title<span class="sc">:</span> <span class="st">"Getting Started with mypackage"</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>output<span class="sc">:</span> rmarkdown<span class="sc">::</span>html_vignette</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>vignette<span class="sc">:</span> <span class="er">&gt;</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  %\VignetteIndexEntry{Getting Started with mypackage}</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  %\VignetteEngine{knitr<span class="sc">::</span>rmarkdown}</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  %\VignetteEncoding{UTF<span class="dv">-8</span>}</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="sc">---</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Getting Started with mypackage"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="an">output:</span><span class="co"> rmarkdown::html_vignette</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="an">vignette:</span><span class="co"> &gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">  %\VignetteIndexEntry{Getting Started with mypackage}</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">  %\VignetteEngine{knitr::rmarkdown}</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">  %\VignetteEncoding{UTF-8}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Installation</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">## Installation</span></span>
 <span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>Install from GitHub<span class="sc">:</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>Install from GitHub:</span>
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="st">```</span><span class="at">r</span></span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="at">pak::pak("username/mypackage")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">"username/mypackage"</span>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="fu">## Basic usage</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>Load the package and run a simple example:</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mypackage)</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">bmi</span>(<span class="dv">70</span>, <span class="fl">1.75</span>)</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>result</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The YAML header is boilerplate. The content is yours. Documentation and vignettes make a package usable, but what makes it <em>reliable</em> is the automated quality gate that catches mistakes you’d never notice yourself.</p>
 </section>
-<section id="basic-usage" class="level2" data-number="32.8">
-<h2 data-number="32.8" class="anchored" data-anchor-id="basic-usage"><span class="header-section-number">32.8</span> Basic usage</h2>
-<p>Load the package and run a simple example:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mypackage)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">bmi</span>(<span class="dv">70</span>, <span class="fl">1.75</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>result</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<pre><code>
-The YAML header is boilerplate. The content is yours. Documentation and vignettes make a package usable, but what makes it *reliable* is the automated quality gate that catches mistakes you'd never notice yourself.
-
-
-## R CMD check {#sec-r-cmd-check}
-
-`R CMD check`\index{R CMD check} runs roughly 50 tests against your package: does the `NAMESPACE` match the exports? Do all examples run without error? Are all arguments documented? Do the tests pass? Is the package installable?
-
-
-::: {.cell}
-
-```{.r .cell-code}
-devtools::check()</code></pre>
-<p>:::</p>
+<section id="sec-r-cmd-check" class="level2" data-number="32.8">
+<h2 data-number="32.8" class="anchored" data-anchor-id="sec-r-cmd-check"><span class="header-section-number">32.8</span> R CMD check</h2>
+<p><code>R CMD check</code> runs roughly 50 tests against your package: does the <code>NAMESPACE</code> match the exports? Do all examples run without error? Are all arguments documented? Do the tests pass? Is the package installable?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">check</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 <p>Three levels of feedback:</p>
 <ul>
 <li><strong>ERROR</strong>: something is broken. Must fix.</li>
@@ -974,7 +970,7 @@ devtools::check()</code></pre>
 </section>
 <section id="sec-sharing-package" class="level2" data-number="32.9">
 <h2 data-number="32.9" class="anchored" data-anchor-id="sec-sharing-package"><span class="header-section-number">32.9</span> Sharing your package</h2>
-<p><strong>GitHub</strong>: push your package to GitHub. Users install with <code>pak::pak("username/mypackage")</code> or <code>devtools::install_github("username/mypackage")</code>. Lowest barrier to sharing.</p>
+<p><strong>GitHub</strong>: push your package to GitHub. Users install it with one line — either <code>pak::pak("user/mypackage")</code> or <code>devtools::install_github("user/mypackage")</code>. Lowest barrier to sharing.</p>
 <p><strong>pkgdown</strong>: <code>usethis::use_pkgdown_github_pages()</code> builds a website from your documentation, README, and vignettes, with automatic deployment through GitHub Actions. Professional documentation for free.</p>
 <p><strong>CRAN</strong>: the official repository. <code>devtools::submit_cran()</code>. Strict review: 0 errors, 0 warnings, ideally 0 notes, plus human reviewers who check CRAN policies. Worth the effort for packages with a broad audience.</p>
 <p><strong>R-universe</strong> (<code>r-universe.dev</code>): automated package hosting with a lower barrier than CRAN but still discoverable. Point it at your GitHub repo, and it builds binaries for all platforms automatically.</p>
@@ -982,7 +978,7 @@ devtools::check()</code></pre>
 <p>The progression is natural. You build a package for yourself, put it on GitHub so colleagues can use it, add pkgdown so new users can find their way around, and eventually submit to CRAN if the package solves a general enough problem. Each step adds effort but also reach.</p>
 <p>For GitHub-hosted packages, continuous integration is nearly free:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">use_github_action</span>(<span class="st">"check-standard"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">use_github_action</span>(<span class="st">"check-standard"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This adds a GitHub Actions workflow that runs <code>R CMD check</code> on Linux, macOS, and Windows every time you push. If the check fails, GitHub shows a red X next to the commit; if it passes, you get a green checkmark and a badge for your README. The real value is catching platform-specific bugs you would never find on your own machine: path separators (Windows uses <code>\</code>, everything else uses <code>/</code>), case-sensitive file systems (Linux is case-sensitive, macOS and Windows are not), and system library availability.</p>
 <p>A package with CI, documentation, and a one-line install command turns a two-day email chain into a single <code>pak::pak()</code> call.</p>

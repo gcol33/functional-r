@@ -276,7 +276,7 @@ Call this before `import()`. Once the Python interpreter starts, you cannot swit
 ### Exercises {.unnumbered}
 
 1. Use reticulate to import Python's `collections` module and call `Counter` on a character vector. Verify the result matches R's `table()`.
-2. Create a NumPy array of 1 million random values using `np$random$standard_normal()`. Pass it to an R function (e.g., `mean()`). Does reticulate copy the data or share it? Use `bench::mark()` with varying sizes to find out.
+2. Create a NumPy array of 1 million random values with `np$random$standard_normal()`, then pass it to an R function (e.g., `mean()`). Does reticulate copy the data or share it? Use `bench::mark()` with varying sizes to find out.
 
 
 ## Fortran {#sec-fortran}

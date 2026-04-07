@@ -181,7 +181,7 @@ ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm)) +
   scale_x_continuous(labels = scales::comma)
 ```
 
-Color scales control how values map to colors. For discrete variables, `scale_color_viridis_d()` is a strong default (colorblind-friendly, perceptually uniform):
+Color scales control how values map to colors. For discrete variables, the function `scale_color_viridis_d()` is a strong default — colorblind-friendly and perceptually uniform:
 
 ```{r}
 #| warning: false

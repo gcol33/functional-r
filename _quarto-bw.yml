@@ -1,0 +1,8 @@
+format:
+  pdf:
+    output-file: "Thinking-in-R-BW.pdf"
+    highlight-style: monochrome
+    code-block-bg: "#eeeeee"
+    include-in-header:
+      - preamble.tex
+      - bw-preamble.tex

@@ -697,7 +697,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Works regardless of where the script lives in the project</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"penguins.csv"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><code>here::here("data", "penguins.csv")</code> produces something like <code>"C:/Users/me/projects/analysis/data/penguins.csv"</code>, but you never type that path. It works on any OS (forward slashes on Windows too), in any subdirectory, in Quarto documents, in test files, and in interactive sessions. It even works when you <code>source()</code> a script from a different directory, because it finds the project root, not the script’s location.</p>
+<p>The call <code>here::here("data", "penguins.csv")</code> returns an absolute path on the fly — something like <code>"C:/Users/me/analysis/data/penguins.csv"</code> — but you never type that path yourself. It works on any OS (forward slashes on Windows too), in any subdirectory, in Quarto documents, in test files, and in interactive sessions. It even works when you <code>source()</code> a script from a different directory, because it finds the project root, not the script’s location.</p>
 <p>Avoid <code>setwd()</code>, which creates a hidden dependency on your computer’s directory structure. Avoid absolute paths, which break on every other machine. And never write <code>source("C:/Users/me/Desktop/functions.R")</code>, because that ties your code to one computer and one human’s folder layout.</p>
 <p>The <code>here</code> package detects the project root (the directory containing <code>.Rproj</code>, <code>.here</code>, or <code>.git</code>) and builds every path relative to it. A clean project layout looks like this:</p>
 <pre><code>my_analysis/
@@ -771,58 +771,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="33.4" class="anchored" data-anchor-id="sec-quarto"><span class="header-section-number">33.4</span> Quarto: code and prose together</h2>
 <p>You have a script that produces three figures. You have a Word document that describes those figures. You update the script, re-run it, forget to update the Word document, and now the text describes figures that no longer exist. The architecture guarantees drift: code and prose live in different files, so they drift apart.</p>
 <p>Quarto documents (<code>.qmd</code>) eliminate the gap by combining narrative text, code chunks, and their output in a single file. When you render the document, the code runs and the results appear inline:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="sc">---</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>title<span class="sc">:</span> <span class="st">"Penguin Analysis"</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>format<span class="sc">:</span> html</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="sc">---</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Penguin Analysis"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> html</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="do">## Body mass by species</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">## Body mass by species</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(palmerpenguins)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>penguins <span class="sc">|&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(species, body_mass_g)) <span class="sc">+</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>No separate script that makes the figures, no separate Word document that describes them. If the data changes, re-render and everything updates. To render the document, run from the terminal:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(palmerpenguins)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Attaching package: 'palmerpenguins'</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The following objects are masked from 'package:datasets':</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     penguins, penguins_raw</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>penguins <span class="sc">|&gt;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(species, body_mass_g)) <span class="sc">+</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Removed 2 rows containing non-finite outside the scale range</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (`stat_boxplot()`).</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="ch33-reproducibility-and-workflow_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" style="width:5in"></p>
-</figure>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>quarto render analysis.qmd           <span class="co"># defaults to the format in the YAML header</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>quarto render analysis.qmd <span class="sc">--</span>to pdf  <span class="co"># override the output format</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>quarto render analysis.qmd <span class="sc">--</span>to docx</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</div>
-</div>
-<pre><code>
-No separate script that makes the figures, no separate Word document that describes them. If the data changes, re-render and everything updates. To render the document, run from the terminal:
-
-
-::: {.cell}
-
-```{.r .cell-code}
-quarto render analysis.qmd           # defaults to the format in the YAML header
-quarto render analysis.qmd --to pdf  # override the output format
-quarto render analysis.qmd --to docx</code></pre>
-<p>:::</p>
 <p>The <code>format</code> field in the YAML header sets the default (html, pdf, docx, revealjs for slides), and the <code>--to</code> flag overrides it. HTML needs no extra software. PDF requires a LaTeX installation; <code>quarto install tinytex</code> handles that. Word output produces a <code>.docx</code> that collaborators who do not use R can read and comment on. In RStudio, the “Render” button (Ctrl+Shift+K) does the same thing without the terminal.</p>
 <p>Quarto is the successor to R Markdown, and the core idea (literate programming) dates back to Donald Knuth in 1984: write programs as documents where the prose explains the code, not the other way around. The lineage runs from WEB (Pascal/TeX) through Sweave (2002), knitr (2012), R Markdown, and finally Quarto (2022), each generation bringing better tooling and broader language support. If you know R Markdown, you already know Quarto. The main differences: Quarto uses <code>#|</code> for chunk options instead of the chunk header, supports Python, Julia, and Observable in addition to R, and has better defaults for academic output (cross-references, citations, callouts).</p>
 <p>Output formats include HTML, PDF, Word, presentations, websites, and books (this book is written in Quarto). The format is flexible, but the real control comes from chunk options, which you place at the top of each chunk with the <code>#|</code> prefix:</p>
 <p><code>echo: false</code> hides the code and shows only the output. <code>eval: false</code> shows the code but does not run it. <code>fig-cap</code> adds a caption. <code>cache: true</code> caches results so unchanged chunks do not re-run. These options give you fine control over what the reader sees versus what runs behind the scenes.</p>
 <p>For academic writing, Quarto supports citations natively. Place a <code>.bib</code> file in your project and reference entries with <code>@key</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="sc">---</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>title<span class="sc">:</span> <span class="st">"My Analysis"</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>bibliography<span class="sc">:</span> references.bib</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="sc">---</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>As shown by <span class="sc">@</span>wickham2019, tidy data principles simplify analysis.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="sc">---</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>title<span class="sc">:</span> <span class="st">"My Analysis"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>bibliography<span class="sc">:</span> references.bib</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="sc">---</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>As shown by <span class="sc">@</span>wickham2019, tidy data principles simplify analysis.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The citation is rendered in the output and a reference list is appended automatically, so there are no more manually typed reference sections drifting from the actual citations. Quarto keeps code and prose in sync within a single document; but when your analysis spans multiple scripts with complex dependencies, a different tool keeps the steps themselves in sync.</p>
 <section id="exercises-2" class="level3 unnumbered">
@@ -838,17 +818,17 @@ quarto render analysis.qmd --to docx</code></pre>
 <p>Your analysis has five steps: clean data, fit model, run diagnostics, make figures, render report. You run them by hand, in order, every time. One day you change the model but forget to re-run the diagnostics. The figures now describe a model that no longer exists. How long before you notice?</p>
 <p><code>targets</code> prevents this by making you declare the pipeline: each step (target) is a function call with explicit inputs, and <code>targets</code> tracks what changed so it only re-runs what needs re-running.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># _targets.R</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(targets)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tar_option_set</span>(<span class="at">packages =</span> <span class="fu">c</span>(<span class="st">"dplyr"</span>, <span class="st">"ggplot2"</span>))</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(raw_data, <span class="fu">read.csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"penguins.csv"</span>))),</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(clean_data, <span class="fu">clean_penguins</span>(raw_data)),</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(model, <span class="fu">lm</span>(body_mass_g <span class="sc">~</span> species, <span class="at">data =</span> clean_data)),</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(fig, <span class="fu">plot_results</span>(model))</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># _targets.R</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(targets)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tar_option_set</span>(<span class="at">packages =</span> <span class="fu">c</span>(<span class="st">"dplyr"</span>, <span class="st">"ggplot2"</span>))</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(raw_data, <span class="fu">read.csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"penguins.csv"</span>))),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(clean_data, <span class="fu">clean_penguins</span>(raw_data)),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(model, <span class="fu">lm</span>(body_mass_g <span class="sc">~</span> species, <span class="at">data =</span> clean_data)),</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(fig, <span class="fu">plot_results</span>(model))</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><code>tar_make()</code> runs the pipeline. <code>tar_visnetwork()</code> visualizes the dependency graph. <code>tar_read(model)</code> retrieves a cached result.</p>
 <p>Each target is a function call. Functions are the unit of computation (<a href="ch07-functions-are-values.html" class="quarto-xref"><span>Chapter 7</span></a>); targets are the unit of caching. If <code>raw_data</code> has not changed, <code>clean_data</code> does not re-run. If you change <code>plot_results()</code>, only <code>fig</code> re-runs.</p>
@@ -870,24 +850,24 @@ quarto render analysis.qmd --to docx</code></pre>
 </div>
 <p>One design principle worth internalizing: each target should be defined by a function, not raw code. Instead of writing the transformation inline, write a function in <code>R/</code> and call it from the target. This makes targets testable (you can test the function independently) and readable (the pipeline reads like a table of contents):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># R/functions.R</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>clean_penguins <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  data[<span class="sc">!</span><span class="fu">is.na</span>(data<span class="sc">$</span>body_mass_g), ]</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>plot_results <span class="ot">&lt;-</span> <span class="cf">function</span>(model) {</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(model, <span class="at">which =</span> <span class="dv">1</span>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># R/functions.R</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>clean_penguins <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  data[<span class="sc">!</span><span class="fu">is.na</span>(data<span class="sc">$</span>body_mass_g), ]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>plot_results <span class="ot">&lt;-</span> <span class="cf">function</span>(model) {</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(model, <span class="at">which =</span> <span class="dv">1</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># _targets.R</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/functions.R"</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(raw, <span class="fu">read.csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"penguins.csv"</span>))),</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(clean, <span class="fu">clean_penguins</span>(raw)),</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(model, <span class="fu">lm</span>(body_mass_g <span class="sc">~</span> species, <span class="at">data =</span> clean)),</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(fig, <span class="fu">plot_results</span>(model))</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># _targets.R</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/functions.R"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(raw, <span class="fu">read.csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"penguins.csv"</span>))),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(clean, <span class="fu">clean_penguins</span>(raw)),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(model, <span class="fu">lm</span>(body_mass_g <span class="sc">~</span> species, <span class="at">data =</span> clean)),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tar_target</span>(fig, <span class="fu">plot_results</span>(model))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <section id="exercises-3" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="exercises-3">Exercises</h3>
@@ -912,12 +892,12 @@ quarto render analysis.qmd --to docx</code></pre>
 <h3 class="unnumbered anchored" data-anchor-id="the-daily-workflow">The daily workflow</h3>
 <p>Git has many commands. You need six:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>git status                              <span class="co"># what has changed?</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>git add file.R                          <span class="co"># stage a file for the next commit</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>git commit <span class="sc">-</span>m <span class="st">"Add bootstrap analysis"</span>  <span class="co"># record the snapshot</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>git log <span class="sc">--</span>oneline                       <span class="co"># see recent history</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>git diff                                <span class="co"># see unstaged changes line by line</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>git push                                <span class="co"># send commits to GitHub</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>git status                              <span class="co"># what has changed?</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>git add file.R                          <span class="co"># stage a file for the next commit</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>git commit <span class="sc">-</span>m <span class="st">"Add bootstrap analysis"</span>  <span class="co"># record the snapshot</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>git log <span class="sc">--</span>oneline                       <span class="co"># see recent history</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>git diff                                <span class="co"># see unstaged changes line by line</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>git push                                <span class="co"># send commits to GitHub</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The mental model: you make changes to files, <code>git add</code> selects which changes to include in the next snapshot, <code>git commit</code> takes the snapshot with a message, and <code>git push</code> sends it to a remote server. <code>git pull</code> does the reverse, fetching commits from the remote and incorporating them into your local copy.</p>
 <p>RStudio has a built-in Git pane that shows modified files, lets you stage changes, write commit messages, and push to GitHub without touching the terminal. For initial setup, <code>usethis::use_git()</code> initializes a repository, and <code>usethis::use_github()</code> creates a remote on GitHub and pushes your code in one step.</p>
@@ -926,11 +906,11 @@ quarto render analysis.qmd --to docx</code></pre>
 <h3 class="unnumbered anchored" data-anchor-id="branching">Branching</h3>
 <p>Branches let you try something without risking the main line of work:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>git branch try<span class="sc">-</span>new<span class="sc">-</span>model     <span class="co"># create a branch</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>git checkout try<span class="sc">-</span>new<span class="sc">-</span>model   <span class="co"># switch to it</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ... make changes, commit ...</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>git checkout main            <span class="co"># switch back</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>git merge try<span class="sc">-</span>new<span class="sc">-</span>model      <span class="co"># incorporate the branch's changes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>git branch try<span class="sc">-</span>new<span class="sc">-</span>model     <span class="co"># create a branch</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>git checkout try<span class="sc">-</span>new<span class="sc">-</span>model   <span class="co"># switch to it</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ... make changes, commit ...</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>git checkout main            <span class="co"># switch back</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>git merge try<span class="sc">-</span>new<span class="sc">-</span>model      <span class="co"># incorporate the branch's changes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>If the experiment works, merge it. If it does not, delete the branch. The main branch is untouched either way, your code stays the same regardless of which experiment succeeded.</p>
 </section>
@@ -940,13 +920,13 @@ quarto render analysis.qmd --to docx</code></pre>
 <p><strong>Do not commit</strong>: large data files, generated output (figures, HTML reports, <code>_targets/</code> cache), secrets and passwords, <code>.Rhistory</code>, <code>.RData</code>, <code>.DS_Store</code>.</p>
 <p><code>.gitignore</code> tells Git what to skip. A good starting point for R projects:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>.Rhistory</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>.RData</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>.Rproj.user</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>_targets<span class="sc">/</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>docs<span class="sc">/</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="er">*</span>.html</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="sc">*</span>.pdf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>.Rhistory</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>.RData</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>.Rproj.user</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>_targets<span class="sc">/</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>docs<span class="sc">/</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="er">*</span>.html</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="sc">*</span>.pdf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><code>usethis::use_git_ignore()</code> helps set it up.</p>
 </section>
@@ -965,17 +945,17 @@ quarto render analysis.qmd --to docx</code></pre>
 <h2 data-number="33.7" class="anchored" data-anchor-id="sec-seeds-sessions"><span class="header-section-number">33.7</span> set.seed() and session info</h2>
 <p>Any analysis involving randomness (simulation, resampling, train/test splits) needs <code>set.seed()</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="dv">5</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 49 65 25 74 18</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="dv">5</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 49 65 25 74 18</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Without <code>set.seed()</code>, every run produces different numbers. With it, the same seed always produces the same sequence. Place it at the top of your script or Quarto document; the specific number does not matter (42, 123, 2024, anything), but it must be fixed and documented.</p>
 <p>One subtlety: R 3.6.0 changed the default random number generator, so code using <code>set.seed()</code> before and after that version may produce different sequences even with the same seed. If exact reproducibility across R versions matters, specify the RNG kind: <code>set.seed(42, kind = "Mersenne-Twister", normal.kind = "Inversion")</code>.</p>
 <p>At the end of reports, record your environment:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This captures R version, OS, and package versions. If results differ on another machine, the session info is the first place to look. Small practices, both of them, but they close gaps that the larger tools leave open.</p>
 <section id="exercises-4" class="level3 unnumbered">
@@ -1041,25 +1021,25 @@ quarto render analysis.qmd --to docx</code></pre>
 <p><code>renv</code> captures R package versions. It does not capture R itself, system libraries (libcurl, GDAL, libxml2), or the C compiler that built them. When your code depends on any of these (and spatial code, for instance, almost always depends on GDAL), <code>renv</code> alone leaves a gap.</p>
 <p><strong>Docker</strong> fills it by bundling everything into a container: OS, R, system libraries, packages, your code. The Rocker project (rocker-project.org) provides pre-built R images:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dockerfile</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>FROM rocker<span class="sc">/</span>r<span class="sc">-</span>ver<span class="sc">:</span><span class="dv">4</span>.<span class="fl">4.0</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>RUN install2.r dplyr ggplot2</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>COPY . <span class="sc">/</span>analysis</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>CMD [<span class="st">"Rscript"</span>, <span class="st">"analysis/main.R"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dockerfile</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>FROM rocker<span class="sc">/</span>r<span class="sc">-</span>ver<span class="sc">:</span><span class="dv">4</span>.<span class="fl">4.0</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>RUN install2.r dplyr ggplot2</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>COPY . <span class="sc">/</span>analysis</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>CMD [<span class="st">"Rscript"</span>, <span class="st">"analysis/main.R"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A Dockerfile is a recipe that always produces the same environment. Build once, run anywhere. The trade-off is complexity: Docker adds a layer of tooling (images, containers, registries) that takes time to learn.</p>
 <p><strong>Nix</strong> takes a different approach. Where Docker isolates by containerization, Nix isolates by functional purity: the Nix package manager treats every package as a pure function from its inputs (source code, dependencies, compiler flags) to its output (the built artifact). Fix all inputs, get a deterministic output. This is referential transparency applied to software builds, the same principle that makes pure functions predictable in R: same inputs, same output, no hidden state.</p>
 <p>The <code>rix</code> R package makes Nix accessible from R:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rix)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rix</span>(</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_ver =</span> <span class="st">"4.4.0"</span>,</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_pkgs =</span> <span class="fu">c</span>(<span class="st">"dplyr"</span>, <span class="st">"ggplot2"</span>, <span class="st">"palmerpenguins"</span>),</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">system_pkgs =</span> <span class="cn">NULL</span>,</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">ide =</span> <span class="st">"rstudio"</span>,</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">project_path =</span> <span class="st">"."</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rix)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rix</span>(</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_ver =</span> <span class="st">"4.4.0"</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_pkgs =</span> <span class="fu">c</span>(<span class="st">"dplyr"</span>, <span class="st">"ggplot2"</span>, <span class="st">"palmerpenguins"</span>),</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">system_pkgs =</span> <span class="cn">NULL</span>,</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">ide =</span> <span class="st">"rstudio"</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">project_path =</span> <span class="st">"."</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This generates a <code>default.nix</code> file that pins everything: R version, package versions, system libraries, even the C compiler. Running <code>nix-build</code> on any machine with Nix installed produces an identical environment. Where <code>renv.lock</code> captures one layer (R packages), <code>default.nix</code> captures all of them.</p>
 <p>The practical trade-off: Nix has a steep learning curve and limited Windows support (it runs natively on Linux and macOS, or via WSL on Windows), while Docker is more widely adopted and better supported across platforms. Both achieve full-stack reproducibility; they differ in mechanism and philosophy. Docker says “ship the whole machine.” Nix says “describe the machine as a function and let anyone rebuild it.”</p>

@@ -48,7 +48,7 @@ Every path you hardcode is a bet that your directory structure will never change
 data <- read.csv(here::here("data", "penguins.csv"))
 ```
 
-`here::here("data", "penguins.csv")` produces something like `"C:/Users/me/projects/analysis/data/penguins.csv"`, but you never type that path. It works on any OS (forward slashes on Windows too), in any subdirectory, in Quarto documents, in test files, and in interactive sessions. It even works when you `source()` a script from a different directory, because it finds the project root, not the script's location.
+The call `here::here("data", "penguins.csv")` returns an absolute path on the fly — something like `"C:/Users/me/analysis/data/penguins.csv"` — but you never type that path yourself. It works on any OS (forward slashes on Windows too), in any subdirectory, in Quarto documents, in test files, and in interactive sessions. It even works when you `source()` a script from a different directory, because it finds the project root, not the script's location.
 
 Avoid `setwd()`, which creates a hidden dependency on your computer's directory structure. Avoid absolute paths, which break on every other machine. And never write `source("C:/Users/me/Desktop/functions.R")`, because that ties your code to one computer and one human's folder layout.
 
@@ -121,8 +121,7 @@ You have a script that produces three figures. You have a Word document that des
 
 Quarto\index{Quarto} documents (`.qmd`) eliminate the gap by combining narrative text, code chunks, and their output in a single file. When you render the document, the code runs and the results appear inline:
 
-```{r}
-#| eval: false
+````markdown
 ---
 title: "Penguin Analysis"
 format: html
@@ -130,14 +129,14 @@ format: html
 
 ## Body mass by species
 
-```{r}
+```{{r}}
 library(palmerpenguins)
 library(ggplot2)
 penguins |>
   ggplot(aes(species, body_mass_g)) +
   geom_boxplot()
 ```
-```
+````
 
 No separate script that makes the figures, no separate Word document that describes them. If the data changes, re-render and everything updates. To render the document, run from the terminal:
 

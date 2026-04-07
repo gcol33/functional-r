@@ -1,0 +1,11 @@
+% ============================================================
+%  Thinking in R — Black & White PDF preamble
+%  Loaded after preamble.tex when rendering with `--profile bw`.
+%  Forces xcolor into grayscale mode so all LaTeX color commands
+%  (rules, code highlighting, callout backgrounds, links) print
+%  in shades of gray. Raster figures are not converted here —
+%  use the post-render ghostscript step in render-bw.sh for
+%  full grayscale conversion of embedded images.
+% ============================================================
+
+\AtBeginDocument{\selectcolormodel{gray}}

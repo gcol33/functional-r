@@ -217,7 +217,7 @@ filter(data, x > 0)
 dplyr::filter(data, x > 0)
 ```
 
-`usethis::use_package("dplyr")` adds to `Imports` in `DESCRIPTION`. `usethis::use_package("ggplot2", type = "Suggests")` adds to `Suggests`.
+`usethis::use_package("dplyr")` adds the package to `Imports` in `DESCRIPTION`. The variant `usethis::use_package("ggplot2", type = "Suggests")` adds it to `Suggests` instead.
 
 When you use a Suggested package in tests or vignettes, guard the code:
 
@@ -294,8 +294,7 @@ A good package has at least one vignette: "Getting Started" or "Introduction to 
 
 A vignette template looks like this:
 
-```{r}
-#| eval: false
+````markdown
 ---
 title: "Getting Started with mypackage"
 output: rmarkdown::html_vignette
@@ -322,7 +321,7 @@ library(mypackage)
 result <- bmi(70, 1.75)
 result
 ```
-```
+````
 
 The YAML header is boilerplate. The content is yours. Documentation and vignettes make a package usable, but what makes it *reliable* is the automated quality gate that catches mistakes you'd never notice yourself.
 
@@ -361,7 +360,7 @@ Run `check()` often during development, not just at the end. Each run should fin
 
 ## Sharing your package {#sec-sharing-package}
 
-**GitHub**: push your package to GitHub. Users install with `pak::pak("username/mypackage")` or `devtools::install_github("username/mypackage")`. Lowest barrier to sharing.
+**GitHub**: push your package to GitHub. Users install it with one line — either `pak::pak("user/mypackage")` or `devtools::install_github("user/mypackage")`. Lowest barrier to sharing.
 
 **pkgdown**\index{pkgdown (package)}: `usethis::use_pkgdown_github_pages()` builds a website from your documentation, README, and vignettes, with automatic deployment through GitHub Actions. Professional documentation for free.
 

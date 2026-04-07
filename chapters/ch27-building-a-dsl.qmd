@@ -307,7 +307,7 @@ If you find yourself writing `eval(parse(text = ...))`, stop and ask whether the
 
 ### Exercises {.unnumbered}
 
-1. Rewrite `eval(parse(text = paste0("mean(mtcars$", col, ")")))` without `eval(parse(...))`. Use `[[` or `rlang::sym()`.
+1. Given the expression `eval(parse(text = paste0("mean(mtcars$", col, ")")))`, rewrite it without `eval(parse(...))`. Use `[[` or `rlang::sym()`.
 2. Write a function `safe_select(data, col_name)` that takes a string column name and returns that column. Do it without `eval(parse(text = ...))`.
 
 

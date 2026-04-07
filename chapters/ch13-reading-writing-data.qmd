@@ -53,7 +53,7 @@ if (!file.exists(path)) stop("File not found: ", path)
 
 1. Run `getwd()` in your console. What does it return?
 2. Install the `here` package (`install.packages("here")`). Run `here::here()`. What directory does it point to?
-3. Why is `here::here("data", "file.csv")` more portable than `"C:/Users/me/project/data/file.csv"`?
+3. Why is `here::here("data", "file.csv")` more portable than a hard-coded path like `"C:/Users/me/project/file.csv"`?
 
 
 ## Reading CSV files {#sec-reading-csv}
