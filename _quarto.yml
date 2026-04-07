@@ -4,15 +4,13 @@ execute:
 project:
   type: book
   output-dir: docs
-  resources:
-    - CNAME
 
 book:
   title: "Thinking in R"
   author: "Gilles Colling"
   date: "2026"
   reader-mode: true
-  site-url: https://thinking-in-r.gillescolling.com/
+  site-url: https://gillescolling.com/thinking-in-r/
   repo-url: https://github.com/gcol33/thinking-in-r/
   repo-branch: main
   favicon: favicon.svg
