@@ -8,8 +8,12 @@ __pycache__/
 # LaTeX / PDF build intermediates
 Thinking-in-R.tex
 docs/Thinking-in-R.pdf
-index.*
-!index.qmd
+/index.tex
+/index.aux
+/index.log
+/index.toc
+/index.out
+/index.pdf
 
 # PDF freeze files (HTML freeze is tracked; PDF is not committed)
 _freeze/**/tex.json
