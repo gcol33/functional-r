@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 220" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 220" font-family="Sans">
   <style>
     .cell { stroke: #111; stroke-width: 1.2; }
     .hdr { fill: #f7f7f7; }
     .dat { fill: #eaeaea; }
-    .fn { font-size: 13px; font-family: 'Courier New', monospace; font-weight: bold; fill: #111; text-anchor: middle; }
+    .fn { font-size: 13px; font-family: Mono; font-weight: bold; fill: #111; text-anchor: middle; }
     .fs { font-size: 11px; fill: #777; text-anchor: middle; font-style: italic; }
     .title { font-size: 18px; font-weight: bold; fill: #111; text-anchor: middle; }
     .brl { font-size: 13px; fill: #555; font-style: italic; text-anchor: middle; }

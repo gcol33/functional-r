@@ -75,13 +75,17 @@ format:
     callout-appearance: simple
   pdf:
     documentclass: scrbook
-    papersize: letter
+    classoption:
+      - twoside
+      - openright
     fontsize: 11pt
     geometry:
-      - top=1in
-      - bottom=1in
-      - left=1.25in
-      - right=1.25in
+      - paperwidth=7in
+      - paperheight=10in
+      - inner=0.75in
+      - outer=0.5in
+      - top=0.75in
+      - bottom=0.75in
     mainfont: "Latin Modern Roman"
     monofont: "Latin Modern Mono"
     monofontoptions:
@@ -91,15 +95,19 @@ format:
     code-overflow: wrap
     highlight-style: github
     fig-pos: "H"
-    fig-width: 5.5
-    fig-height: 3.5
+    fig-width: 5
+    fig-height: 3.2
     toc: true
     toc-depth: 2
     number-sections: true
-    colorlinks: true
+    colorlinks: false
+    linkcolor: black
+    urlcolor: black
+    citecolor: black
     link-citations: true
     callout-appearance: simple
     include-in-header: preamble.tex
+    include-before-body: copyright.tex
     include-after-body: printindex.tex
 
 editor: source

@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 380" font-family="'Courier New', monospace">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 380" font-family="Mono">
   <style>
     text { font-size: 17px; fill: #111; }
-    .title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; }
-    .sub { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; fill: #555; font-style: italic; }
+    .title { font-family: Sans; font-size: 20px; font-weight: bold; }
+    .sub { font-family: Sans; font-size: 14px; fill: #555; font-style: italic; }
     .step { font-size: 15px; }
     .nt { font-size: 16px; text-anchor: middle; }
     .expr { font-size: 18px; text-anchor: middle; }
@@ -38,7 +38,7 @@
   <!-- Head -->
   <line x1="71" y1="91" x2="71" y2="101" stroke="#111" stroke-width="1.2"/>
   <polygon points="71,111 66,101 76,101" fill="#111"/>
-  <text x="71" y="128" font-size="13px" text-anchor="middle" font-family="Helvetica, sans-serif" fill="#555">head</text>
+  <text x="71" y="128" font-size="13px" text-anchor="middle" font-family="Sans" fill="#555">head</text>
 
   <!-- Steps -->
   <g font-size="14px">

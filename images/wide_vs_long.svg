@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 524" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 524" font-family="Sans">
   <style>
     .cell { fill: none; stroke: #111; stroke-width: 1.0; }
     .hdr { fill: #f4f4f4; stroke: #111; stroke-width: 1.0; }
-    .ct { font-size: 16px; font-family: 'Courier New', monospace; fill: #111; text-anchor: middle; }
-    .ch { font-size: 16px; font-family: 'Courier New', monospace; fill: #111; text-anchor: middle; font-weight: bold; }
-    .sub { font-size: 18px; font-family: 'Courier New', monospace; fill: #111; font-weight: bold; }
+    .ct { font-size: 16px; font-family: Mono; fill: #111; text-anchor: middle; }
+    .ch { font-size: 16px; font-family: Mono; fill: #111; text-anchor: middle; font-weight: bold; }
+    .sub { font-size: 18px; font-family: Mono; fill: #111; font-weight: bold; }
     .note { font-size: 15px; fill: #555; font-style: italic; text-anchor: middle; }
     .ann { font-size: 15px; fill: #777; font-style: italic; }
   </style>

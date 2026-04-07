@@ -1,0 +1,15 @@
+# matplotlib config for SVG generation in this directory.
+# matplotlib auto-loads matplotlibrc from the current working directory.
+#
+# These settings ensure generated SVGs reference Pango generic family
+# aliases that fontconfig will resolve to embedded fonts when the SVG
+# is rendered into the PDF (KDP rejects unembedded fonts).
+
+font.family       : sans-serif
+font.sans-serif   : Sans, DejaVu Sans
+font.serif        : Serif, DejaVu Serif
+font.monospace    : Mono, DejaVu Sans Mono
+
+# Always emit text as <text> elements (not paths) so the font choice
+# survives into the SVG and can be re-mapped at PDF embed time.
+svg.fonttype      : none
