@@ -5,11 +5,13 @@
 source(here::here("_common.R"))
 ```
 
-By 1930, the dream was nearly complete. Three centuries of work (formalizing numbers, formalizing logic, formalizing proof) had brought mathematicians to the edge of something unprecedented: a mechanical method that could settle any mathematical question. Feed in a statement, turn the crank, get the answer. The greatest living mathematician stood before a crowd in Königsberg and declared it would be done. *Wir müssen wissen. Wir werden wissen.* We must know. We shall know.
+By 1930, the dream was close. Three centuries of work — formalizing numbers, then logic, then proof — had brought mathematicians within reach of something unprecedented: a mechanical method to settle any mathematical question. Write down a statement, follow the rules, get the answer. The greatest living mathematician stood before a crowd in Königsberg and declared it would be done. *Wir müssen wissen. Wir werden wissen.* We must know. We shall know. His name was David Hilbert\index{Hilbert, David}, and he had spent thirty years building toward that moment.
 
-But to build the machine that turns the crank, someone first had to answer a question that nobody had thought to ask. What does it mean to compute?\index{computation}
+The following year, a twenty-five-year-old in Vienna proved it was impossible. Some true statements about arithmetic had no proof. The structure of formal systems ruled them out. Hilbert's program was over.
 
-David Hilbert\index{Hilbert, David} had spent thirty years building toward that question. To finish his life's work, he needed someone to define what "turning the crank" actually meant. Two people answered him in 1936, strangers to each other. One imagined a machine: a paper tape, a reading head, a finite list of rules. The other wrote down a grammar of functions, three lines long. It would take a few years before anyone noticed that the two answers described exactly the same thing. The split between them runs through every programming language alive today, R included. We'll get to the formalism. First, the intuition.
+But proving it required first defining something nobody had precisely stated. To show that no formal system could settle every question, someone had to say what formal systems could do. What does it mean to compute?\index{computation}
+
+Two people answered that question in 1936, strangers to each other. One imagined a machine: a paper tape, a reading head, a finite list of rules. The other wrote down a grammar of functions, three lines long. It would take a few years before anyone noticed that the two answers described exactly the same thing. The split between them runs through every programming language alive today, R included. We'll get to the formalism. First, the intuition.
 
 ***
 
