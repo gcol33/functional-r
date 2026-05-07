@@ -11,7 +11,7 @@ He stood before a packed hall in Königsberg and declared it would be done. *Wir
 
 The following year, a twenty-five-year-old logician in Vienna showed that the dream could never work.
 
-He had found something the machinery could not touch. Some true statements about arithmetic had no proof. The limitation was built into the system itself. His name was Kurt Gödel\index{Gödel, Kurt}. What he had done was reveal a boundary nobody knew existed.
+He had found something the machinery could not touch: some true statements about arithmetic had no proof, and no refinement of the rules would change that. Kurt Gödel\index{Gödel, Kurt} had found a boundary nobody knew existed.
 
 Gödel had shown the limits of formal systems before anyone had fully said what a formal system even was. Someone had to say, precisely, what they could do. What does it mean to compute?\index{computation}
 
