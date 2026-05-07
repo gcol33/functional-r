@@ -11,9 +11,9 @@ He stood before a packed hall in Königsberg and declared it would be done. *Wir
 
 The following year, a twenty-five-year-old logician in Vienna showed that the dream could never work.
 
-He had found something the machinery could not touch: some true statements about arithmetic had no proof, and no refinement of the rules would change that. Kurt Gödel\index{Gödel, Kurt} had found a boundary nobody knew existed.
+He had found something the machinery could not touch. Take any formal system rich enough to do arithmetic, and you can write down a sentence inside that system which says, in effect, *I cannot be proved here*. If the system proves it, the system contradicts itself; if it never proves it, the sentence is true and unprovable. There is no way out. Add more rules, and the new system has a new such sentence; add more again, and so does that one. Some true statements about arithmetic have no proof, and no refinement of the rules will ever change that. Kurt Gödel\index{Gödel, Kurt} had found a boundary nobody knew existed.
 
-Gödel had shown the limits of formal systems before anyone had fully said what a formal system even was. Someone had to say, precisely, what they could do. What does it mean to compute?\index{computation}
+Gödel had shown the limits of formal systems before anyone had fully said what a formal system even was. Hilbert's program had relied on the idea of a *mechanical procedure*, a step-by-step recipe that could be followed without thought; but nobody had ever written down what a procedure actually was. Someone had to say, precisely, what such a procedure could do. What does it mean to compute?\index{computation}
 
 Two people answered that question in 1936, strangers to each other. One imagined a machine: a paper tape, a reading head, a finite list of rules. The other wrote down a grammar of functions, three lines long. It would take a few years before anyone noticed that the two answers described exactly the same thing. They looked completely different. One resembled machinery. The other resembled language. Modern computing would inherit both. We'll get to the formalism. First, the intuition.
 
@@ -142,19 +142,18 @@ One line. `scores > 70` produces a vector of `TRUE` and `FALSE` values; `sum()` 
 
 Both give the answer 4. The second one is a piece of mathematics from 1936, written before electronic computers existed, and in 2026 it still outruns the loop. The loop works against the grain. The expression works with it.
 
-The same pattern runs through the rest of the language:
+The same shape runs through the rest of the language. In R, `if/else` is an expression: it produces a value, so you can assign its result directly (@sec-expressions-names).
 
-- `if/else` returns a value, so you can assign its result directly. In most languages, `if` is a statement that *does* something; in R, it's an expression that *produces* something (@sec-expressions-names):
+```r
+y <- if (x > 0) "positive" else "negative"
+```
 
-    ```r
-    y <- if (x > 0) "positive" else "negative"
-    ```
-- Functions are ordinary values. You can store one in a variable, pass it to another function, or create one on the fly (@sec-functions-are-values).
-- `x * 2` multiplies every element of `x` at once, with no loop and no index variable. Operations that in other languages require a loop are built into R as expressions on whole vectors (@sec-vectors).
-- Pipe chains compose functions left to right, each one receiving the result of the previous one. This is Church's core operation, function composition, made into syntax (@sec-pipes-and-composition):
+Functions are ordinary values. You can store one in a variable, pass it to another function, or create one on the fly without ever giving it a name (@sec-functions-are-values). Operations on data work the same way: `x * 2` multiplies every element of `x` at once, with no loop and no index variable; the expression takes the whole vector as input, not one piece at a time (@sec-vectors). Pipe chains compose functions left to right, each one receiving what the last produced; this is exactly what Church meant by composition, with a syntax wrapped around it (@sec-pipes-and-composition).
 
-    ```r
-    data |> filter(x > 5) |> summarize(mean(y))
-    ```
+```r
+data |> filter(x > 5) |> summarize(mean(y))
+```
+
+All four come from a single decision: build the language out of expressions, and let functions be values like anything else. The shape is Mr. Fold's.
 
 But how did Church's 1936 notation, written decades before computers existed, end up inside a language used by statisticians? @sec-family-tree follows the chain: Church to Lisp to Scheme to S to R, and what each step added along the way.
